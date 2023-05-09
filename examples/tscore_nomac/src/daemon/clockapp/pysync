@@ -1,0 +1,434 @@
+#!/usr/bin/python
+# pylint: disable=W,C,R,E
+#-------------------------------------------------------------------------------
+#- Copyright (c) 2021 Arista Networks, Inc. All rights reserved.
+#-------------------------------------------------------------------------------
+#- Author:
+#-   fdk-support@arista.com
+#-
+#- Description:
+#-
+#-
+#-   Licensed under BSD 3-clause license:
+#-     https://opensource.org/licenses/BSD-3-Clause
+#-
+#- Tags:
+#-   license-bsd-3-clause
+#-
+#-------------------------------------------------------------------------------
+
+import argparse
+import logging
+import logging.handlers
+import sys
+import time
+from math import copysign
+
+import clockapp_mosapi as mosapi
+import clocks
+import references
+from filters import MAF, PIController
+
+# Parse arguments for all to use
+parser = argparse.ArgumentParser()
+parser.add_argument('-v', "--verbose", default=0, action='count', help="Increase verbosity")
+parser.add_argument("--no-syslog", action='store_true',
+                    help="Log to terminal instead of syslog")
+parser.add_argument('-l', "--list", action='store_true', help="List available clocks & references")
+parser.add_argument('-m', "--measure", action='store_true', help="Try do some meaasurements.")
+parser.add_argument('-c', "--clock",  help="Use specific clock")
+parser.add_argument('-r', "--reference",  help="Use specific reference")
+parser.add_argument('-a', "--appname", default="", help="Name of the application spawning this daemon")
+parser.add_argument("--no-set",  help="Don't step the initial timeofday", action='store_true')
+args = parser.parse_args()
+
+
+from mosapi.telemetry import Telemetry
+
+telem = Telemetry(appname=args.appname, author="metamako")
+
+import os
+
+from chron import PPSTimeSampleTimeoutError, PTPTimeSampleError
+from errors import TimeSampleError
+from freerun import FreeRunError
+
+
+def cast_config(val):
+    try:
+        return int(val)
+    except ValueError:
+        pass
+
+    try:
+        return float(val)
+    except ValueError:
+        pass
+
+    return val
+
+class ConfigCache(object):
+    def __init__(self, app):
+        self.app = app
+        self._cache = {} # _cache[key] = ( value, timestamp )
+
+    def get_config(self, key):
+        mod_time = os.path.getmtime(self.app.conf_filename)
+
+        try:
+            prev_val, prev_time = self._cache[key]
+        except KeyError:
+            value = cast_config(self.app.get_config(key))
+            self._cache[key] = ( value, mod_time )
+            logging.debug("pysync: Loaded config {}: {}".format(key, value))
+            return value
+
+        if mod_time > prev_time:
+            value = cast_config(self.app.get_config(key))
+            self._cache[key] = ( value, mod_time )
+            if value != prev_val:
+                logging.debug("pysync: Changed config {}: {} --> {}".format(key, prev_val, value))
+            return value
+
+        return prev_val
+
+def my_signal_handler(_signo, _stack_frame):
+    # walk through the constants in the signal module
+    for n in [n for n in dir(signal) if n.startswith('SIG') and '_' not in n]:
+        if getattr(signal, n) == _signo:
+            signame = n
+            break
+    else:
+        signame = "Signal:{}".format(_signo)
+
+    send_status("Exited: ({})".format(signame))
+    sys.exit(0)
+
+import signal
+
+for s in [signal.SIGABRT, signal.SIGBUS, signal.SIGFPE,
+          signal.SIGSEGV, signal.SIGUSR1, signal.SIGUSR2,
+          signal.SIGTERM, signal.SIGINT]:
+    signal.signal(s, my_signal_handler)
+
+
+def send_telem(telem, tags={}, **kwargs):
+    try:
+        telem.send_metrics("{appname}_sync".format(appname=args.appname), kwargs, tags)
+    except Exception as e:
+        print "Telem faild: ", e
+
+def send_status(status):
+    logging.info("pysync: {}".format(status))
+    with open("/var/run/metamako/apps/{}/pysync_status".format(args.appname), "w") as fp:
+        fp.write(status)
+
+def frequency_offset(ref, t):
+    errs = MAF(t)
+
+    last_samp = None
+    last_ref  = None
+    e = None
+    while True:
+        try:
+            for i in xrange(t):
+                reference, sample = ref.sample()
+                if last_samp:
+                    s_frequency = sample - last_samp
+                    r_frequency = reference - last_ref
+                    err = s_frequency - r_frequency
+                    errs(err)
+
+                    logging.debug( "pysync: {}: {}/{}\tErr:{}\tRunning Avg Err: {}".format(
+                            i, s_frequency, r_frequency, err, errs.val))
+
+                last_samp = sample
+                last_ref = reference
+            # The measured ppb in frequency error
+            return errs.val
+        except FreeRunError as e:
+            return 0
+        except TimeSampleError as e:
+            send_status("Waiting for reference: {}".format(e))
+
+
+def freq_adj_err(ref, t, clock):
+    ppb = {}
+    offsets = [clock.MIN_OFFS, clock.MAX_OFFS]
+    for offset in offsets:
+        clock.adjust(offset)
+        ppb[offset] = frequency_offset(ref, t)
+
+    try:
+        scaler = ( ( max(offsets) - min(offsets) ) / ( ppb[max(offsets)] - ppb[min(offsets)] ) )
+    except ZeroDivisionError:
+        return 1.0
+
+    if scaler < clock.MIN_SCALER:
+        logging.error("pysync: frequency adjust scaler saturated at {} (actual {})".format(clock.MIN_SCALER, scaler))
+        return clock.MIN_SCALER
+    if scaler > clock.MAX_SCALER:
+        logging.error("pysync: frequency adjust scaler saturated at {} (actual {})".format(clock.MAX_SCALER, scaler))
+        return clock.MAX_SCALER
+    return scaler
+
+
+def wait_for_reference(ref):
+    last_log_message = None
+    while True:
+        try:
+            ref.sample()
+            if last_log_message:
+                send_status("Reference OK")
+            break
+        except NotImplementedError as e:
+            # just catch+reraise these first, since NotImplemented is subclaass of Runtime.
+            raise
+        except FreeRunError as e:
+            send_status("Reference OK")
+            break
+        except TimeSampleError as e:
+            if e.message != last_log_message:
+                send_status("Waiting for reference: {}".format(e))
+                last_log_message = e.message
+            time.sleep(1)
+
+
+class deltaBool(object):
+    " Wrapper for bool which remembers when the value chenges. Useful for logging "
+    def __init__(self, init=None):
+        self.val = init
+        self.changed = False
+    def set(self,val):
+        self.changed = val != self.val
+        self.val = val
+        return self.changed
+    def __nonzero__(self):
+        return bool(self.val)
+
+
+
+def main(_args):
+    if not _args.clock:
+        raise Exception("Required config -cCLOCK")
+        return 1
+    if not _args.reference:
+        raise Exception("Required config -rREFERENCE")
+        return 1
+    send_status("Starting")
+    clock = clocks.get(_args.clock)(_args.appname)
+
+    if _args.clock.lower() != "addskip":
+        fastclock = clocks.get("addskip")(_args.appname)
+        clampval = fastclock.CLAMP
+    else:
+        fastclock = None
+        clampval = clock.CLAMP
+
+    clock.adjust(0)
+    if fastclock:
+        fastclock.adjust(0)
+
+    ref = references.get(_args.reference)(_args.appname)
+    logging.info("pysync: Using reference  : {}".format(ref))
+    logging.info("pysync: Using clock      : {}".format(clock))
+    logging.info("pysync: Using fast-clock : {}".format(fastclock))
+
+    app = mosapi.get_app_by_name(_args.appname)
+    config = ConfigCache(app)
+
+    wait_for_reference(ref)
+
+    if hasattr(clock, "PPB_ADJ"):
+        send_status("Calibrating Clock Control")
+        clock.PPB_ADJ = freq_adj_err(ref, 10, clock)
+        logging.info("pysync: Clock frequency control scaler: {}".format(clock.PPB_ADJ))
+
+    avg_err = config.get_config('tuning adjustinit')
+    logging.info("pysync: Configured frequency adjustment: {}".format(avg_err))
+
+    if avg_err == "auto":
+        # Take an initial 10-second sample to get a rough idea of the current frequency
+        send_status("Calibrating Clock Centre")
+        clock.adjust(0)
+        avg_err = frequency_offset(ref, 10)
+    logging.info("pysync: Initial frequency adjustment: {}".format(avg_err))
+    clock.adjust(-avg_err)
+
+    pi = PIController(pval = config.get_config('tuning proportional'),
+                      ival = config.get_config('tuning integral'),
+                      clamp = clampval,
+                      integral=avg_err)
+
+    if not _args.no_set:
+        send_status("Setting time of day")
+        ref.set_time()
+    else:
+        send_status("Skipping setting time of day")
+
+    # effectively infinity seconds (~292e9 years)
+    infinity = xrange(sys.maxint)
+
+    tags = {
+        "reference" : ref.__class__.__name__,
+        "clock"     : clock.__class__.__name__,
+    }
+
+    is_holdover = deltaBool(None)
+    is_fastconverge = deltaBool(False)
+    is_saturated = deltaBool(False)
+
+    for iteration in infinity:
+        pi.p = config.get_config('tuning proportional')
+        pi.i = config.get_config('tuning integral')
+
+        time_ref = sample = 0
+        try:
+            time_ref, sample = ref.sample()
+            if is_holdover.set(False):
+                send_status("Running")
+
+        except NotImplementedError as e:
+            # Catch+reraise these first, since NotImplemented is subclaass of Runtime.
+            raise
+        except TimeSampleError as e:
+            if is_holdover.set(True):
+                send_status("Running (Holdover): {}".format(e.message))
+
+        time_offs = sample - time_ref + 0.5
+
+        if is_holdover:
+            time_offs = 0
+
+        desired_ppb = -pi(time_offs)
+        achieved_ppb = clock.adjust(desired_ppb)
+        residual_ppb = desired_ppb - achieved_ppb
+
+        logline = "{}\tErr({:+f}) Adj({:+f}) Cppb({:+f})".format(sample, time_offs, desired_ppb, achieved_ppb)
+        RESIDUAL_EPSILON = 0.01
+        if abs(residual_ppb) > RESIDUAL_EPSILON and fastclock:
+            # Primary clock was not enough; fall back to fastclock if present
+            if is_fastconverge.set(True):
+                send_status("Running (fast-converge; additional jitter)")
+            fast_achieved = fastclock.adjust(residual_ppb)
+            logline += " FCppb({:+f})".format(fast_achieved)
+            residual_ppb = residual_ppb - fast_achieved
+        else:
+            if fastclock:
+                # stop Add/Skip if the clocks are distinct
+                fastclock.adjust(0)
+
+            if is_fastconverge.set(False):
+                logging.info("pysync: Leaving fast-converge")
+                send_status("Running")
+
+        logline += " R({:+f})".format(residual_ppb)
+        logging.debug("pysync: "+logline)
+
+        # This should never happen
+        # PI clamping to prevent integrator windup means initial desired_control will
+        # never be greater than fastclock's ability, so it shold never fall short ..
+        if abs(residual_ppb) > 0.01:
+            if is_saturated.set(True):
+                send_status("Running (saturated)")
+
+        else:
+            if is_saturated.set(False):
+                logging.info("pysync: Leaving saturated")
+                send_status("Running")
+
+        telem_values = {
+            "holdover"      : bool(is_holdover),
+            "fastconverge"  : bool(is_fastconverge),
+            "saturated"     : bool(is_saturated),
+
+            "iteration"     : iteration,
+            "adjust"        : desired_ppb,
+            "clock_ppb"     : achieved_ppb,
+            "control"       : float(clock.raw),
+            "i_accum"       : pi.i_effort,
+        }
+
+        if not is_holdover:
+            telem_values["Error"] = time_offs
+        if is_fastconverge:
+            telem_values.update({
+                "fast_ppb"    : fast_achieved,
+                "fast_control": fastclock.raw,
+            })
+        send_telem(telem, tags, **telem_values)
+
+
+
+
+
+
+def list_modules():
+    print "Clocks:"
+    best = None # TODO: auto-detect best clock
+    for c in clocks.get_all():
+        print "  {}{} ".format('*' if c == best else ' ',
+                c.__name__)
+
+    print "References:"
+    best = None # TODO: auto-detect best reference
+    for r in references.get_all():
+        print "  {}{} ".format('*' if r == best else ' ',
+                r.__name__)
+    return 0
+
+def do_measurement(_args):
+    infinity = xrange(sys.maxint)
+    ref = references.get(_args.reference)()
+
+    clk = _args.clock
+    if clk:
+        clock = clocks.get(clk)()
+        clock.adjust(0)
+
+
+    base_ref, base_samp = ref.sample()
+    print "n,ref,samp,delta"
+    print "{},{},{},{}".format(0, 0, 0, 0)
+    sys.stdout.flush()
+    for iteration in infinity:
+        time_ref, time_samp = ref.sample()
+
+        time_ref  = time_ref  - base_ref
+        time_samp = time_samp - base_samp
+
+        print "{},{},{},{}".format(iteration+1, time_ref, time_samp, time_samp-time_ref)
+        sys.stdout.flush()
+
+
+if __name__ == "__main__":
+    print args
+
+    logging.getLogger().addHandler(
+        logging.StreamHandler(sys.stdout) if args.no_syslog else
+        logging.handlers.SysLogHandler('/dev/log'))
+
+    loglevel = max(30 - (args.verbose*10), 0)
+    logging.getLogger().setLevel(loglevel)
+
+    if args.list:
+        sys.exit(list_modules())
+    elif args.measure:
+        sys.exit(do_measurement(args))
+    else:
+        try:
+            ret = main(args)
+            send_status("Exited: {}".format(ret))
+            sys.exit(ret)
+        except KeyboardInterrupt as e:
+            send_status("Exited: (Ctrl-C)")
+            sys.exit(0)
+        except Exception as e:
+            errstr = "Exited: (Error: {})".format(e)
+            logging.critical(errstr)
+            send_status(errstr)
+            import traceback
+            logs = traceback.format_exc().split("\n")
+            for l in logs:
+                logging.critical(l)
+            sys.exit(-1)

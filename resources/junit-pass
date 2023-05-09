@@ -1,0 +1,29 @@
+#!/bin/bash
+
+#-------------------------------------------------------------------------------
+#- Copyright (c) 2019-2023 Arista Networks, Inc. All rights reserved.
+#-------------------------------------------------------------------------------
+#- Author:
+#-   fdk-support@arista.com
+#-
+#- Description:
+#-   Write a junit .xml file with a pass message.
+#-   Usage: junit-pass
+#-
+#- Tags:
+#-   license-arista-fdk-agreement
+#-   license-bsd-3-clause
+#-
+#-------------------------------------------------------------------------------
+
+export JUNIT_SUITENAME="${JUNIT_SUITENAME:-DefaultSuite}"
+export JUNIT_TESTNAME="${JUNIT_TESTNAME:-DefaultTest}"
+export JUNIT_OUTFILE="${JUNIT_OUTFILE:-test-reports/junit_report.xml}"
+
+mkdir -p $(dirname $JUNIT_OUTFILE)
+
+cat <<EOF > $JUNIT_OUTFILE
+<testsuite tests='1'>
+    <testcase classname='$JUNIT_SUITENAME' name='$JUNIT_TESTNAME' />
+</testsuite>
+EOF

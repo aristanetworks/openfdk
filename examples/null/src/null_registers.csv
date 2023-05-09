@@ -1,0 +1,10 @@
+number,name,type,writeable,width
+0,app_name_0_3,reserved,false,32
+1,app_name_4_7,reserved,false,32
+2,app_name_8_11,reserved,false,32
+3,app_name_12_15,eserved,false,32
+4,fpga_id,reserved,false,32
+5,scratch/reg_1,ctl,true,32
+6,scratch/reg_2,ctl,true,32
+7,scratch/reg_3,ctl,true,32
+8,scratch/reg_4,ctl,true,32
