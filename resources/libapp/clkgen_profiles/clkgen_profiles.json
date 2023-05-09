@@ -1,0 +1,101 @@
+{
+  "license": "bsd-3-clause",
+  "default": {
+    "description": "Manufacturing default Clock Generator Configuration",
+    "emu": {
+      "e_central": {"si5345": {"config_file": "default_eh_emu_si5345.txt"}},
+      "ea_central":{"si5345": {"config_file": "default_eh_emu_si5345.txt"}},
+      "eb_central":{"si5345": {"config_file": "default_eh_emu_si5345.txt"}},
+      "ep_central":{"si5345": {"config_file": "default_eh_emu_si5345.txt"}},
+      "ed_central":{"si5345": {"config_file": "default_eh_emu_si5345.txt"}},
+      "eh_central":{"si5345": {"config_file": "default_eh_emu_si5345.txt"}}
+    },
+    "lyrebird": {
+      "l":  {"si5345": {"config_file": "default_lb2_lyrebird_si5345.txt"}},
+      "lb2":{"si5345": {"config_file": "default_lb2_lyrebird_si5345.txt"}}
+    },
+    "tamarama": {
+      "lb2":{"lmk05318": {"config_file": "default_lb2_tamarama_lmk05318.txt"}}
+    },
+    "malabar": {
+      "lb2":{"lmk05318b": {"config_file": "default_lb2_malabar_lmk05318b.txt"}}
+    }
+  },
+  "eth156": {
+    "description": "Ethernet with GTREFCLK0=156.25MHz, GTREFCLK1=125.0MHz",
+    "emu": {
+      "e_central": {"si5345": {"config_file": "default_eh_emu_si5345.txt"}},
+      "ea_central":{"si5345": {"config_file": "default_eh_emu_si5345.txt"}},
+      "eb_central":{"si5345": {"config_file": "default_eh_emu_si5345.txt"}},
+      "ep_central":{"si5345": {"config_file": "default_eh_emu_si5345.txt"}},
+      "ed_central":{"si5345": {"config_file": "default_eh_emu_si5345.txt"}},
+      "eh_central":{"si5345": {"config_file": "default_eh_emu_si5345.txt"}}
+    },
+    "lyrebird": {
+      "l":  {"si5345": {"config_file": "default_lb2_lyrebird_si5345.txt"}},
+      "lb2":{"si5345": {"config_file": "default_lb2_lyrebird_si5345.txt"}}
+    },
+    "tamarama": {
+      "lb2":{"lmk05318": {"config_file": "default_lb2_tamarama_lmk05318.txt"}}
+    },
+    "malabar": {
+      "lb2":{"lmk05318b": {"config_file": "default_lb2_malabar_lmk05318b.txt"}}
+    }
+  },
+  "eth161": {
+    "description": "Ethernet with GTREFCLK0=161.1328125MHz, GTREFCLK1=125.0MHz",
+    "emu": {
+      "e_central": {"si5345": {"config_file": "eth161_eh_emu_si5345.txt"}},
+      "ea_central":{"si5345": {"config_file": "eth161_eh_emu_si5345.txt"}},
+      "eb_central":{"si5345": {"config_file": "eth161_eh_emu_si5345.txt"}},
+      "ep_central":{"si5345": {"config_file": "eth161_eh_emu_si5345.txt"}},
+      "ed_central":{"si5345": {"config_file": "eth161_eh_emu_si5345.txt"}},
+      "eh_central":{"si5345": {"config_file": "eth161_eh_emu_si5345.txt"}}
+    },
+    "lyrebird": {
+      "l":  {"si5345": {"config_file": "eth161_lb2_lyrebird_si5345.txt"}},
+      "lb2":{"si5345": {"config_file": "eth161_lb2_lyrebird_si5345.txt"}}
+    },
+    "tamarama": {
+      "lb2":{"lmk05318": {"config_file": "eth161_lb2_tamarama_lmk05318.txt"}}
+    },
+    "malabar": {
+      "lb2":{"lmk05318b": {"config_file": "eth161_lb2_malabar_lmk05318b.txt"}}
+    }
+  },
+  "eth156ocxo": {
+    "description": "Ethernet with GTREFCLK0=156.25MHz, GTREFCLK1=125.0MHz and Clock Generator Source the OCXO",
+    "lyrebird": {
+      "l":  {"si5345": {"config_file": "eth156OCXO_lb2_lyrebird_si5345.txt"}},
+      "lb2":{"si5345": {"config_file": "eth156OCXO_lb2_lyrebird_si5345.txt"}}
+    }
+  },
+  "ntsc148ocxo": {
+    "description": "Video NTSC with GTREFCLK0=156.25MHz, GTREFCLK1=148.5/1.001MHz and Clock Generator Source the OCXO",
+    "lyrebird": {
+      "l":  {"si5345": {"config_file": "ntsc148OCXO_lb2_lyrebird_si5345.txt"}},
+      "lb2":{"si5345": {"config_file": "ntsc148OCXO_lb2_lyrebird_si5345.txt"}}
+    }
+  },
+  "ntsc297ocxo": {
+    "description": "Video NTSC with GTREFCLK0=156.25MHz, GTREFCLK1=297.0/1.001MHz and Clock Generator Source the OCXO",
+    "lyrebird": {
+      "l":  {"si5345": {"config_file": "ntsc297OCXO_lb2_lyrebird_si5345.txt"}},
+      "lb2":{"si5345": {"config_file": "ntsc297OCXO_lb2_lyrebird_si5345.txt"}}
+    }
+  },
+  "pal148ocxo": {
+    "description": "Video PAL with GTREFCLK0=156.25MHz, GTREFCLK1=148.5MHz and Clock Generator Source the OCXO",
+    "lyrebird": {
+      "l":  {"si5345": {"config_file": "pal148OCXO_lb2_lyrebird_si5345.txt"}},
+      "lb2":{"si5345": {"config_file": "pal148OCXO_lb2_lyrebird_si5345.txt"}}
+    }
+  },
+  "pal297ocxo": {
+    "description": "Video PAL with GTREFCLK0=156.25MHz, GTREFCLK1=297.0MHz and Clock Generator Source the OCXO",
+    "lyrebird": {
+      "l":  {"si5345": {"config_file": "pal297OCXO_lb2_lyrebird_si5345.txt"}},
+      "lb2":{"si5345": {"config_file": "pal297OCXO_lb2_lyrebird_si5345.txt"}}
+    }
+  }
+}

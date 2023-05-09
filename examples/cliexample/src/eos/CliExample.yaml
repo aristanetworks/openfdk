@@ -1,0 +1,56 @@
+#-------------------------------------------------------------------------------
+#- Copyright (c) 2021 Arista Networks, Inc. All rights reserved.
+#-------------------------------------------------------------------------------
+#- Author:
+#-   fdk-support@arista.com
+#-
+#- Description:
+#-   Example application demonstrating CLI.
+#-
+#-   Licensed under BSD 3-clause license:
+#-     https://opensource.org/licenses/BSD-3-Clause
+#-
+#- Tags:
+#-   license-bsd-3-clause
+#-
+#-------------------------------------------------------------------------------
+
+vendor:
+   name: Arista Networks
+   address: 5453 Great America Parkway, Santa Clara, CA 95054
+   phoneNumber: +1-408-547-5500
+   email: support@arista.com
+
+namespace: arista.cliexample
+
+daemons:
+   CliExampleDaemon:
+      exe: /opt/apps/cliexample/eos/CliExampleDaemon.py
+
+modes:
+   cliexample:
+      command:
+         syntax: cliexample
+         noSyntax: cliexample
+      modeKey: cliexample
+      daemon: CliExampleDaemon
+      runningConfigGenerator: !!python/name:cliexample.libapp.cli.running_config
+
+commands:
+   disabled:
+      syntax: disabled
+      noSyntax: disabled
+      mode: cliexample
+
+   ipAddress:
+      syntax: ip address <ip> [secondary]
+      noSyntax: ip address [<ip>] [secondary]
+      mode: cliexample
+      data:
+         <ip>:
+            ipv4Address:
+
+   showCliExampleStatus:
+      syntax: show cliexample status
+      mode: Unprivileged
+      outputSchema: {}

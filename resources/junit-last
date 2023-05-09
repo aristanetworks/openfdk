@@ -1,0 +1,53 @@
+#!/bin/bash
+
+#-------------------------------------------------------------------------------
+#- Copyright (c) 2019-2023 Arista Networks, Inc. All rights reserved.
+#-------------------------------------------------------------------------------
+#- Author:
+#-   fdk-support@arista.com
+#-
+#- Description:
+#-   Write a junit .xml file with the state of the last command to run.
+#-   Usage:
+#-     junit-last HelloSuite WorldTest test-reports/outfile.txt $? $(fc -nl -1)
+#-
+#- Tags:
+#-   license-arista-fdk-agreement
+#-   license-bsd-3-clause
+#-
+#-------------------------------------------------------------------------------
+
+export JUNIT_SUITENAME=$1
+export JUNIT_TESTNAME=$2
+export JUNIT_OUTFILE=$3
+export LASTCMD_RESULT=$4
+export JUNIT_FAILMESSAGE=$5
+
+if [ -z "$2" ]; then
+    export OUTFILE=/dev/stdout
+else
+    export OUTFILE=$JUNIT_OUTFILE
+fi
+
+mkdir -p $(dirname $OUTFILE)
+
+if [ $LASTCMD_RESULT -eq 0 ]; then
+cat <<EOF >$OUTFILE
+<testsuite tests='1'>
+    <testcase classname='$JUNIT_SUITENAME' name='$JUNIT_TESTNAME' />
+</testsuite>
+EOF
+
+else
+
+cat <<EOF > $OUTFILE
+<testsuite tests="1">
+    <testcase classname="$JUNIT_SUITENAME" name="$JUNIT_TESTNAME">
+        <failure type="$LASTCMD_RESULT">Resultcode: $LASTCMD_RESULT\n$JUNIT_FAILMESSAGE</failure>
+    </testcase>
+</testsuite>
+EOF
+
+fi
+
+exit $LASTCMD_RESULT

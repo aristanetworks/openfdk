@@ -1,0 +1,5 @@
+{
+    "license" : "bsd-3-clause",
+    "FPGA_VENDOR" : "xilinx",
+    "FPGA_DEVICE" : "xcvu7p-flvb2104-2-e"
+}
