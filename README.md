@@ -17,7 +17,7 @@ Building applications for Arista devices dramatically eases the problem of
 *deploying* professional-quality FPGA applications (but does not necessarily
 make writing FPGA code easier).
 
-The intention the FDK is twofold -- to provide:
+The intention of the FDK is twofold -- to provide:
 
 * the information required by developers to build applications, including: the information about hardware required by FPGA engineers to build FPGA configs; API details for interfacing with Arista's software platform (EOS).
 * libraries, examples, documents, IP cores, build systems, and any other material that will ease development.
@@ -60,16 +60,14 @@ relating to licensing the files within the FDK. Please see the
 
 ## Documentation
 
-Detailed documents regarding specific topics is available:
+Detailed documents regarding specific topics are available:
 
-* Developer's guide -- [doc/developers-guide.md](doc/developers-guide.md)
+* Developer's guide -- [doc/developer-guide.md](doc/developer-guide.md)
     * A guide and information on how to build applications using the FDK. This focusses on software, packaging, operations and other non-FPGA aspects of the  applications.
 * LibApp User's Guide - [doc/libapp/index.html](doc/libapp/index.html)
     * API information for LibApp, which provides user-friendly methods for writing EOS and MOS based applications.
-* FAQ - [doc/faq.md](doc/faq.md)
-    * Frequently asked questions.
 
-In addition, each example is documented with a README.md and a quickstart.md.
+In addition, each example is documented with a `README.md` and a `quickstart.md`.
 These describe the application from a developer's point of view, and a
 user's point of view, respectively.
 

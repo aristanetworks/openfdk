@@ -751,7 +751,6 @@ package body metamako_pkg is
   --! @param[in]  arg1 Vector to reverse.
   --! @param[in]  grp  Grouping. Eg. 8 gives byte reversal.
   --! @returns    Group reversed arg1 data.
-  --! @author     lindsayp@metamako.com
   function reverse (arg1 : std_logic_vector;
                     grp  : natural) return std_logic_vector
   is

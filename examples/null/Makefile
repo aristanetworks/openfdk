@@ -23,11 +23,11 @@
 .SECONDEXPANSION:
 
 PROJECT    ?= null
-VERSION_ID ?= 2.6.0beta1.openfdk
-BUILD_ID   ?= 1
+VERSION_ID ?= 2.6.0.openfdk
+BUILD_ID   ?= 4
 
 PROJECT_DIR         = $(CURDIR)
-ARISTA_FDK_VERSION ?= 2.6.0beta1.openfdk
+ARISTA_FDK_VERSION ?= 2.6.0.openfdk
 ARISTA_FDK_DIR     ?= $(PROJECT_DIR)/../../../arista_fdk-$(ARISTA_FDK_VERSION)
 ARISTA_SRC_DIR      = $(ARISTA_FDK_DIR)/src
 

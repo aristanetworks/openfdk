@@ -121,7 +121,7 @@ To copy and use the example from the Arista FDK, copy the `telemexample` directo
 outside the FDK tree (probably to a new version control repository):
 
 ```bash
-cp -r arista_fdk-2.6.0beta1.openfdk/examples/telemexample mynewproject/
+cp -r arista_fdk-2.6.0.openfdk/examples/telemexample mynewproject/
 ```
 Update the `Makefile` to change:
 
@@ -149,8 +149,8 @@ For example, for a new project, based on `telemexample` called `mynewproject`:
 +BUILD_ID   ?= 1
 
  PROJECT_DIR     = $(CURDIR)
--ARISTA_FDK_DIR ?= $(PROJECT_DIR)/../../../arista_fdk-2.6.0beta1.openfdk
-+ARISTA_FDK_DIR ?= $(PROJECT_DIR)/../arista_fdk-2.6.0beta1.openfdk
+-ARISTA_FDK_DIR ?= $(PROJECT_DIR)/../../../arista_fdk-2.6.0.openfdk
++ARISTA_FDK_DIR ?= $(PROJECT_DIR)/../arista_fdk-2.6.0.openfdk
  ARISTA_SRC_DIR  = $(ARISTA_FDK_DIR)/src
 
  SOURCE_FILES = $(PROJECT_DIR)/src_files.json
