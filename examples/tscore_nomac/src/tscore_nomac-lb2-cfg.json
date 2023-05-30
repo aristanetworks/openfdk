@@ -34,6 +34,7 @@
         "${ARISTA_FDK_DIR}/src/regfile/i2c_slave_deglitch.vhd",
         "${ARISTA_FDK_DIR}/src/regfile/reg_file_pkg.vhd",
         "${ARISTA_FDK_DIR}/src/regfile/reg_flexi_pkg.vhd",
+        "${ARISTA_FDK_DIR}/src/regfile/reg_hs_counter.vhd",
         "${ARISTA_FDK_DIR}/src/seu/ip/xcvu9p-flgb2104-3-e/sem_mit_100M/sem_mit_100M.xci",
         "${ARISTA_FDK_DIR}/src/seu/ip/xcvu9p-flgb2104-3-e/sem_mit_78M125/sem_mit_78M125.xci",
         "${ARISTA_FDK_DIR}/src/seu/ip/xcvu9p-flgb2104-3-e/sem_mit_test_100M/sem_mit_test_100M.xci",
