@@ -245,11 +245,35 @@ begin
 
       ts_result_vld                    => ts_result_vld,
       ts_result                        => ts_result,
-      
+
       trigger                          => timestamp_trigger,
       trig_timestamp_vld               => timestamp_vld,
       trig_timestamp                   => timestamp
       );
+
+      -- A dummy module which implements a reg_hs_counter.
+      -- This should currently be optimised away.
+      -- FIXME: Use the reg_hs_counter module for something useful in this example.
+      trigger_count_sync_i : entity work.reg_hs_counter
+      generic map (
+        HS_PIPE_G      => 2,
+        HS_CLK_FREQ_G  => 156,
+        REG_CLK_FREQ_G => 25,
+        IS_MASTER_G    => true
+        )
+      port map (
+        -- High-Speed Domain
+        hs_clk        => refclk_user(0),
+        hs_pulse      => '0',
+
+        -- Regfile Domain
+        reg_clk       => refclk_25,
+        master_sample => open,
+        reg_sample    => '0',
+
+        reg_we        => open,
+        reg_count     => open
+        );
 
   --------------------------------------------------------------------------------
   -- Timing References
