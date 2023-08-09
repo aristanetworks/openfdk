@@ -17,6 +17,11 @@ Building applications for Arista devices dramatically eases the problem of
 *deploying* professional-quality FPGA applications (but does not necessarily
 make writing FPGA code easier).
 
+Open-source examples that use the FDK include:
+* [Netnod's FPGA NTP Server](https://github.com/Netnod/FPGA_NTP_SERVER/tree/devel/FPGA/targets/ntps_arista) -- provides an encrypted NTP server (NTPS), leveraging the FDK's Timesync core to run Sweden's NTP service.
+* [Arista's Promtail Extension](https://github.com/netnod/FPGA_NTP_SERVER) -- packages and runs Promtail on Arista Switches to
+  collect logs and send them to Grafana Loki.
+
 The intention of the FDK is twofold -- to provide:
 
 * the information required by developers to build applications, including: the information about hardware required by FPGA engineers to build FPGA configs; API details for interfacing with Arista's software platform (EOS).

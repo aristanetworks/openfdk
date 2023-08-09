@@ -86,7 +86,7 @@ skus = [
     },
     {
         # Pattern matches all 7130L (Lyrebird-VU7P-2) Devices
-        "sku_pattern": re.compile(r"DCS-7130-\d{2}LA?S?($|-.*)"),
+        "sku_pattern": re.compile(r"DCS-7130-\d{2}L(A|C)?S?($|-.*)"),
         "fpgas": [
             {
                 "identifier": "Fpga1",
@@ -122,7 +122,7 @@ skus = [
     },
     {
         # Pattern matches all 7130LB (Lyrebird-VU9P-3) Devices
-        "sku_pattern": re.compile(r"DCS-7130-\d{2}LBA?S?($|-.*)"),
+        "sku_pattern": re.compile(r"DCS-7130-\d{2}LB(A|C)?S?($|-.*)"),
         "fpgas": [
             {
                 "identifier": "Fpga1",
@@ -592,6 +592,7 @@ skus = [
                         "bus_number": 5,
                         "address": 0x66,
                         "pci": "01:00.0",
+                        "scd_pll_lock": ["0x300", 13],
                     },
                 },
             },
@@ -631,6 +632,7 @@ skus = [
                         "bus_number": 5,
                         "address": 0x65,
                         "pci": "01:00.0",
+                        "scd_pll_lock": ["0x300", 14],
                     },
                 },
             },
@@ -674,6 +676,7 @@ skus = [
                         "bus_number": 3,
                         "address": 0x65,
                         "pci": "01:00.0",
+                        "scd_pll_lock": ["0x300", 13],
                     },
                 },
             },
@@ -985,7 +988,6 @@ class Fpga(object):  # pylint: disable=too-many-instance-attributes
         """
         pcie = kwargs.pop("with_pcie", False)
         clk_profile = kwargs.pop("clock_profile", "default")
-        print("clk_profile : {}".format(clk_profile))
 
         self.clkgen.load_profile(clk_profile)
         if pcie:
@@ -1117,7 +1119,7 @@ def get_interface_macaddr(interface=None):
         interface [str]: The name of a particular port.
     """
     try:
-        with open("/sys/class/net/" + interface + "/address") as fd:  # pylint: disable=unspecified-encoding
+        with open("/sys/class/net/" + interface.lower() + "/address") as fd:  # pylint: disable=unspecified-encoding
             return EUI(fd.read().strip())
     except Exception:  # pylint: disable=broad-except
         return EUI("00:00:00:00:00:00")

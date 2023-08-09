@@ -26,17 +26,23 @@ import eossdk
 import libapp
 import libapp.eossdk_utils
 
+
 logger = logging.getLogger(__name__)
+
+daemon_name = "CliExampleDaemon"
 
 
 class CliExampleDaemon(
     libapp.eossdk_utils.EosSdkAgent,
+    libapp.daemon.LoggingMixin,
     libapp.daemon.ConfigMixin,
     libapp.daemon.StatusMixin,
     eossdk.AgentHandler,
 ):
     def __init__(self, sdk):
         self.agent_mgr = sdk.get_agent_mgr()
+
+        libapp.daemon.LoggingMixin.__init__(self, sdk.name())
         eossdk.AgentHandler.__init__(self, self.agent_mgr)
 
     # inherited from AgentHandler
@@ -81,7 +87,7 @@ class CliExampleDaemon(
                 del self.status[key]
 
     def on_agent_enabled(self, enabled):
-        print("on_agent_enabled", enabled)
+        logger.info("on_agent_enabled %s", enabled)
         # Remove all status, giving us a clean slate.
         self.status.clear()
 
@@ -90,9 +96,9 @@ class CliExampleDaemon(
 
 
 def main():
-    logging.basicConfig(format="%(asctime)s %(levelname)s: %(name)s: %(message)s", level="DEBUG")
+    logging.basicConfig(format="%(asctime)s %(levelname)s: %(name)s: %(message)s", level="INFO")
 
-    sdk = eossdk.Sdk("CliExampleDaemon")
+    sdk = eossdk.Sdk(daemon_name)
     _ = CliExampleDaemon(sdk)
     sdk.main_loop(sys.argv)
 

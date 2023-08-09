@@ -32,7 +32,7 @@ The daemon is generally an EosSdk agent with two main responsiblities:
 1. Responding to config changes made by the CLI commands above.
 2. Publishing status updates that can be queried by the CLI or other APIs.
 
-[Lifecyle of an SDK agent](https://github.com/aristanetworks/EosSdk/wiki/Lifecycle-of-an-SDK-agent)
+[Lifecycle of an SDK agent](https://github.com/aristanetworks/EosSdk/wiki/Lifecycle-of-an-SDK-agent)
 
 ## Developing with the FDK
 

@@ -21,6 +21,8 @@ from __future__ import absolute_import
 import os
 import json
 import re
+import subprocess
+import time
 from functools import wraps
 
 from . import IS_EOS
@@ -37,13 +39,19 @@ class Si5345(object):
 
     page_register = 0x1
 
-    def __init__(self, chan_number=None, address=None, mos_label=None):
+    def __init__(self, clkgen_interface):
         self.partNum = "si5345"
 
         if not IS_EOS:
-            self.device = i2c.Device(bus=i2c.label_to_bus(mos_label), addr=address)
+            self.device = i2c.Device(
+                bus=i2c.label_to_bus(clkgen_interface["mos_label"]),
+                addr=clkgen_interface["address"],
+            )
         else:
-            self.device = PlutoSmbusDaemonAccessor(mezzanineMuxPort=chan_number, address=address)
+            self.device = PlutoSmbusDaemonAccessor(
+                mezzanineMuxPort=clkgen_interface["chan_number"],
+                address=clkgen_interface["address"],
+            )
 
     def load_config(self, fileName):
         reg_map = self._reg_map_parser(fileName)
@@ -107,9 +115,15 @@ class Si5345(object):
 
 # -------------------------------------------------------------------------------
 class LMK05318(object):
-    def __init__(self, accelerator=None, bus_number=None, address=None, pci=None):
-        self.device = PlutoSmbusDaemonAccessor(bus=bus_number, address=address, accelId=accelerator, pci=pci)
+    def __init__(self, clkgen_interface):
+        self.device = PlutoSmbusDaemonAccessor(
+            bus=clkgen_interface["bus_number"],
+            address=clkgen_interface["address"],
+            accelId=clkgen_interface["accelerator"],
+            pci=clkgen_interface["pci"],
+        )
 
+        self.scdplllock = clkgen_interface["scd_pll_lock"]
         self.partNum = self._get_part_number()
 
     def load_config(self, fileName):
@@ -132,8 +146,7 @@ class LMK05318(object):
             else:
                 wr_data = data
 
-            # SmbusUtils is REALLY slow if you write one register at a time...so build up
-            # sequential blocks of writes
+            # Build up sequential blocks of writes to improve I2C performance
             if addrlast is None or address != addrlast + 1:
                 if addrlast is not None:
                     self.device.write_i2c_block_data(
@@ -153,12 +166,20 @@ class LMK05318(object):
 
     @property
     def device_ready(self):
-        return True
+        scd_output = subprocess.check_output(["scd", "-i", "0", "read", self.scdplllock[0]])
+        reg_contents = "".join(scd_output.decode().split()).split("==")[1]
+        is_pll_locked = bool((int(reg_contents, 2) >> self.scdplllock[1]) & 1)
+        return is_pll_locked
 
     def _soft_reset(self):
         res = self.device.read_byte_data(bytearray.fromhex("000C"))
         self.device.write_byte_data(bytearray.fromhex("000C"), res | 0x80)
         self.device.write_byte_data(bytearray.fromhex("000C"), res & 0x7F)
+
+        # Insert a blocking read here to make sure all transactions have completed
+        # before moving on
+        res = self.device.read_byte_data(bytearray.fromhex("000C"))
+        time.sleep(5)
 
     def _reg_map_parser(self, fileName):
         with open(fileName, "r") as f:  # pylint: disable=unspecified-encoding
@@ -201,20 +222,11 @@ class ClockGenerator(object):  # pylint:disable=too-many-instance-attributes
         self.noClkGen = True
         if "device" in interface["clkgen"]:
             if interface["clkgen"]["device"] == "Si5345":
-                self.clkgen = Si5345(
-                    chan_number=interface["clkgen"]["chan_number"],
-                    address=interface["clkgen"]["address"],
-                    mos_label=interface["clkgen"]["mos_label"],
-                )
+                self.clkgen = Si5345(interface["clkgen"])
                 self.noClkGen = False
             if interface["clkgen"]["device"] == "LMK05318":
                 if agentIsRunning("ar", "PLSmbusMediator"):
-                    self.clkgen = LMK05318(
-                        accelerator=interface["clkgen"]["accelerator"],
-                        bus_number=interface["clkgen"]["bus_number"],
-                        address=interface["clkgen"]["address"],
-                        pci=interface["clkgen"]["pci"],
-                    )
+                    self.clkgen = LMK05318(interface["clkgen"])
                     self.noClkGen = False
                 else:
                     print(

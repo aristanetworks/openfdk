@@ -13,7 +13,7 @@
       
       
       <link rel="icon" href="assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.4.3, mkdocs-material-9.1.14">
+      <meta name="generator" content="mkdocs-1.4.3, mkdocs-material-9.1.19">
     
     
       
@@ -21,7 +21,7 @@
       
     
     
-      <link rel="stylesheet" href="assets/stylesheets/main.85bb2934.min.css">
+      <link rel="stylesheet" href="assets/stylesheets/main.eebd395e.min.css">
       
       
 
@@ -207,6 +207,13 @@
   
     <nav class="md-nav" aria-label="cli">
       <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#libapp.cli.ShowEnabledBaseCmd" class="md-nav__link">
+    ShowEnabledBaseCmd
+  </a>
+  
+</li>
         
           <li class="md-nav__item">
   <a href="#libapp.cli.StatusAccessor" class="md-nav__link">
@@ -425,6 +432,26 @@
           <li class="md-nav__item">
   <a href="#libapp.eossdk_utils.debug_fn" class="md-nav__link">
     debug_fn()
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#libapp.loghandler" class="md-nav__link">
+    loghandler
+  </a>
+  
+    <nav class="md-nav" aria-label="loghandler">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#libapp.loghandler.EOSTraceHandler" class="md-nav__link">
+    EOSTraceHandler
   </a>
   
 </li>
@@ -1156,6 +1183,13 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#libapp.cli.ShowEnabledBaseCmd" class="md-nav__link">
+    ShowEnabledBaseCmd
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#libapp.cli.StatusAccessor" class="md-nav__link">
     StatusAccessor
   </a>
@@ -1372,6 +1406,26 @@
           <li class="md-nav__item">
   <a href="#libapp.eossdk_utils.debug_fn" class="md-nav__link">
     debug_fn()
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#libapp.loghandler" class="md-nav__link">
+    loghandler
+  </a>
+  
+    <nav class="md-nav" aria-label="loghandler">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#libapp.loghandler.EOSTraceHandler" class="md-nav__link">
+    EOSTraceHandler
   </a>
   
 </li>
@@ -2098,7 +2152,7 @@
 
 
 <h2 id="libapp.cli" class="doc doc-heading">
-          <code>cli</code>
+            <code>cli</code>
 
 
 </h2>
@@ -2122,16 +2176,87 @@
 
 
 
-<h3 id="libapp.cli.StatusAccessor" class="doc doc-heading">
-        <code>StatusAccessor</code>
+<h3 id="libapp.cli.ShowEnabledBaseCmd" class="doc doc-heading">
+          <code>ShowEnabledBaseCmd</code>
 
 
 </h3>
 
 
   <div class="doc doc-contents ">
-      <p class="doc doc-class-bases">
-        Bases: <code><span title="collections.Mapping">Mapping</span></code></p>
+          <p class="doc doc-class-bases">
+            Bases: <code>CliExtension.<span title="CliExtension.ShowCommandClass">ShowCommandClass</span></code></p>
+
+  
+      <p>Subclassing me will provide enabled/running status.</p>
+
+
+
+  <p><strong>Attributes:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td><code>daemon</code></td>
+          <td>
+                <code>str</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Name of the daemon.</p>
+            </div>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+      <p>The derived class must initialize the data object with a call to
+super(<DerivedClass>, self).handler(ctx) which will return a dict with the
+<enabled> and <running> keys.</p>
+<p>Furthermore, the same must be done in the render function:
+e.g. super(<DerivedClass>, self).render(data)
+which will print the enabled/running status.</p>
+
+
+  
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+
+  </div>
+
+  </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h3 id="libapp.cli.StatusAccessor" class="doc doc-heading">
+          <code>StatusAccessor</code>
+
+
+</h3>
+
+
+  <div class="doc doc-contents ">
+          <p class="doc doc-class-bases">
+            Bases: <code><span title="collections.Mapping">Mapping</span></code>, <code>dict</code></p>
 
   
       <p>A wrapper around statuses in Sysdb that provides python objects.</p>
@@ -2140,7 +2265,6 @@ representations stored in Sysdb under daemon/agent/status.  Those values
 are always strings which this class assumes are JSON encoded.  Strings
 which are not correctly encoded will result in ValueError/JsonDecodeError
 exceptions.</p>
-
 
 
   
@@ -2177,7 +2301,7 @@ exceptions.</p>
 
 
 <h2 id="libapp.clkgen_ctl" class="doc doc-heading">
-          <code>clkgen_ctl</code>
+            <code>clkgen_ctl</code>
 
 
 </h2>
@@ -2203,24 +2327,24 @@ exceptions.</p>
 
 
 <h3 id="libapp.clkgen_ctl.ClkGenDevice" class="doc doc-heading">
-        <code>ClkGenDevice</code>
+          <code>ClkGenDevice</code>
 
 
 </h3>
 
 
   <div class="doc doc-contents ">
-      <p class="doc doc-class-bases">
-        Bases: <code>object</code></p>
+          <p class="doc doc-class-bases">
+            Bases: <code>object</code></p>
 
   
       <p>Clock generator (clkgen) controller.</p>
 
 
-
   
 
   <div class="doc doc-children">
+
 
 
 
@@ -2248,6 +2372,7 @@ exceptions.</p>
 
 </div>
 
+
 <div class="doc doc-object doc-function">
 
 
@@ -2263,6 +2388,8 @@ exceptions.</p>
       <p>Sets clkgen profile.</p>
 <p>Configures clkgen with the specified profile and waits for the device
 to be ready.</p>
+
+
 
   <p><strong>Parameters:</strong></p>
   <table>
@@ -2280,8 +2407,12 @@ to be ready.</p>
           <td>
                 <code>str</code>
           </td>
-          <td><p>Name of profile to apply. Possible values are:
-"eth", "eth161", "pal", "ntsc", "palx2", "ntscx2".</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>Name of profile to apply. Possible values are:
+"eth", "eth161", "pal", "ntsc", "palx2", "ntscx2".</p>
+            </div>
+          </td>
           <td>
               <em>required</em>
           </td>
@@ -2315,7 +2446,7 @@ to be ready.</p>
 
 
 <h2 id="libapp.clock_generator" class="doc doc-heading">
-          <code>clock_generator</code>
+            <code>clock_generator</code>
 
 
 </h2>
@@ -2340,24 +2471,24 @@ to be ready.</p>
 
 
 <h3 id="libapp.clock_generator.ClockGenerator" class="doc doc-heading">
-        <code>ClockGenerator</code>
+          <code>ClockGenerator</code>
 
 
 </h3>
 
 
   <div class="doc doc-contents ">
-      <p class="doc doc-class-bases">
-        Bases: <code>object</code></p>
+          <p class="doc doc-class-bases">
+            Bases: <code>object</code></p>
 
   
       <p>Clock generator (clkgen) controller.</p>
 
 
-
   
 
   <div class="doc doc-children">
+
 
 
 
@@ -2383,6 +2514,8 @@ to be ready.</p>
 <p>Configures clkgen with the specified profile and waits for the device
 to return ready.</p>
 
+
+
   <p><strong>Parameters:</strong></p>
   <table>
     <thead>
@@ -2399,7 +2532,11 @@ to return ready.</p>
           <td>
                 <code>str</code>
           </td>
-          <td><p>Name of profile to apply.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>Name of profile to apply.</p>
+            </div>
+          </td>
           <td>
               <em>required</em>
           </td>
@@ -2424,16 +2561,15 @@ to return ready.</p>
 
 
 <h3 id="libapp.clock_generator.LMK05318" class="doc doc-heading">
-        <code>LMK05318</code>
+          <code>LMK05318</code>
 
 
 </h3>
 
 
   <div class="doc doc-contents ">
-      <p class="doc doc-class-bases">
-        Bases: <code>object</code></p>
-
+          <p class="doc doc-class-bases">
+            Bases: <code>object</code></p>
 
 
 
@@ -2471,7 +2607,7 @@ to return ready.</p>
 
 
 <h2 id="libapp.daemon" class="doc doc-heading">
-          <code>daemon</code>
+            <code>daemon</code>
 
 
 </h2>
@@ -2496,20 +2632,19 @@ to return ready.</p>
 
 
 <h3 id="libapp.daemon.StatusMixin" class="doc doc-heading">
-        <code>StatusMixin</code>
+          <code>StatusMixin</code>
 
 
 </h3>
 
 
   <div class="doc doc-contents ">
-      <p class="doc doc-class-bases">
-        Bases: <code>object</code></p>
+          <p class="doc doc-class-bases">
+            Bases: <code>object</code></p>
 
   
       <p>A mixin for a daemon class that provides automatic serializing and
 deserializing of status.</p>
-
 
 
   
@@ -2568,7 +2703,7 @@ automatically serializes and deserializes.</p>
 
 
 <h2 id="libapp.device" class="doc doc-heading">
-          <code>device</code>
+            <code>device</code>
 
 
 </h2>
@@ -2593,19 +2728,21 @@ automatically serializes and deserializes.</p>
 
 
 <h3 id="libapp.device.Fpga" class="doc doc-heading">
-        <code>Fpga</code>
+          <code>Fpga</code>
 
 
 </h3>
 
 
   <div class="doc doc-contents ">
-      <p class="doc doc-class-bases">
-        Bases: <code>object</code></p>
+          <p class="doc doc-class-bases">
+            Bases: <code>object</code></p>
 
   
       <p>An FPGA in the system.</p>
 <p>Typically accessed via get_fpga_devices().</p>
+
+
 
   <p><strong>Attributes:</strong></p>
   <table>
@@ -2622,88 +2759,132 @@ automatically serializes and deserializes.</p>
           <td>
                 <code>str</code>
           </td>
-          <td><p>Legacy (MOS-style) name of the FPGA.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>Legacy (MOS-style) name of the FPGA.</p>
+            </div>
+          </td>
         </tr>
         <tr>
           <td><code>identifier</code></td>
           <td>
                 <code>str</code>
           </td>
-          <td><p>The name of the FPGA on EOS.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>The name of the FPGA on EOS.</p>
+            </div>
+          </td>
         </tr>
         <tr>
           <td><code>board_standard</code></td>
           <td>
                 <code>str</code>
           </td>
-          <td><p>The FPGA bitstream compatibility standard.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>The FPGA bitstream compatibility standard.</p>
+            </div>
+          </td>
         </tr>
         <tr>
           <td><code>communicator</code></td>
           <td>
                 <code>RegisterAccessor</code>
           </td>
-          <td><p>The interface to use to access
-registers via the i2c_app bus.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>The interface to use to access
+registers via the i2c_app bus.</p>
+            </div>
+          </td>
         </tr>
         <tr>
           <td><code>sys_communicator</code></td>
           <td>
                 <code>RegisterAccessor</code>
           </td>
-          <td><p>The interface to use to access
-registers via the i2c_sys bus.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>The interface to use to access
+registers via the i2c_sys bus.</p>
+            </div>
+          </td>
         </tr>
         <tr>
           <td><code>port_list</code></td>
           <td>
                 <code>List[int]</code>
           </td>
-          <td><p>List of ap interfaces on this FPGA.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>List of ap interfaces on this FPGA.</p>
+            </div>
+          </td>
         </tr>
         <tr>
           <td><code>macaddr_list</code></td>
           <td>
                 <code>List[netaddr.<span title="netaddr.EUI">EUI</span>]</code>
           </td>
-          <td><p>List of MAC addresses allocated to this FPGA.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>List of MAC addresses allocated to this FPGA.</p>
+            </div>
+          </td>
         </tr>
         <tr>
           <td><code>part</code></td>
           <td>
                 <code>str</code>
           </td>
-          <td><p>Part number of the FPGA.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>Part number of the FPGA.</p>
+            </div>
+          </td>
         </tr>
         <tr>
           <td><code>jtag</code></td>
           <td>
                 <code>JTAG</code>
           </td>
-          <td><p>JTAG interface to the FPGA.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>JTAG interface to the FPGA.</p>
+            </div>
+          </td>
         </tr>
         <tr>
           <td><code>pcie</code></td>
           <td>
                 <code><span title="libapp.device.Pcie">Pcie</span></code>
           </td>
-          <td><p>PCIe interface to the FPGA.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>PCIe interface to the FPGA.</p>
+            </div>
+          </td>
         </tr>
         <tr>
           <td><code>clkgen</code></td>
           <td>
                 <code>ClockGenerator</code>
           </td>
-          <td><p>ClockGenerator device interface for FPGA reference clocks.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>ClockGenerator device interface for FPGA reference clocks.</p>
+            </div>
+          </td>
         </tr>
     </tbody>
   </table>
 
 
-
   
 
   <div class="doc doc-children">
+
 
 
 
@@ -2727,6 +2908,8 @@ registers via the i2c_sys bus.</p></td>
   
       <p>Programs the FPGA with a specified bitstream.</p>
 
+
+
   <p><strong>Parameters:</strong></p>
   <table>
     <thead>
@@ -2743,7 +2926,11 @@ registers via the i2c_sys bus.</p></td>
           <td>
                 <code>str</code>
           </td>
-          <td><p>The file to be written to the device.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>The file to be written to the device.</p>
+            </div>
+          </td>
           <td>
               <em>required</em>
           </td>
@@ -2753,8 +2940,12 @@ registers via the i2c_sys bus.</p></td>
           <td>
                 <code>bool</code>
           </td>
-          <td><p>A boolean indicating if the image uses PCIe, and
-needs a bus rescan, etc.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>A boolean indicating if the image uses PCIe, and
+needs a bus rescan, etc.</p>
+            </div>
+          </td>
           <td>
               <em>required</em>
           </td>
@@ -2765,6 +2956,7 @@ needs a bus rescan, etc.</p></td>
   </div>
 
 </div>
+
 
 <div class="doc doc-object doc-function">
 
@@ -2779,6 +2971,8 @@ needs a bus rescan, etc.</p></td>
   <div class="doc doc-contents ">
   
       <p>Clears FPGA configuration.</p>
+
+
 
   <p><strong>Parameters:</strong></p>
   <table>
@@ -2796,8 +2990,12 @@ needs a bus rescan, etc.</p></td>
           <td>
                 <code>bool</code>
           </td>
-          <td><p>A boolean indicating if the loaded image uses
-PCIe.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>A boolean indicating if the loaded image uses
+PCIe.</p>
+            </div>
+          </td>
           <td>
               <em>required</em>
           </td>
@@ -2816,6 +3014,7 @@ PCIe.</p></td>
   </div>
 
 </div>
+
 
 
 <div class="doc doc-object doc-function">
@@ -2835,6 +3034,8 @@ PCIe.</p></td>
 but the result can be filtered by specifying a board standard or identifier
 for a particular FPGA.</p>
 
+
+
   <p><strong>Parameters:</strong></p>
   <table>
     <thead>
@@ -2851,8 +3052,12 @@ for a particular FPGA.</p>
           <td>
                 <code>Optional[str]</code>
           </td>
-          <td><p>The board standard to restrict the
-resulting FPGA list to, if any.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>The board standard to restrict the
+resulting FPGA list to, if any.</p>
+            </div>
+          </td>
           <td>
                 <code>None</code>
           </td>
@@ -2862,8 +3067,12 @@ resulting FPGA list to, if any.</p></td>
           <td>
                 <code>Optional[str]</code>
           </td>
-          <td><p>The name of a particular FPGA to limit the
-result to.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>The name of a particular FPGA to limit the
+result to.</p>
+            </div>
+          </td>
           <td>
                 <code>None</code>
           </td>
@@ -2874,6 +3083,7 @@ result to.</p></td>
   </div>
 
 </div>
+
 
 <div class="doc doc-object doc-function">
 
@@ -2888,6 +3098,8 @@ result to.</p></td>
   <div class="doc doc-contents ">
   
       <p>Returns the mac address of a particular port.</p>
+
+
 
   <p><strong>Parameters:</strong></p>
   <table>
@@ -2905,7 +3117,11 @@ result to.</p></td>
           <td>
                 <code>[str]</code>
           </td>
-          <td><p>The name of a particular port.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>The name of a particular port.</p>
+            </div>
+          </td>
           <td>
                 <code>None</code>
           </td>
@@ -2930,7 +3146,7 @@ result to.</p></td>
 
 
 <h2 id="libapp.eossdk_utils" class="doc doc-heading">
-          <code>eossdk_utils</code>
+            <code>eossdk_utils</code>
 
 
 </h2>
@@ -2953,19 +3169,18 @@ result to.</p></td>
 
 
 <h3 id="libapp.eossdk_utils.EosSdkAgent" class="doc doc-heading">
-        <code>EosSdkAgent</code>
+          <code>EosSdkAgent</code>
 
 
 </h3>
 
 
   <div class="doc doc-contents ">
-      <p class="doc doc-class-bases">
-        Bases: <code>six.<span title="six.with_metaclass">with_metaclass</span>(<a class="autorefs autorefs-internal" title="libapp.eossdk_utils.SdkAgentMetaClass" href="#libapp.eossdk_utils.SdkAgentMetaClass">SdkAgentMetaClass</a>, object)</code></p>
+          <p class="doc doc-class-bases">
+            Bases: <code>six.<span title="six.with_metaclass">with_metaclass</span>(<a class="autorefs autorefs-internal" title="libapp.eossdk_utils.SdkAgentMetaClass" href="#libapp.eossdk_utils.SdkAgentMetaClass">SdkAgentMetaClass</a>, object)</code></p>
 
   
       <p>To add debgging capabilities to your agent, subclass this EosSdkAgent.</p>
-
 
 
   </div>
@@ -2977,22 +3192,22 @@ result to.</p></td>
 
 
 <h3 id="libapp.eossdk_utils.SdkAgentMetaClass" class="doc doc-heading">
-        <code>SdkAgentMetaClass</code>
+          <code>SdkAgentMetaClass</code>
 
 
 </h3>
 
 
   <div class="doc doc-contents ">
-      <p class="doc doc-class-bases">
-        Bases: <code>type</code></p>
-
+          <p class="doc doc-class-bases">
+            Bases: <code>type</code></p>
 
 
 
   
 
   <div class="doc doc-children">
+
 
 
 
@@ -3030,6 +3245,7 @@ the above debug_fn</p>
 </div>
 
 
+
 <div class="doc doc-object doc-function">
 
 
@@ -3062,8 +3278,81 @@ TTY, drop the user into an interactive debug session.</p>
 
 
 
+<h2 id="libapp.loghandler" class="doc doc-heading">
+            <code>loghandler</code>
+
+
+</h2>
+
+  <div class="doc doc-contents ">
+  
+      <p>Python logging for EOS apps.</p>
+
+  
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+
+<div class="doc doc-object doc-class">
+
+
+
+<h3 id="libapp.loghandler.EOSTraceHandler" class="doc doc-heading">
+          <code>EOSTraceHandler</code>
+
+
+</h3>
+
+
+  <div class="doc doc-contents ">
+          <p class="doc doc-class-bases">
+            Bases: <code>logging.<span title="logging.Handler">Handler</span></code></p>
+
+  
+      <p>A handler class which uses EOS tracing.</p>
+
+
+  
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+
+  </div>
+
+  </div>
+
+</div>
+
+
+
+
+  </div>
+
+  </div>
+
+</div>
+
+<div class="doc doc-object doc-module">
+
+
+
 <h2 id="libapp.pcie" class="doc doc-heading">
-          <code>pcie</code>
+            <code>pcie</code>
 
 
 </h2>
@@ -3088,7 +3377,7 @@ TTY, drop the user into an interactive debug session.</p>
 
 
 <h3 id="libapp.pcie.fpga_pcie" class="doc doc-heading">
-          <code>fpga_pcie</code>
+            <code>fpga_pcie</code>
 
 
 </h3>
@@ -3111,24 +3400,24 @@ TTY, drop the user into an interactive debug session.</p>
 
 
 <h4 id="libapp.pcie.fpga_pcie.FpgaPCIeDeviceManager" class="doc doc-heading">
-        <code>FpgaPCIeDeviceManager</code>
+          <code>FpgaPCIeDeviceManager</code>
 
 
 </h4>
 
 
   <div class="doc doc-contents ">
-      <p class="doc doc-class-bases">
-        Bases: <code>object</code></p>
+          <p class="doc doc-class-bases">
+            Bases: <code>object</code></p>
 
   
       <p>Class to manage PCIe devices on FPGAs in the system</p>
 
 
-
   
 
   <div class="doc doc-children">
+
 
 
 
@@ -3161,6 +3450,7 @@ If None, then there is no size limit and only one transaction is used.</p>
 
 </div>
 
+
 <div class="doc doc-object doc-function">
 
 
@@ -3179,6 +3469,7 @@ If None, then there is no size limit and only one transaction is used.</p>
 
 </div>
 
+
 <div class="doc doc-object doc-function">
 
 
@@ -3196,6 +3487,7 @@ If None, then there is no size limit and only one transaction is used.</p>
   </div>
 
 </div>
+
 
 <div class="doc doc-object doc-function">
 
@@ -3218,6 +3510,7 @@ mezzanine.central 0000:03:00.0 5.0(8.0)GT/s x8(x8)     Memory controller Xilinx 
 
 </div>
 
+
 <div class="doc doc-object doc-function">
 
 
@@ -3239,6 +3532,7 @@ mezzanine.central 03:00.0 Region 0 0xdfd00000   2K   Yes</p>
 
 </div>
 
+
 <div class="doc doc-object doc-function">
 
 
@@ -3256,6 +3550,7 @@ mezzanine.central 03:00.0 Region 0 0xdfd00000   2K   Yes</p>
   </div>
 
 </div>
+
 
 <div class="doc doc-object doc-function">
 
@@ -3284,6 +3579,7 @@ Must be a multiple of the region's word size.</p>
 
 </div>
 
+
 <div class="doc doc-object doc-function">
 
 
@@ -3302,6 +3598,7 @@ Must be a multiple of the region's word size.</p>
 
 </div>
 
+
 <div class="doc doc-object doc-function">
 
 
@@ -3319,6 +3616,7 @@ Must be a multiple of the region's word size.</p>
   </div>
 
 </div>
+
 
 <div class="doc doc-object doc-function">
 
@@ -3373,7 +3671,7 @@ Must be a multiple of the region's word size.</p>
 
 
 <h3 id="libapp.pcie.helpers" class="doc doc-heading">
-          <code>helpers</code>
+            <code>helpers</code>
 
 
 </h3>
@@ -3405,7 +3703,7 @@ Must be a multiple of the region's word size.</p>
 
 
 <h3 id="libapp.pcie.pci" class="doc doc-heading">
-          <code>pci</code>
+            <code>pci</code>
 
 
 </h3>
@@ -3428,19 +3726,18 @@ Must be a multiple of the region's word size.</p>
 
 
 <h4 id="libapp.pcie.pci.PCIBridge" class="doc doc-heading">
-        <code>PCIBridge</code>
+          <code>PCIBridge</code>
 
 
 </h4>
 
 
   <div class="doc doc-contents ">
-      <p class="doc doc-class-bases">
-        Bases: <code><a class="autorefs autorefs-internal" title="libapp.pcie.pci.PCIDevice" href="#libapp.pcie.pci.PCIDevice">PCIDevice</a></code></p>
+          <p class="doc doc-class-bases">
+            Bases: <code><a class="autorefs autorefs-internal" title="libapp.pcie.pci.PCIDevice" href="#libapp.pcie.pci.PCIDevice">PCIDevice</a></code></p>
 
   
       <p>Class representing a PCI bridge</p>
-
 
 
   
@@ -3468,19 +3765,18 @@ Must be a multiple of the region's word size.</p>
 
 
 <h4 id="libapp.pcie.pci.PCICapability" class="doc doc-heading">
-        <code>PCICapability</code>
+          <code>PCICapability</code>
 
 
 </h4>
 
 
   <div class="doc doc-contents ">
-      <p class="doc doc-class-bases">
-        Bases: <code>object</code></p>
+          <p class="doc doc-class-bases">
+            Bases: <code>object</code></p>
 
   
       <p>Class representing a PCI capability</p>
-
 
 
   
@@ -3508,20 +3804,19 @@ Must be a multiple of the region's word size.</p>
 
 
 <h4 id="libapp.pcie.pci.PCIDevice" class="doc doc-heading">
-        <code>PCIDevice</code>
+          <code>PCIDevice</code>
 
 
 </h4>
 
 
   <div class="doc doc-contents ">
-      <p class="doc doc-class-bases">
-        Bases: <code>object</code></p>
+          <p class="doc doc-class-bases">
+            Bases: <code>object</code></p>
 
   
       <p>Class representing a PCI device.
 This class should really only be constructed through PCI(e)Endpoint or PCI(e)Bridge.</p>
-
 
 
   
@@ -3563,8 +3858,8 @@ This class should really only be constructed through PCI(e)Endpoint or PCI(e)Bri
 <code class="highlight language-python"><span class="n">memspace_access_enabled</span></code>
   
   <span class="doc doc-labels">
-      <small class="doc doc-label doc-label-writable"><code>writable</code></small>
       <small class="doc doc-label doc-label-property"><code>property</code></small>
+      <small class="doc doc-label doc-label-writable"><code>writable</code></small>
   </span>
 
 </h5>
@@ -3600,6 +3895,7 @@ This class should really only be constructed through PCI(e)Endpoint or PCI(e)Bri
 
 
 
+
 <div class="doc doc-object doc-function">
 
 
@@ -3618,6 +3914,7 @@ Call self.fill_info() to set device info.</p>
   </div>
 
 </div>
+
 
 <div class="doc doc-object doc-function">
 
@@ -3640,6 +3937,7 @@ Prefer using config_read instead, which reads from the device's config file.</p>
 
 </div>
 
+
 <div class="doc doc-object doc-function">
 
 
@@ -3659,6 +3957,7 @@ Param value: integer interpreted as a little endian bitstring of length nbytes</
 
 </div>
 
+
 <div class="doc doc-object doc-function">
 
 
@@ -3676,6 +3975,7 @@ Param value: integer interpreted as a little endian bitstring of length nbytes</
   </div>
 
 </div>
+
 
 <div class="doc doc-object doc-function">
 
@@ -3713,24 +4013,24 @@ Get a new reference to the device by specifying its BDF to PCIDeviceManager.</p>
 
 
 <h4 id="libapp.pcie.pci.PCIDeviceManager" class="doc doc-heading">
-        <code>PCIDeviceManager</code>
+          <code>PCIDeviceManager</code>
 
 
 </h4>
 
 
   <div class="doc doc-contents ">
-      <p class="doc doc-class-bases">
-        Bases: <code>object</code></p>
+          <p class="doc doc-class-bases">
+            Bases: <code>object</code></p>
 
   
       <p>Class to manage all the PCI devices in the system</p>
 
 
-
   
 
   <div class="doc doc-children">
+
 
 
 
@@ -3759,6 +4059,7 @@ Param bdfs: List of BDFs of devices to detect, includes all devices in the syste
 
 </div>
 
+
 <div class="doc doc-object doc-function">
 
 
@@ -3777,6 +4078,7 @@ Param bdfs: List of BDFs of devices to detect, includes all devices in the syste
 
 </div>
 
+
 <div class="doc doc-object doc-function">
 
 
@@ -3794,6 +4096,7 @@ Param bdfs: List of BDFs of devices to detect, includes all devices in the syste
   </div>
 
 </div>
+
 
 <div class="doc doc-object doc-function">
 
@@ -3816,6 +4119,7 @@ Param bdfs: List of BDFs of devices to detect, includes all devices in the syste
   </div>
 
 </div>
+
 
 <div class="doc doc-object doc-function">
 
@@ -3848,19 +4152,18 @@ Param bdfs: List of BDFs of devices to detect, includes all devices in the syste
 
 
 <h4 id="libapp.pcie.pci.PCIEndpoint" class="doc doc-heading">
-        <code>PCIEndpoint</code>
+          <code>PCIEndpoint</code>
 
 
 </h4>
 
 
   <div class="doc doc-contents ">
-      <p class="doc doc-class-bases">
-        Bases: <code><a class="autorefs autorefs-internal" title="libapp.pcie.pci.PCIDevice" href="#libapp.pcie.pci.PCIDevice">PCIDevice</a></code></p>
+          <p class="doc doc-class-bases">
+            Bases: <code><a class="autorefs autorefs-internal" title="libapp.pcie.pci.PCIDevice" href="#libapp.pcie.pci.PCIDevice">PCIDevice</a></code></p>
 
   
       <p>Class representing a PCI endpoint</p>
-
 
 
   
@@ -3888,24 +4191,24 @@ Param bdfs: List of BDFs of devices to detect, includes all devices in the syste
 
 
 <h4 id="libapp.pcie.pci.PCIExpressCapability" class="doc doc-heading">
-        <code>PCIExpressCapability</code>
+          <code>PCIExpressCapability</code>
 
 
 </h4>
 
 
   <div class="doc doc-contents ">
-      <p class="doc doc-class-bases">
-        Bases: <code><a class="autorefs autorefs-internal" title="libapp.pcie.pci.PCICapability" href="#libapp.pcie.pci.PCICapability">PCICapability</a></code></p>
+          <p class="doc doc-class-bases">
+            Bases: <code><a class="autorefs autorefs-internal" title="libapp.pcie.pci.PCICapability" href="#libapp.pcie.pci.PCICapability">PCICapability</a></code></p>
 
   
       <p>Class representing the PCI Express capability</p>
 
 
-
   
 
   <div class="doc doc-children">
+
 
 
 
@@ -3946,19 +4249,18 @@ Param bdfs: List of BDFs of devices to detect, includes all devices in the syste
 
 
 <h4 id="libapp.pcie.pci.PCIMemoryRegion" class="doc doc-heading">
-        <code>PCIMemoryRegion</code>
+          <code>PCIMemoryRegion</code>
 
 
 </h4>
 
 
   <div class="doc doc-contents ">
-      <p class="doc doc-class-bases">
-        Bases: <code>object</code></p>
+          <p class="doc doc-class-bases">
+            Bases: <code>object</code></p>
 
   
       <p>Class representing a memory region of a PCI device</p>
-
 
 
   
@@ -3994,6 +4296,7 @@ Param bdfs: List of BDFs of devices to detect, includes all devices in the syste
 
 
 
+
 <div class="doc doc-object doc-function">
 
 
@@ -4019,6 +4322,7 @@ Must be a multiple of the region's word size.</p>
   </div>
 
 </div>
+
 
 <div class="doc doc-object doc-function">
 
@@ -4059,19 +4363,18 @@ Must be a multiple of the region's word size.</p>
 
 
 <h4 id="libapp.pcie.pci.PCIeBridge" class="doc doc-heading">
-        <code>PCIeBridge</code>
+          <code>PCIeBridge</code>
 
 
 </h4>
 
 
   <div class="doc doc-contents ">
-      <p class="doc doc-class-bases">
-        Bases: <code><a class="autorefs autorefs-internal" title="libapp.pcie.pci.PCIeDevice" href="#libapp.pcie.pci.PCIeDevice">PCIeDevice</a></code>, <code><a class="autorefs autorefs-internal" title="libapp.pcie.pci.PCIBridge" href="#libapp.pcie.pci.PCIBridge">PCIBridge</a></code></p>
+          <p class="doc doc-class-bases">
+            Bases: <code><a class="autorefs autorefs-internal" title="libapp.pcie.pci.PCIeDevice" href="#libapp.pcie.pci.PCIeDevice">PCIeDevice</a></code>, <code><a class="autorefs autorefs-internal" title="libapp.pcie.pci.PCIBridge" href="#libapp.pcie.pci.PCIBridge">PCIBridge</a></code></p>
 
   
       <p>Class representing a PCIe bridge</p>
-
 
 
   
@@ -4099,19 +4402,18 @@ Must be a multiple of the region's word size.</p>
 
 
 <h4 id="libapp.pcie.pci.PCIeDevice" class="doc doc-heading">
-        <code>PCIeDevice</code>
+          <code>PCIeDevice</code>
 
 
 </h4>
 
 
   <div class="doc doc-contents ">
-      <p class="doc doc-class-bases">
-        Bases: <code><a class="autorefs autorefs-internal" title="libapp.pcie.pci.PCIDevice" href="#libapp.pcie.pci.PCIDevice">PCIDevice</a></code></p>
+          <p class="doc doc-class-bases">
+            Bases: <code><a class="autorefs autorefs-internal" title="libapp.pcie.pci.PCIDevice" href="#libapp.pcie.pci.PCIDevice">PCIDevice</a></code></p>
 
   
       <p>Class representing a PCIe device</p>
-
 
 
   
@@ -4139,19 +4441,18 @@ Must be a multiple of the region's word size.</p>
 
 
 <h4 id="libapp.pcie.pci.PCIeEndpoint" class="doc doc-heading">
-        <code>PCIeEndpoint</code>
+          <code>PCIeEndpoint</code>
 
 
 </h4>
 
 
   <div class="doc doc-contents ">
-      <p class="doc doc-class-bases">
-        Bases: <code><a class="autorefs autorefs-internal" title="libapp.pcie.pci.PCIeDevice" href="#libapp.pcie.pci.PCIeDevice">PCIeDevice</a></code>, <code><a class="autorefs autorefs-internal" title="libapp.pcie.pci.PCIEndpoint" href="#libapp.pcie.pci.PCIEndpoint">PCIEndpoint</a></code></p>
+          <p class="doc doc-class-bases">
+            Bases: <code><a class="autorefs autorefs-internal" title="libapp.pcie.pci.PCIeDevice" href="#libapp.pcie.pci.PCIeDevice">PCIeDevice</a></code>, <code><a class="autorefs autorefs-internal" title="libapp.pcie.pci.PCIEndpoint" href="#libapp.pcie.pci.PCIEndpoint">PCIEndpoint</a></code></p>
 
   
       <p>Class representing a PCIe endpoint</p>
-
 
 
   
@@ -4188,7 +4489,7 @@ Must be a multiple of the region's word size.</p>
 
 
 <h3 id="libapp.pcie.pci_ids" class="doc doc-heading">
-          <code>pci_ids</code>
+            <code>pci_ids</code>
 
 
 </h3>
@@ -4211,24 +4512,24 @@ Must be a multiple of the region's word size.</p>
 
 
 <h4 id="libapp.pcie.pci_ids.PCI_IDs" class="doc doc-heading">
-        <code>PCI_IDs</code>
+          <code>PCI_IDs</code>
 
 
 </h4>
 
 
   <div class="doc doc-contents ">
-      <p class="doc doc-class-bases">
-        Bases: <code>object</code></p>
+          <p class="doc doc-class-bases">
+            Bases: <code>object</code></p>
 
   
       <p>Database of PCI IDs, providing name-to-ID and ID-to-name translations</p>
 
 
-
   
 
   <div class="doc doc-children">
+
 
 
 
@@ -4261,6 +4562,7 @@ If leading is True then the string is prefixed with 0x.</p>
 
 </div>
 
+
 <div class="doc doc-object doc-function">
 
 
@@ -4284,6 +4586,7 @@ If leading is True then the string is prefixed with 0x.</p>
 
 </div>
 
+
 <div class="doc doc-object doc-function">
 
 
@@ -4301,6 +4604,7 @@ If leading is True then the string is prefixed with 0x.</p>
   </div>
 
 </div>
+
 
 <div class="doc doc-object doc-function">
 
@@ -4321,6 +4625,7 @@ Vendor name is used only if ID is unspecified.</p>
 
 </div>
 
+
 <div class="doc doc-object doc-function">
 
 
@@ -4339,6 +4644,7 @@ Vendor name is used only if ID is unspecified.</p>
   </div>
 
 </div>
+
 
 <div class="doc doc-object doc-function">
 
@@ -4359,6 +4665,7 @@ Class name is used only if ID is unspecified.</p>
 
 </div>
 
+
 <div class="doc doc-object doc-function">
 
 
@@ -4377,6 +4684,7 @@ Class name is used only if ID is unspecified.</p>
   </div>
 
 </div>
+
 
 <div class="doc doc-object doc-function">
 
@@ -4400,6 +4708,7 @@ Class name is used only if ID is unspecified.</p>
 
 </div>
 
+
 <div class="doc doc-object doc-function">
 
 
@@ -4418,6 +4727,7 @@ Class name is used only if ID is unspecified.</p>
 
 </div>
 
+
 <div class="doc doc-object doc-function">
 
 
@@ -4435,6 +4745,7 @@ Class name is used only if ID is unspecified.</p>
   </div>
 
 </div>
+
 
 <div class="doc doc-object doc-function">
 
@@ -4458,6 +4769,7 @@ If leading is True then the string is prefixed with 0x.</p>
   </div>
 
 </div>
+
 
 <div class="doc doc-object doc-function">
 
@@ -4504,7 +4816,7 @@ If leading is True then the string is prefixed with 0x.</p>
 
 
 <h3 id="libapp.pcie.shell" class="doc doc-heading">
-          <code>shell</code>
+            <code>shell</code>
 
 
 </h3>
@@ -4514,6 +4826,7 @@ If leading is True then the string is prefixed with 0x.</p>
   
 
   <div class="doc doc-children">
+
 
 
 
@@ -4540,6 +4853,7 @@ If leading is True then the string is prefixed with 0x.</p>
   </div>
 
 </div>
+
 
 <div class="doc doc-object doc-function">
 
@@ -4579,7 +4893,7 @@ If leading is True then the string is prefixed with 0x.</p>
 
 
 <h2 id="libapp.register_file" class="doc doc-heading">
-          <code>register_file</code>
+            <code>register_file</code>
 
 
 </h2>
@@ -4589,6 +4903,7 @@ If leading is True then the string is prefixed with 0x.</p>
   
 
   <div class="doc doc-children">
+
 
 
 
@@ -4628,6 +4943,8 @@ struct.pack(
 </blockquote>
 </blockquote>
 </details>
+
+
   <p><strong>Parameters:</strong></p>
   <table>
     <thead>
@@ -4644,7 +4961,11 @@ struct.pack(
           <td>
                 <code>str</code>
           </td>
-          <td><p>Path to the CSV file describing the register file layout.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>Path to the CSV file describing the register file layout.</p>
+            </div>
+          </td>
           <td>
               <em>required</em>
           </td>
@@ -4654,7 +4975,11 @@ struct.pack(
           <td>
                 <code>RegisterAccess</code>
           </td>
-          <td><p>The object to use to perform register access.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>The object to use to perform register access.</p>
+            </div>
+          </td>
           <td>
               <em>required</em>
           </td>
@@ -4665,6 +4990,7 @@ struct.pack(
   </div>
 
 </div>
+
 
 <div class="doc doc-object doc-function">
 
@@ -4700,7 +5026,7 @@ Upon failure, the most recently caught exception bubbles up.</p>
 
 
 <h2 id="libapp.serial" class="doc doc-heading">
-          <code>serial</code>
+            <code>serial</code>
 
 
 </h2>
@@ -4712,6 +5038,7 @@ Upon failure, the most recently caught exception bubbles up.</p>
   
 
   <div class="doc doc-children">
+
 
 
 
@@ -4735,6 +5062,8 @@ Upon failure, the most recently caught exception bubbles up.</p>
   
       <p>Returns a string containing a serialized representation of an object.</p>
 
+
+
   <p><strong>Parameters:</strong></p>
   <table>
     <thead>
@@ -4751,7 +5080,11 @@ Upon failure, the most recently caught exception bubbles up.</p>
           <td>
                 <code>any</code>
           </td>
-          <td><p>The object to serialize.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>The object to serialize.</p>
+            </div>
+          </td>
           <td>
               <em>required</em>
           </td>
@@ -4762,6 +5095,7 @@ Upon failure, the most recently caught exception bubbles up.</p>
   </div>
 
 </div>
+
 
 <div class="doc doc-object doc-function">
 
@@ -4776,6 +5110,8 @@ Upon failure, the most recently caught exception bubbles up.</p>
   <div class="doc doc-contents ">
   
       <p>Returns a deserialized Python object.</p>
+
+
 
   <p><strong>Parameters:</strong></p>
   <table>
@@ -4793,7 +5129,11 @@ Upon failure, the most recently caught exception bubbles up.</p>
           <td>
                 <code>str</code>
           </td>
-          <td><p>A serialized represensation of an object.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>A serialized represensation of an object.</p>
+            </div>
+          </td>
           <td>
               <em>required</em>
           </td>
@@ -4818,7 +5158,7 @@ Upon failure, the most recently caught exception bubbles up.</p>
 
 
 <h2 id="libapp.subprocess" class="doc doc-heading">
-          <code>subprocess</code>
+            <code>subprocess</code>
 
 
 </h2>
@@ -4828,6 +5168,8 @@ Upon failure, the most recently caught exception bubbles up.</p>
       <p>subprocess</p>
 <p>A module mirroring the standard library's <code>subprocess</code> module using EosSdk's
 reactor system for running child processes asynchronously.</p>
+
+
 
 <p><strong>Examples:</strong></p>
     <p>from libapp.subprocess import SubprocessHandler, SubprocessMgr
@@ -4862,24 +5204,24 @@ def on_initialized(self):
 
 
 <h3 id="libapp.subprocess.ChildProcess" class="doc doc-heading">
-        <code>ChildProcess</code>
+          <code>ChildProcess</code>
 
 
 </h3>
 
 
   <div class="doc doc-contents ">
-      <p class="doc doc-class-bases">
-        Bases: <code><span title="subprocess.Popen">Popen</span></code></p>
+          <p class="doc doc-class-bases">
+            Bases: <code><span title="subprocess.Popen">Popen</span></code></p>
 
   
       <p>A class derived from Popen that represents a child process.</p>
 
 
-
   
 
   <div class="doc doc-children">
+
 
 
 
@@ -4920,22 +5262,22 @@ def on_initialized(self):
 
 
 <h3 id="libapp.subprocess.SubprocessHandler" class="doc doc-heading">
-        <code>SubprocessHandler</code>
+          <code>SubprocessHandler</code>
 
 
 </h3>
 
 
   <div class="doc doc-contents ">
-      <p class="doc doc-class-bases">
-        Bases: <code>object</code></p>
-
+          <p class="doc doc-class-bases">
+            Bases: <code>object</code></p>
 
 
 
   
 
   <div class="doc doc-children">
+
 
 
 
@@ -4976,19 +5318,18 @@ def on_initialized(self):
 
 
 <h3 id="libapp.subprocess.SubprocessMgr" class="doc doc-heading">
-        <code>SubprocessMgr</code>
+          <code>SubprocessMgr</code>
 
 
 </h3>
 
 
   <div class="doc doc-contents ">
-      <p class="doc doc-class-bases">
-        Bases: <code>object</code></p>
+          <p class="doc doc-class-bases">
+            Bases: <code>object</code></p>
 
   
       <p>A manager class for running asynchronous subprocesses.</p>
-
 
 
   
@@ -5007,20 +5348,19 @@ def on_initialized(self):
 
 
 <h4 id="libapp.subprocess.SubprocessMgr.SubprocessReactor" class="doc doc-heading">
-        <code>SubprocessReactor</code>
+          <code>SubprocessReactor</code>
 
 
 </h4>
 
 
   <div class="doc doc-contents ">
-      <p class="doc doc-class-bases">
-        Bases: <code>eossdk.<span title="eossdk.FdHandler">FdHandler</span></code></p>
+          <p class="doc doc-class-bases">
+            Bases: <code>eossdk.<span title="eossdk.FdHandler">FdHandler</span></code></p>
 
   
       <p>An internal class for the SubprocessMgr that reacts to child processes
 exiting.</p>
-
 
 
   
@@ -5042,6 +5382,7 @@ exiting.</p>
   </div>
 
 </div>
+
 
 
 <div class="doc doc-object doc-function">
@@ -5090,7 +5431,7 @@ use <code>child=Subprocess.run(...); child.wait()</code>.</p>
 
 
 <h2 id="libapp.telemetry" class="doc doc-heading">
-          <code>telemetry</code>
+            <code>telemetry</code>
 
 
 </h2>
@@ -5116,18 +5457,20 @@ For example, sampled packet counters, time offsets, etc.</p>
 
 
 <h3 id="libapp.telemetry.Telemetry" class="doc doc-heading">
-        <code>Telemetry</code>
+          <code>Telemetry</code>
 
 
 </h3>
 
 
   <div class="doc doc-contents ">
-      <p class="doc doc-class-bases">
-        Bases: <code>object</code></p>
+          <p class="doc doc-class-bases">
+            Bases: <code>object</code></p>
 
   
       <p>A client for sending telemetry to Telegraf.</p>
+
+
 
   <p><strong>Parameters:</strong></p>
   <table>
@@ -5145,7 +5488,11 @@ For example, sampled packet counters, time offsets, etc.</p>
           <td>
                 <code>str</code>
           </td>
-          <td><p>The value to included as the "application" tag.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>The value to included as the "application" tag.</p>
+            </div>
+          </td>
           <td>
               <em>required</em>
           </td>
@@ -5155,7 +5502,11 @@ For example, sampled packet counters, time offsets, etc.</p>
           <td>
                 <code>str</code>
           </td>
-          <td><p>The value to be included as the "author" tag.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>The value to be included as the "author" tag.</p>
+            </div>
+          </td>
           <td>
               <em>required</em>
           </td>
@@ -5165,8 +5516,12 @@ For example, sampled packet counters, time offsets, etc.</p>
           <td>
                 <code>dict[str, Any]</code>
           </td>
-          <td><p>Any other default tags to be included with each
-metric.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>Any other default tags to be included with each
+metric.</p>
+            </div>
+          </td>
           <td>
                 <code>None</code>
           </td>
@@ -5175,10 +5530,10 @@ metric.</p></td>
   </table>
 
 
-
   
 
   <div class="doc doc-children">
+
 
 
 
@@ -5202,6 +5557,8 @@ metric.</p></td>
   
       <p>Adds extra default tags to the set included with metrics.</p>
 
+
+
   <p><strong>Parameters:</strong></p>
   <table>
     <thead>
@@ -5218,8 +5575,12 @@ metric.</p></td>
           <td>
                 <code>dict[str, Any]</code>
           </td>
-          <td><p>Extra default tags to be included with each
-metric.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>Extra default tags to be included with each
+metric.</p>
+            </div>
+          </td>
           <td>
                 <code>None</code>
           </td>
@@ -5230,6 +5591,7 @@ metric.</p></td>
   </div>
 
 </div>
+
 
 <div class="doc doc-object doc-function">
 
@@ -5249,6 +5611,7 @@ metric.</p></td>
 
 </div>
 
+
 <div class="doc doc-object doc-function">
 
 
@@ -5266,6 +5629,7 @@ metric.</p></td>
   </div>
 
 </div>
+
 
 <div class="doc doc-object doc-function">
 
@@ -5287,6 +5651,7 @@ metric.</p></td>
 
 </div>
 
+
 <div class="doc doc-object doc-function">
 
 
@@ -5300,6 +5665,8 @@ metric.</p></td>
   <div class="doc doc-contents ">
   
       <p>Sends a metric to the Telegraf socket.</p>
+
+
 
   <p><strong>Parameters:</strong></p>
   <table>
@@ -5317,7 +5684,11 @@ metric.</p></td>
           <td>
                 <code>str</code>
           </td>
-          <td><p>The name of the actual measurement.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>The name of the actual measurement.</p>
+            </div>
+          </td>
           <td>
               <em>required</em>
           </td>
@@ -5327,7 +5698,11 @@ metric.</p></td>
           <td>
                 <code>Any | dict[str, Any]</code>
           </td>
-          <td><p>The value or collection of values.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>The value or collection of values.</p>
+            </div>
+          </td>
           <td>
               <em>required</em>
           </td>
@@ -5337,7 +5712,11 @@ metric.</p></td>
           <td>
                 <code>Optional[dict[str, Any]</code>
           </td>
-          <td><p>Dict of extra tags if any.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>Dict of extra tags if any.</p>
+            </div>
+          </td>
           <td>
                 <code>None</code>
           </td>
@@ -5347,8 +5726,12 @@ metric.</p></td>
           <td>
                 <code>int</code>
           </td>
-          <td><p>The timestmap for the datapoint in
-nanosecond-precision Unix time.</p></td>
+          <td>
+            <div class="doc-md-description">
+              <p>The timestmap for the datapoint in
+nanosecond-precision Unix time.</p>
+            </div>
+          </td>
           <td>
                 <code>None</code>
           </td>
@@ -5420,10 +5803,10 @@ nanosecond-precision Unix time.</p></td>
       <div class="md-dialog__inner md-typeset"></div>
     </div>
     
-    <script id="__config" type="application/json">{"base": ".", "features": [], "search": "assets/javascripts/workers/search.208ed371.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    <script id="__config" type="application/json">{"base": ".", "features": [], "search": "assets/javascripts/workers/search.74e28a9f.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
     
     
-      <script src="assets/javascripts/bundle.b4d07000.min.js"></script>
+      <script src="assets/javascripts/bundle.220ee61c.min.js"></script>
       
     
   </body>

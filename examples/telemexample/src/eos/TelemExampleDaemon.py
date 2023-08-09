@@ -32,25 +32,30 @@ sys.path.insert(
     os.path.join(os.path.dirname(__file__), "python_deps" + str(sys.version_info[0]) + ".zip"),
 )
 
+import libapp  # pylint: disable=wrong-import-position
 import libapp.eossdk_utils  # pylint: disable=wrong-import-position
 import libapp.telemetry  # pylint: disable=wrong-import-position
 
 logger = logging.getLogger(__name__)
 
 
-class TelemExampleDaemon(libapp.eossdk_utils.EosSdkAgent, eossdk.AgentHandler, eossdk.TimeoutHandler):
+class TelemExampleDaemon(
+    libapp.eossdk_utils.EosSdkAgent,
+    libapp.daemon.LoggingMixin,
+    eossdk.AgentHandler,
+    eossdk.TimeoutHandler,
+):
     # EOSSDK setup.
     def __init__(self, sdk):
         self.agent_manager = sdk.get_agent_mgr()
         self.timeout_manager = sdk.get_timeout_mgr()
+
+        libapp.daemon.LoggingMixin.__init__(self, sdk.name())
         eossdk.AgentHandler.__init__(self, self.agent_manager)
         eossdk.TimeoutHandler.__init__(self, self.timeout_manager)
 
         self.telemetry = None
         self.sent_record_counter = 0
-
-        self.tracer = eossdk.Tracer("TelemExampleDaemon")
-        self.tracer.enabled_is(0, True)
 
     # inherited from AgentHandler
     # http://aristanetworks.github.io/EosSdk/docs/2.10.0/ref/agent.html

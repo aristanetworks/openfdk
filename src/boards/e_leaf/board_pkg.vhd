@@ -130,7 +130,7 @@ package body board_pkg is
       ret_val(i).rxdfeen       := '0';
       ret_val(i).rxpolarity    := '0';
       ret_val(i).eyescanreset  := '0';
-      ret_val(i).rxdfelpmreset := '0';
+      ret_val(i).rxreset       := '0';
     end loop;
 
     return ret_val;
