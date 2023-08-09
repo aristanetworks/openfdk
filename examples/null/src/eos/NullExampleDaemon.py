@@ -26,11 +26,12 @@ import sys
 import eossdk
 from null import libapp
 
-logger = eossdk.Tracer(__name__)
+logger = logging.getLogger(__name__)
 
 
 class NullExampleDaemon(
     libapp.eossdk_utils.EosSdkAgent,
+    libapp.daemon.LoggingMixin,
     eossdk.AgentHandler,
     eossdk.TimeoutHandler,
     libapp.daemon.StatusMixin,
@@ -45,10 +46,7 @@ class NullExampleDaemon(
         self.loaded_fpgas = []
         self.fpga_registers = {}
 
-        logger.enabled_is(0, True)
-        logger.enabled_is(1, True)
-        logger.enabled_is(3, True)
-
+        libapp.daemon.LoggingMixin.__init__(self, sdk.name())
         eossdk.AgentHandler.__init__(self, self.agent_manager)
         eossdk.TimeoutHandler.__init__(self, self.timeout_manager)
 
@@ -61,7 +59,7 @@ class NullExampleDaemon(
         should check Sysdb and handle the initial state of any configuration and
         status that this agent is interested in."""
 
-        logger.trace0("on_initialized")
+        logger.debug("on_initialized")
 
         # Remove all status, giving us a clean slate.
         self.status.clear()
@@ -81,12 +79,12 @@ class NullExampleDaemon(
                 "l",
                 "lb2",
             ):
-                logger.trace0("This Application is not compatible with the current Device Board Standard.")
+                logger.error("This Application is not compatible with the current Device Board Standard.")
                 continue
 
             bit = self.appdir + "/fpga/null-{}.bit".format(fpga.board_standard)
 
-            logger.trace1("Programming {} ...".format(fpga_name.title()))
+            logger.debug("Programming %s ...", fpga_name.title())
             fpga.load_image(bit)
             self.loaded_fpgas.append(fpga)
 
@@ -96,7 +94,7 @@ class NullExampleDaemon(
 
         # Demonstrate that registers can be read immediately.
         for fpga_name, regfile in self.fpga_registers.items():
-            logger.trace0("Fpga: {} appName is: {}".format(fpga_name, regfile.app_name))
+            logger.debug("Fpga: %s appName is: %s", fpga_name, regfile.app_name)
 
         self.status["fpgas"] = {f: r.app_name for f, r in self.fpga_registers.items()}
 
@@ -104,7 +102,7 @@ class NullExampleDaemon(
         self.status["running"] = True
 
         # Run on_agent_option any config that already exists.
-        logger.trace1("Loading initial config")
+        logger.info("Loading initial config")
         for k in self.agent_manager.agent_option_iter():
             self.on_agent_option(k, self.agent_manager.agent_option(k))
 
@@ -113,7 +111,7 @@ class NullExampleDaemon(
         self.on_timeout()
 
         # Print for the agent logs in /var/log/agents/*
-        logger.trace0("Finished initialization")
+        logger.debug("Finished initialization")
 
     def on_agent_option(self, key, val):
         """Handler called when a configuration option of the agent has changed.
@@ -124,7 +122,7 @@ class NullExampleDaemon(
 
     # This gets called when we are disabled
     def on_agent_enabled(self, enabled):
-        logger.trace3("on_agent_enabled - {}".format(str(enabled)))
+        logger.debug("on_agent_enabled - %s", str(enabled))
         if not enabled:
             sys.stdout.flush()
 
@@ -142,11 +140,11 @@ class NullExampleDaemon(
             self.agent_manager.agent_shutdown_complete_is(True)
 
     def on_timeout(self):
-        logger.trace3("on_timeout")
+        logger.debug("on_timeout")
         self.status["last_timeout"] = eossdk.now()
 
         self.timeout_time_is(eossdk.now() + 1)
-        logger.trace3("on_timeout completed")
+        logger.debug("on_timeout completed")
 
 
 def main():

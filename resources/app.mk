@@ -78,6 +78,12 @@ $(PYTHON3_ENV):
 $(PYTHON3) $(PIP3): $(PYTHON3_ENV)
 	@
 
+#-------------------------------------------------------------------------------
+# Rules for creating directories
+#-------------------------------------------------------------------------------
+
+$(BUILD_DIR)/%/:
+	@mkdir -p $@
 
 #-------------------------------------------------------------------------------
 # Build all bitstreams
@@ -299,20 +305,22 @@ endif # ifeq ($(APP_BUILD_SQUASHFS),)
 $(APP_MANIFEST_YAML): \
 			$(SWIX_RPM) \
 			| $(SWIX_BUILD_DIR)
-	@echo "metadataVersion: 1.0" > $@
-	@echo "version:" >> $@
-	@echo "  - ${APP_EOS_VERSION}:" >> $@
-	@echo "    - all" >> $@
+	@printf "%s\n" \
+		"metadataVersion: 1.0" \
+		"version:" \
+		"  - ${APP_EOS_VERSION}:" \
+		"    - all" > $@
 ifneq ($(APP_BUILD_SQUASHFS),)
-	@echo "    - $(notdir $(APP_SQUASHFS)):" >> $@
-	@echo "      - mount: $(APP_INSTALL_DIR)" >> $@
+	@printf "%s\n" \
+		"    - $(notdir $(APP_SQUASHFS)):" \
+		"      - mount: $(APP_INSTALL_DIR)" >> $@
 endif
 ifneq ($(APP_AGENTS_TO_RESTART),)
 	@AGENTS_TO_RESTART="$(APP_AGENTS_TO_RESTART)"; \
-	    echo "agentsToRestart:" >> $@; \
-	    for agent in $$(echo "$${AGENTS_TO_RESTART}"|sed ':s;s/\(\<\S*\>\)\(.*\)\<\1\>/\1\2/g;ts'); do \
-	        echo "  - $${agent}" >> $@; \
-	    done
+		echo "agentsToRestart:" >> $@; \
+		for agent in $$(echo "$${AGENTS_TO_RESTART}"|sed ':s;s/\(\<\S*\>\)\(.*\)\<\1\>/\1\2/g;ts'); do \
+			echo "  - $${agent}" >> $@; \
+		done
 endif
 
 # This uses "python3 -m pip install" instead of "pip3 install" so that it works

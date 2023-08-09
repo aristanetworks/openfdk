@@ -1,5 +1,5 @@
 --------------------------------------------------------------------------------
--- Copyright (c) 2017 Arista Networks, Inc. All rights reserved.
+-- Copyright (c) 2017-2023 Arista Networks, Inc. All rights reserved.
 --------------------------------------------------------------------------------
 -- Author:
 --   fdk-support@arista.com
@@ -42,7 +42,8 @@ package fpga_spec_pkg is
                             MM_FPGA_XILINX_XC7K70T_22,
                             MM_FPGA_XILINX_XC7A50T_11,
                             MM_FPGA_XILINX_XC7A50T_22,
-                            MM_FPGA_MICROSEMI_M2GL005
+                            MM_FPGA_MICROSEMI_M2GL005,
+                            MM_FPGA_MICROSEMI_M2GL025T
                             );
 
   type mm_fpga_family_t is (MM_FPGA_7SERIES,
@@ -70,6 +71,7 @@ package fpga_spec_pkg is
   ------------------------------------------------------------------------------
 
   function mm_get_fpga_manufacturer (constant i : mm_fpga_target_t) return mm_fpga_manufacturer_t;
+  function mm_get_fpga_manufacturer (constant i : mm_fpga_target_t) return string;                            -- Overload
   function mm_get_fpga_family       (constant i : mm_fpga_target_t) return mm_fpga_family_t;
   function mm_get_fpga_family       (constant i : string) return mm_fpga_family_t;                            -- Overload
   function mm_get_fpga_target       (constant i : string) return mm_fpga_target_t;
@@ -89,9 +91,20 @@ package body fpga_spec_pkg is
   function mm_get_fpga_manufacturer (constant i : mm_fpga_target_t) return mm_fpga_manufacturer_t is
   begin
     case i is
-      when MM_FPGA_ALTERA_10AX115_32 => return MM_FPGA_ALTERA;
-      when MM_FPGA_MICROSEMI_M2GL005 => return MM_FPGA_MICROSEMI;
-      when others                    => return MM_FPGA_XILINX;
+      when MM_FPGA_ALTERA_10AX115_32  => return MM_FPGA_ALTERA;
+      when MM_FPGA_MICROSEMI_M2GL005  => return MM_FPGA_MICROSEMI;
+      when MM_FPGA_MICROSEMI_M2GL025T => return MM_FPGA_MICROSEMI;
+      when others                     => return MM_FPGA_XILINX;
+    end case;
+  end function;
+
+  function mm_get_fpga_manufacturer (constant i : mm_fpga_target_t) return string is
+  begin
+    case i is
+      when MM_FPGA_ALTERA_10AX115_32  => return "ALTERA";
+      when MM_FPGA_MICROSEMI_M2GL005  => return "MICROSEMI";
+      when MM_FPGA_MICROSEMI_M2GL025T => return "MICROSEMI";
+      when others                     => return "XILINX";
     end case;
   end function;
 
@@ -110,6 +123,7 @@ package body fpga_spec_pkg is
       when MM_FPGA_XILINX_XC7A50T_22   => return MM_FPGA_7SERIES;
       when MM_FPGA_ALTERA_10AX115_32   => return MM_FPGA_ARRIA10;
       when MM_FPGA_MICROSEMI_M2GL005   => return MM_FPGA_IGLOO2;
+      when MM_FPGA_MICROSEMI_M2GL025T  => return MM_FPGA_IGLOO2;
       when others                      => assert false report "Unknown FPGA target specified in mm_get_fpga_family" severity failure;
                      return MM_FPGA_7SERIES;  -- Return should never be used, but this keeps the tools happy
     end case;
@@ -192,6 +206,7 @@ package body fpga_spec_pkg is
       when MM_FPGA_XILINX_XC7A50T_22   => return 1;
       when MM_FPGA_ALTERA_10AX115_32   => return 1;
       when MM_FPGA_MICROSEMI_M2GL005   => return 1;
+      when MM_FPGA_MICROSEMI_M2GL025T  => return 1;
       when others                      => assert false report "Unknown FPGA target specified in mm_get_fpga_num_slr" severity failure;
                      return 1;  -- Return should never be used, but this keeps the tools happy
     end case;

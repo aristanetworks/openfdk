@@ -15,9 +15,11 @@
 #
 # ------------------------------------------------------------------------------
 """Helpers for writing EosSdk daemons."""
+import logging
 import six
 
 from . import cli, serial
+from .loghandler import EOSTraceHandler
 
 if six.PY3:
     from collections.abc import Set, MutableMapping
@@ -53,14 +55,25 @@ class ConfigMixin(object):
 
 
 class StatusMutator(cli.StatusAccessor, MutableMapping):
+    def __setattr__(self, name, value):
+        self[name] = value
+
+    def __getitem__(self, key):
+        data = self.ctx.status(self._extend_prefix(key))
+        if not data:
+            return StatusMutator(self.ctx, self._extend_prefix(key))
+        return serial.loads(data)
+
     def __setitem__(self, key, value):
-        return self.ctx.status_set(key, serial.dumps(value))
+        return self.ctx.status_set(self._extend_prefix(key), serial.dumps(value))
 
     def __delitem__(self, key):
-        return self.ctx.status_del(key)
+        StatusMutator(self.ctx, self._extend_prefix(key)).clear()
+        return self.ctx.status_del(self._extend_prefix(key))
 
-    def __iter__(self):
-        return self.ctx.status_iter()
+    def _status_iter(self):
+        for key in self.ctx.status_iter():
+            yield key
 
 
 class StatusMixin(object):
@@ -74,3 +87,10 @@ class StatusMixin(object):
         automatically serializes and deserializes.
         """
         return StatusMutator(self.get_agent_mgr())
+
+
+class LoggingMixin(object):
+    def __init__(self, name):
+        self.trace_handler = EOSTraceHandler(name)
+        self.trace_handler.setLevel(logging.DEBUG)  # Leave what levels to export to EOS tracing.
+        logging.getLogger().addHandler(self.trace_handler)

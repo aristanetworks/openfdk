@@ -32,6 +32,7 @@ from . import (
     device,
     eossdk_utils,
     eossdk_wrappers,
+    loghandler,
     pcie,
     register_accessor,
     register_file,

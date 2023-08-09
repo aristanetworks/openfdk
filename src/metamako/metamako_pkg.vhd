@@ -421,6 +421,7 @@ package metamako_pkg is
 
   function reverse (arg1 : std_logic_vector) return std_logic_vector;
   function reverse (arg1 : diffpair_vector_t) return diffpair_vector_t;
+  function reverse (arg1 : integer_array_t) return integer_array_t;
   function reverse (arg1 : std_logic_vector;
                     grp  : natural) return std_logic_vector;
   function reverse_bytes (arg1 : std_logic_vector) return std_logic_vector;
@@ -540,6 +541,10 @@ package metamako_pkg is
   function shift_data_right (arg1     : std_logic_vector;
                              numshift : integer
                              ) return std_logic_vector;
+
+  function get_incrementing (base : natural;
+                            count : positive
+                            ) return integer_array_t;
 
   function iif(test                    : boolean;
                true_value, false_value : integer)
@@ -683,6 +688,22 @@ package body metamako_pkg is
     variable res_norm  : diffpair_vector_t(arg1'length-1 downto 0);
     -- result converted back to arg1 range
     variable res       : diffpair_vector_t(arg1'range);
+  begin
+    for i in arg1_norm'range loop
+      res_norm(arg1_norm'high - i) := arg1_norm(i);
+    end loop;
+    res := res_norm;
+    return res;
+  end function reverse;
+
+  function reverse (arg1 : integer_array_t) return integer_array_t is
+    -- Want this to work for all ranges
+    -- normalise the range of the input array as x downto 0
+    variable arg1_norm : integer_array_t(arg1'length-1 downto 0) := arg1;
+    -- normalised result in reverse order
+    variable res_norm  : integer_array_t(arg1'length-1 downto 0);
+    -- result converted back to arg1 range
+    variable res       : integer_array_t(arg1'range);
   begin
     for i in arg1_norm'range loop
       res_norm(arg1_norm'high - i) := arg1_norm(i);
@@ -1413,6 +1434,15 @@ package body metamako_pkg is
     result := zero_c & arg1(arg1'length-1 downto numshift);
     return result;
   end function shift_data_right;
+
+  function get_incrementing (base : natural; count : positive) return integer_array_t is
+    variable r : integer_array_t(0 to count - 1);
+  begin
+    for i in r'range loop
+      r(i) := base + i;
+    end loop;
+    return r;
+  end function;
 
   function iif(test                    : boolean;
                true_value, false_value : boolean)

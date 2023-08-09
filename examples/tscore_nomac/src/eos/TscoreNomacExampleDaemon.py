@@ -29,11 +29,12 @@ from tscore_nomac import libapp
 import eossdk
 
 
-logger = eossdk.Tracer(__name__)
+logger = logging.getLogger(__name__)
 
 
 class TscoreNomacExampleDaemon(
     libapp.eossdk_utils.EosSdkAgent,
+    libapp.daemon.LoggingMixin,
     eossdk.AgentHandler,
     eossdk.TimeoutHandler,
     libapp.daemon.StatusMixin,
@@ -48,10 +49,7 @@ class TscoreNomacExampleDaemon(
         self.fpga = None
         self.regfile = None
 
-        logger.enabled_is(0, True)
-        logger.enabled_is(1, True)
-        logger.enabled_is(3, True)
-
+        libapp.daemon.LoggingMixin.__init__(self, sdk.name())
         eossdk.AgentHandler.__init__(self, self.agent_manager)
         eossdk.TimeoutHandler.__init__(self, self.timeout_manager)
 
@@ -69,7 +67,7 @@ class TscoreNomacExampleDaemon(
         should check Sysdb and handle the initial state of any configuration and
         status that this agent is interested in."""
 
-        logger.trace0("on_initialized")
+        logger.debug("on_initialized")
 
         # Remove all status, giving us a clean slate.
         self.status.clear()
@@ -91,13 +89,13 @@ class TscoreNomacExampleDaemon(
         )
 
         # Demonstrate that registers can be read immediately.
-        logger.trace0("timestamp_low=0x{:08x}".format(self.regfile.example_ts_0.timestamp_low))
-        logger.trace0("timestamp_high=0x{:08x}".format(self.regfile.example_ts_0.timestamp_high))
+        logger.debug("timestamp_low=0x%08x", self.regfile.example_ts_0.timestamp_low)
+        logger.debug("timestamp_high=0x%08x", self.regfile.example_ts_0.timestamp_high)
 
         # Demonstrate libapp functionality of reading 64b registers with _low/_high definitions
-        logger.trace0("timestamp_64b=0x{:08x}".format(self.regfile.example_ts_0.timestamp))
+        logger.debug("timestamp_64b=0x%08x", self.regfile.example_ts_0.timestamp)
 
-        # logger.trace0("App name is: %s", self.regfile.app_name)
+        # logger.info("App name is: %s", self.regfile.app_name)
 
         # Indicate the daemon status (read by the CLI code).
         self.status["running"] = True
@@ -106,7 +104,7 @@ class TscoreNomacExampleDaemon(
         self.status["last_timestamp"] = self.get_readable_timestamp()
 
         # Run on_agent_option any config that already exists.
-        logger.trace1("Loading initial config")
+        logger.info("Loading initial config")
         for k in self.agent_manager.agent_option_iter():
             self.on_agent_option(k, self.agent_manager.agent_option(k))
 
@@ -131,7 +129,7 @@ class TscoreNomacExampleDaemon(
         chron.apply_initval = 0
 
         # Print for the agent logs in /var/log/agents/*
-        logger.trace0("Finished initialization")
+        logger.debug("Finished initialization")
 
     def on_agent_option(self, key, val):
         """Handler called when a configuration option of the agent has changed.
@@ -143,7 +141,7 @@ class TscoreNomacExampleDaemon(
     def on_agent_rpc(self, command):
         """Handler called when agentRpc is called from the CLI.
         This function _must_ return a string"""
-        logger.trace3("on_agent_rpc - {}".format(command))
+        logger.debug("on_agent_rpc - %s", command)
         if command.startswith("trigger"):
             # the fpga register file will trigger a timestamp in the tscore when
             # this register is written to
@@ -155,7 +153,7 @@ class TscoreNomacExampleDaemon(
 
     # This gets called when we are disabled
     def on_agent_enabled(self, enabled):
-        logger.trace3("on_agent_enabled - {}".format(str(enabled)))
+        logger.debug("on_agent_enabled - %s", str(enabled))
         if not enabled:
             sys.stdout.flush()
 
@@ -172,11 +170,11 @@ class TscoreNomacExampleDaemon(
             self.agent_manager.agent_shutdown_complete_is(True)
 
     def on_timeout(self):
-        logger.trace3("on_timeout")
+        logger.debug("on_timeout")
         self.status["last_timeout"] = eossdk.now()
 
         self.timeout_time_is(eossdk.now() + 1)
-        logger.trace3("on_timeout completed")
+        logger.debug("on_timeout completed")
 
 
 def main():

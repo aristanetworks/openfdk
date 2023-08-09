@@ -121,7 +121,7 @@ class ConfigMutator(MutableSet):
         return self.ctx.configDel(serial.dumps(value.key))
 
 
-class StatusAccessor(Mapping):
+class StatusAccessor(Mapping, dict):
     """A wrapper around statuses in Sysdb that provides python objects.
 
     This mapping handles the translation between python objects and serialized
@@ -131,25 +131,52 @@ class StatusAccessor(Mapping):
     exceptions.
     """
 
-    def __init__(self, ctx):
-        self.ctx = ctx
+    def __init__(self, ctx, prefix=""):
+        object.__setattr__(self, "ctx", ctx)
+        object.__setattr__(self, "prefix", prefix)
+
+    def __getattr__(self, name):
+        try:
+            return self[name]
+        except KeyError:
+            raise AttributeError
 
     def __getitem__(self, key):
         # This class is used from two different contexts:
         # 1. From CliExtension, where missing keys return None.
         # 2. From EosSdk, where missing keys return an empty string.
         # This code doesn't distinguish between the two cases.
-        data = self.ctx.status(key)
+        data = self.ctx.status(self._extend_prefix(key))
         if not data:
-            raise KeyError
+            status = StatusAccessor(self.ctx, self._extend_prefix(key))
+            if not status:
+                raise KeyError
+            return status
         return serial.loads(data)
 
     def __iter__(self):
-        for key, _ in self.ctx.statusIter():
+        prog = re.compile(re.escape(self.prefix) + r"(?:(?:\A|/)([^/\[\]]+)|\[([^/\[\]]+)\])")
+        keys = set()
+        for key in self._status_iter():
+            m = prog.match(key)
+            if m:
+                keys.add(m.group(1) or int(m.group(2)))
+        for key in keys:
             yield key
 
     def __len__(self):
         return sum(1 for _ in self)
+
+    def _extend_prefix(self, key):
+        if isinstance(key, six.integer_types):
+            key = "{}[{}]".format(self.prefix, key)
+        elif self.prefix:
+            key = "{}/{}".format(self.prefix, key)
+        return key
+
+    def _status_iter(self):
+        for key, _ in self.ctx.statusIter():
+            yield key
 
 
 def _tokenize(syntax, optionals=True):
@@ -175,11 +202,25 @@ def running_config(ctx):
 
 
 class ShowEnabledBaseCmd(CliExtension.ShowCommandClass):
+    """Subclassing me will provide enabled/running status.
+
+    Attributes:
+        daemon (str): Name of the daemon.
+
+    The derived class must initialize the data object with a call to
+    super(<DerivedClass>, self).handler(ctx) which will return a dict with the
+    <enabled> and <running> keys.
+
+    Furthermore, the same must be done in the render function:
+    e.g. super(<DerivedClass>, self).render(data)
+    which will print the enabled/running status.
+    """
+
     daemon = None
 
     def __init__(self):
         CliExtension.ShowCommandClass.__init__(self)
-        assert self.daemon, "DAEMON must be defined"
+        assert self.daemon, "Daemon name must be defined."
 
     def handler(self, ctx):
         result = {"enabled": False, "running": False}
@@ -192,7 +233,7 @@ class ShowEnabledBaseCmd(CliExtension.ShowCommandClass):
         status = StatusAccessor(daemon.status)
 
         result["enabled"] = daemon.config.isEnabled()
-        result["running"] = status.get("running", False)
+        result["running"] = getattr(status, "running", False)
 
         return result
 
