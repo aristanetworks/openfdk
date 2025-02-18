@@ -1,7 +1,7 @@
 # ------------------------------------------------------------------------------
-#  Copyright (c) 2021-2023 Arista Networks, Inc. All rights reserved.
+#  Copyright (c) 2021 Arista Networks, Inc. All rights reserved.
 # ------------------------------------------------------------------------------
-#  Author:
+#  Maintainers:
 #    fdk-support@arista.com
 #
 #  Description:
@@ -13,16 +13,19 @@
 #
 # ------------------------------------------------------------------------------
 
-# the build system fills this in.
 from __future__ import absolute_import
 
-import mosapi
+try:
+    import mosapi
+
+    IS_MOS = mosapi.IS_MOS
+except ImportError:
+    IS_MOS = False
 
 __version__ = "UNVERSIONED"
 __buildid__ = 0
 
 app_name = "null"
 
-# If we are not running on EOS, import the CLI example.
-if not mosapi.IS_EOS:
-    from .example import *
+if IS_MOS:
+    from .example import *  # pylint: disable=import-self

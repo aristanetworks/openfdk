@@ -1,7 +1,7 @@
 --------------------------------------------------------------------------------
--- Copyright (c) 2013-2023 Arista Networks, Inc. All rights reserved.
+-- Copyright (c) 2013 Arista Networks, Inc. All rights reserved.
 --------------------------------------------------------------------------------
--- Author:
+-- Maintainers:
 --   fdk-support@arista.com
 --
 -- Description:
@@ -125,6 +125,10 @@ package metamako_pkg is
   type slv20_array_t is array (natural range <>) of slv20_t;
   type slv20_array_ptr_t is access slv20_array_t;
 
+  subtype slv21_t is std_logic_vector(20 downto 0);
+  type slv21_array_t is array (natural range <>) of slv21_t;
+  type slv21_array_ptr_t is access slv21_array_t;
+
   subtype slv22_t is std_logic_vector(21 downto 0);
   type slv22_array_t is array (natural range <>) of slv22_t;
   type slv22_array_ptr_t is access slv22_array_t;
@@ -198,6 +202,9 @@ package metamako_pkg is
 
   subtype slv128_t is std_logic_vector(127 downto 0);
   type slv128_array_t is array (natural range <>) of slv128_t;
+
+  subtype slv160_t is std_logic_vector(159 downto 0);
+  type slv160_array_t is array (natural range <>) of slv160_t;
 
   subtype slv256_t is std_logic_vector(255 downto 0);
   type slv256_array_t is array (natural range <>) of slv256_t;
@@ -513,12 +520,6 @@ package metamako_pkg is
                               signal match : out std_logic;
                               signal value : out unsigned);
 
-  -- priority encoder with active low input vector, lsb has higher priority
-  function priority_encode_rev_n(vec_n : in std_logic_vector) return unsigned;
-  procedure priority_encode_rev_n(vec_n        : in  std_logic_vector;
-                                  signal match : out std_logic;
-                                  signal value : out unsigned);
-
   -- priority encoder with active high input vector, msb has higher priority
   procedure priority_encode(vec          : in  std_logic_vector;
                             signal match : out std_logic;
@@ -530,7 +531,7 @@ package metamako_pkg is
                                 signal value : out unsigned);
 
   function find_first(a         : std_logic_vector) return std_logic_vector;
-  function encode_one_hot_slv(a : std_logic_vector) return std_logic_vector;
+  function encode_one_hot_slv(input_signal : std_logic_vector) return std_logic_vector;
 
   -- left shifts a vector by the specified number of bits
   function shift_data_left (arg1     : std_logic_vector;
@@ -881,13 +882,12 @@ package body metamako_pkg is
   end function;
 
   function and_reduce (arg1 : boolean_array_t) return boolean is
-    variable r : boolean := true;
-    variable i : integer;
+    variable rslt : boolean := true;
   begin
-    for i in arg1'range loop
-      r := r and arg1(i);
+    for idx in arg1'range loop
+      rslt := rslt and arg1(idx);
     end loop;
-    return r;
+    return rslt;
   end function and_reduce;
 
   ---- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -1260,19 +1260,6 @@ package body metamako_pkg is
     value <= ret_dont_care;
   end procedure priority_encode_n;
 
-  function priority_encode_rev_n(vec_n : in std_logic_vector) return unsigned is
-    variable normalised_vec_n : std_logic_vector(vec_n'length-1 downto 0);
-    variable ret_dont_care    : unsigned(log2c(vec_n'length)-1 downto 0) := (others => '-');
-  begin
-    normalised_vec_n := vec_n;
-    for i in 0 to natural(vec_n'length-1) loop
-      if normalised_vec_n(i) = '0' then
-        return to_unsigned(i, log2c(vec_n'length));
-      end if;
-    end loop;
-    return ret_dont_care;
-  end function priority_encode_rev_n;
-
   -- This function counts the number of ones in a std_logic_vector
   function count_ones(slv : std_logic_vector) return integer is
     variable count : natural := 0;
@@ -1319,24 +1306,6 @@ package body metamako_pkg is
     return count;
   end function count_false;
 
-  procedure priority_encode_rev_n(vec_n        : in  std_logic_vector;
-                                  signal match : out std_logic;
-                                  signal value : out unsigned) is
-    variable normalised_vec_n : std_logic_vector(vec_n'length-1 downto 0);
-    variable ret_dont_care    : unsigned(log2c(vec_n'length)-1 downto 0) := (others => '-');
-  begin
-    normalised_vec_n := vec_n;
-    for i in 0 to natural(vec_n'length-1) loop
-      value <= to_unsigned(i, value'length);
-      if normalised_vec_n(i) = '0' then
-        match <= '1';
-        return;
-      end if;
-    end loop;
-    match <= '0';
-    value <= ret_dont_care;
-  end procedure priority_encode_rev_n;
-
   procedure priority_encode(vec          : in  std_logic_vector;
                             signal match : out std_logic;
                             signal value : out unsigned) is
@@ -1362,6 +1331,7 @@ package body metamako_pkg is
     variable ret_dont_care  : unsigned(log2c(vec'length)-1 downto 0) := (others => '-');
   begin
     normalised_vec := vec;
+    match <= '0';
     for i in 0 to natural(vec'length-1) loop
       value <= to_unsigned(i, value'length);
       if normalised_vec(i) = '1' then
@@ -1369,7 +1339,6 @@ package body metamako_pkg is
         return;
       end if;
     end loop;
-    match <= '0';
     value <= ret_dont_care;
   end procedure priority_encode_rev;
 
@@ -1386,37 +1355,41 @@ package body metamako_pkg is
 
   ---- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-  function encode_one_hot_slv(a : std_logic_vector)
+  function encode_one_hot_slv(input_signal : std_logic_vector)
     return std_logic_vector is
-    variable r                              : std_logic_vector(log2c(a'length)-1 downto 0);
-    variable b                              : std_logic_vector(2*a'length-1 downto 0);
-    variable t                              : std_logic_vector(a'range);
-    variable start, wind, step, index, i, j : integer := 0;
+    variable result_vector   : std_logic_vector(log2c(input_signal'length)-1 downto 0);
+    variable extended_signal : std_logic_vector(2*input_signal'length-1 downto 0);
+    variable temp_vector     : std_logic_vector(input_signal'range);
+    variable start_position  : integer := 0;
+    variable window_size     : integer := 0;
+    variable step_size       : integer := 0;
+    variable current_index   : integer := 0;
+    variable bit_index       : integer := 0;
   begin
     -- steps are:
     --  * start at 1, 1 bit window, 2 bit step
     --  * start at 2, 2 bit window, 4 bit step
     --  * start at 4, 4 bit window, 8 bit step
     --  * start at 8, 8 bit window, 16 bit step
-    --  ...
-    b          := (others => '0');
-    b(a'range) := a;
-    start      := 1;
-    for i in r'range loop
-      start := 2**i;
-      wind  := start - 1;
-      step  := 2**(i+1);
-      index := start;
-      t     := (others => '0');
-      j     := 0;
-      while index + wind < b'length loop
-        t(j)  := or_reduce(b(index + wind downto index));
-        j     := j + 1;
-        index := index + step;
+
+    extended_signal                     := (others => '0');
+    extended_signal(input_signal'range) := input_signal;
+    start_position                      := 1;
+    for loop_index in result_vector'range loop
+      start_position := 2**loop_index;
+      window_size    := start_position - 1;
+      step_size      := 2**(loop_index+1);
+      current_index  := start_position;
+      temp_vector    := (others => '0');
+      bit_index      := 0;
+      while current_index + window_size < extended_signal'length loop
+        temp_vector(bit_index)  := or_reduce(extended_signal(current_index + window_size downto current_index));
+        bit_index               := bit_index + 1;
+        current_index           := current_index + step_size;
       end loop;
-      r(i) := or_reduce(t(j-1 downto 0));
-    end loop;  -- i
-    return r;
+      result_vector(loop_index) := or_reduce(temp_vector(bit_index-1 downto 0));
+    end loop; -- loop_index
+    return result_vector;
   end;
 
   function shift_data_left(arg1 : std_logic_vector; numshift : integer) return std_logic_vector is

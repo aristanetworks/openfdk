@@ -1,7 +1,7 @@
 --------------------------------------------------------------------------------
--- Copyright (c) 2017-2022 Arista Networks, Inc. All rights reserved.
+-- Copyright (c) 2017 Arista Networks, Inc. All rights reserved.
 --------------------------------------------------------------------------------
--- Author:
+-- Maintainers:
 --   fdk-support@arista.com
 --
 -- Description:
@@ -106,9 +106,9 @@ architecture struct of board_top is
   ------------------------------------------------------------------------------
   -- Local Constants
   ------------------------------------------------------------------------------
-  constant DISABLE_SYSCTL_REGS_C : boolean := false;
-  constant DISABLE_SYSCTL_SEM_C  : boolean := false;
-  CONSTANT ENABLE_TEMP_REG_C     : boolean := true;
+  constant EN_SYSCTL_REGS_C : boolean := true;
+  constant EN_SYSCTL_SEM_C  : boolean := true;
+  constant EN_TEMP_REG_C    : boolean := true;
 
   ------------------------------------------------------------------------------
   -- Signal Declarations
@@ -145,7 +145,11 @@ architecture struct of board_top is
   signal sem_clock        : std_logic;
 
   signal fpga_id_i        : std_logic_vector(2 downto 0);
-  signal sysmon_alm       : std_logic_vector(15 downto 0);
+  signal platform_id      : std_logic_vector(15 downto 0);
+  signal boardstd_id      : std_logic_vector(15 downto 0);
+  signal mac_baseaddr     : std_logic_vector(47 downto 0);
+  signal mac_total        : std_logic_vector(7 downto 0);
+  signal sysmon_temp      : std_logic_vector(9 downto 0);
 
   signal top_reserved_in  : top_reserved_in_t;
   signal top_reserved_out : top_reserved_out_t := TOP_RESERVED_OUT_DFLT_C;
@@ -200,11 +204,12 @@ begin
       inter_gpb_gpio    => inter_gpb_gpio,
 
       fpga_id           => fpga_id_i,
-      sysmon_alm        => sysmon_alm,
+      platform_id       => platform_id,
+      boardstd_id       => boardstd_id,
+      mac_baseaddr      => mac_baseaddr,
+      mac_total         => mac_total,
 
-      -- Deprecated signals
-      fpga_dna          => (others => '0'),
-      mac_addr          => (others => (others => '0')),
+      sysmon_temp       => sysmon_temp,
 
       -- Reserved signals
       reserved_in       => top_reserved_in,
@@ -297,10 +302,10 @@ begin
       FPGA_POSITION_G => FPGA_POSITION_C,
 
       ENABLE_SYSMON_G => true,
-      ENABLE_TEMP_G   => ENABLE_TEMP_REG_C,
+      ENABLE_TEMP_G   => EN_TEMP_REG_C,
       ENABLE_EEPROM_G => false,
-      ENABLE_SEM_G    => not DISABLE_SYSCTL_SEM_C,
-      ENABLE_PHYCFG_G => not DISABLE_SYSCTL_REGS_C
+      ENABLE_SEM_G    => EN_SYSCTL_SEM_C,
+      ENABLE_PHYCFG_G => EN_SYSCTL_REGS_C
       )
     port map (
       --------------------------------------------------------------------------
@@ -332,11 +337,11 @@ begin
       gt_cfg        => gt_cfg,
       hermes_cfg    => top_reserved_in.hermes_cfg,
 
-      mac_baseaddr  => top_reserved_in.mac_baseaddr,
-      mac_total     => top_reserved_in.mac_total,
+      mac_baseaddr  => mac_baseaddr,
+      mac_total     => mac_total,
       bitstream_id  => top_reserved_in.bitstream_id,
-      platform_id   => top_reserved_in.platform_id,
-      boardstd_id   => top_reserved_in.boardstd_id,
+      platform_id   => platform_id,
+      boardstd_id   => boardstd_id,
       fpga_id       => fpga_id_i,
 
       i2c_scl_in    => i2c_scl_in,
@@ -349,8 +354,8 @@ begin
       gpio_tri      => gpio_tri,
 
       eeprom_sts    => top_reserved_in.eeprom_sts,
-      sysmon_temp   => top_reserved_in.sysmon_temp,
-      sysmon_alm    => sysmon_alm,
+      sysmon_temp   => sysmon_temp,
+      sysmon_alm    => top_reserved_in.sysmon_alm,
       sem_error     => open,
       sem_status    => top_reserved_in.sem_status
       );

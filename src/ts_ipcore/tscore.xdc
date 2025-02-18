@@ -1,7 +1,7 @@
 #-------------------------------------------------------------------------------
 #- Copyright (c) 2020 Arista Networks, Inc. All rights reserved.
 #-------------------------------------------------------------------------------
-#- Author:
+#- Maintainers:
 #-   fdk-support@arista.com
 #-
 #- Description:
@@ -28,3 +28,4 @@ set_clock_groups -asynchronous -group [get_clocks refclk_25] -group [get_clocks 
 set_clock_groups -asynchronous -group [get_clocks refclk_25] -group [get_clocks clk_500M_ext]
 set_clock_groups -asynchronous -group [get_clocks refclk_25] -group [get_pins -hier -filter {NAME =~ */timing_controller_i/clk_gen_i/clk_500M_mux_i/S0}]
 
+# Add further constraints here based on what is provided to the `user_ts_result_clks` port of the `tscore` entity.

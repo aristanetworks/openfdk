@@ -17,10 +17,8 @@
         "${ARISTA_FDK_DIR}/src/fpga_spec/fpga_spec_pkg.vhd",
         "${ARISTA_FDK_DIR}/src/hermes/hermes_pkg.vhd",
         "${ARISTA_FDK_DIR}/src/hphy_xilinx/phy_pkg.vhd",
-        "${ARISTA_FDK_DIR}/src/metamako/arista_pkg.sv",
         "${ARISTA_FDK_DIR}/src/metamako/edge_detect.vhd",
         "${ARISTA_FDK_DIR}/src/metamako/metamako_pkg.vhd",
-        "${ARISTA_FDK_DIR}/src/metamako/pcie_pkg.sv",
         "${ARISTA_FDK_DIR}/src/metamako/pcie_pkg.vhd",
         "${ARISTA_FDK_DIR}/src/primitive_xilinx/mako_dff_clr.vhd",
         "${ARISTA_FDK_DIR}/src/primitive_xilinx/mako_dff_preset.vhd",
@@ -35,16 +33,19 @@
         "${ARISTA_FDK_DIR}/src/spi/spi_master.vhd",
         "${ARISTA_FDK_DIR}/src/synchroniser/synchroniser.vhd",
         "${ARISTA_FDK_DIR}/src/yart/yart_i2c.vhd",
-        "${ARISTA_FDK_DIR}/src/yart/yart_leaf_decode_v2.vhd",
+        "${ARISTA_FDK_DIR}/src/yart/yart_leaf_decode.vhd",
         "${ARISTA_FDK_DIR}/src/yart/yart_pkg.vhd",
         "${ARISTA_FDK_DIR}/src/yart/yart_reg.vhd",
+        "${ARISTA_FDK_DIR}/src/yart/yart_sideload_pkg.vhd",
+        "${ARISTA_FDK_DIR}/src/yart/yart_test_pkg.vhd",
         "${ARISTA_FDK_DIR}/src/yart/yart_tl.vhd",
+        "${ARISTA_FDK_DIR}/src/yart/yart_tl_driver_pkg.vhd",
         "${ARISTA_FDK_DIR}/src/yart/ytl_bridge.vhd",
         "${PROJECT_DIR}/src/null-eh_leaf-top.vhd",
         "${PROJECT_DIR}/src/null_registers.vhd"
     ],
     "constrs_1": [
-        "${ARISTA_FDK_DIR}/src/boards/eh_leaf/board_constraints.xdc",
-        "${PROJECT_DIR}/src/null-eh_leaf-top.xdc"
+        "${PROJECT_DIR}/src/null-eh_leaf-top.xdc",
+        "${ARISTA_FDK_DIR}/src/boards/eh_leaf/board_constraints.xdc"
     ]
 }

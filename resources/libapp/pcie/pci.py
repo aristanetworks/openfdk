@@ -1,7 +1,7 @@
 # ------------------------------------------------------------------------------
-#  Copyright (c) 2019-2023 Arista Networks, Inc. All rights reserved.
+#  Copyright (c) 2019 Arista Networks, Inc. All rights reserved.
 # ------------------------------------------------------------------------------
-#  Author:
+#  Maintainers:
 #    fdk-support@arista.com
 #
 #  Description:
@@ -67,6 +67,10 @@ class PCIDeviceManager(object):
             # Device with specified BDF does not exist
             logging.info("Could not find device with BDF %s to create", bdf)
             return None
+        except ValueError:
+            # Device likely got removed whilst we were processing it
+            logging.info("Could not load config for BDF %s", bdf)
+            return None
 
         header_type = PCIDevice._config_read_header_type(config)
         if header_type == PCIEndpoint._HEADER_TYPE:
@@ -79,7 +83,12 @@ class PCIDeviceManager(object):
             logging.info("Detected device %s with invalid header type %x", bdf, header_type)
             return None
 
-        return obj(bdf=bdf, manager=self, device_path=device_path, config=config)
+        try:
+            return obj(bdf=bdf, manager=self, device_path=device_path, config=config)
+        except FileNotFoundError:
+            # Device was removed whilst it was being loaded
+            logging.info("Detected device %s has been removed", bdf)
+            return None
 
     def _delete_device(self, bdf):
         """Remove a device from the device manager"""
@@ -656,6 +665,31 @@ class PCIDevice(object):  # pylint: disable=too-many-instance-attributes
         self.config_write_setpci(reg, *self._CONFIG_SPACE["_COMMAND"])
         self._memspace_access_enabled = en
 
+    def nmi_generation_control(self, disable):
+        # See http://aid/7866 for details on NMI control
+        _CAP_REGS = {
+            "device_control": (0x8, 2, "CAP_EXP"),
+            "ce_mask": (0x14, 4, "ECAP_AER"),
+            "ue_mask": (0x8, 4, "ECAP_AER"),
+        }
+
+        device_control = self.config_read_setpci(*_CAP_REGS["device_control"])
+        ce_mask = self.config_read_setpci(*_CAP_REGS["ce_mask"])
+        ue_mask = self.config_read_setpci(*_CAP_REGS["ue_mask"])
+
+        if disable:
+            device_control &= ~0b111
+            ue_mask |= 0b1 << 5
+            ce_mask |= 0b1 << 0
+        else:
+            device_control |= 0b111
+            ue_mask &= ~(0b1 << 5)
+            ce_mask &= ~(0b1 << 0)
+
+        self.config_write_setpci(device_control, *_CAP_REGS["device_control"])
+        self.config_write_setpci(ce_mask, *_CAP_REGS["ce_mask"])
+        self.config_write_setpci(ue_mask, *_CAP_REGS["ue_mask"])
+
     def rescan(self, remove=False):
         """
         Rescan the device.
@@ -693,7 +727,7 @@ class PCIDevice(object):  # pylint: disable=too-many-instance-attributes
             self.manager = None
             self.bdf = None
 
-    def config_read_setpci(self, addr, nbytes):
+    def config_read_setpci(self, addr, nbytes, cap_name=None):
         """
         Read bytes addr:(addr + nbytes) from the device's PCI configuration space as an integer.
         Uses setpci for simplicity. The returned integer represents a bitstring in little endian format.
@@ -702,11 +736,12 @@ class PCIDevice(object):  # pylint: disable=too-many-instance-attributes
         """
 
         width = {1: "b", 2: "w", 4: "l"}.get(nbytes)
+        cap = "{}+".format(cap_name) if cap_name is not None else ""
 
         if width:
             # Try reading word size first
             try:
-                cmd = "setpci -s {} {}.{}".format(self.bdf, helpers.hex(addr), width)
+                cmd = "setpci -s {} {}{}.{}".format(self.bdf, cap, helpers.hex(addr), width)
                 return int(shell.shellcmd(cmd), 16)
             except subprocess.CalledProcessError:
                 # Might fail because setpci does not like the address alignment,
@@ -719,18 +754,19 @@ class PCIDevice(object):  # pylint: disable=too-many-instance-attributes
             ret = (ret << 8) + int(shell.shellcmd(cmd), 16)
         return ret
 
-    def config_write_setpci(self, value, addr, nbytes):
+    def config_write_setpci(self, value, addr, nbytes, cap_name=None):
         """
         Write value as a length nbytes bitstring to the device's configuration space, starting at address addr.
         Param value: integer interpreted as a little endian bitstring of length nbytes
         """
 
         width = {1: "b", 2: "w", 4: "l"}.get(nbytes)
+        cap = "{}+".format(cap_name) if cap_name is not None else ""
 
         if width:
             # Try writing word size first
             try:
-                cmd = "setpci -s {} {}.{}={}".format(self.bdf, helpers.hex(addr), width, helpers.hex(value))
+                cmd = "setpci -s {} {}{}.{}={}".format(self.bdf, cap, helpers.hex(addr), width, helpers.hex(value))
                 shell.shellcmd(cmd, root=True)
                 return
             except subprocess.CalledProcessError:

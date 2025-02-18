@@ -2,7 +2,7 @@
 # ------------------------------------------------------------------------------
 #  Copyright (c) 2023 Arista Networks, Inc. All rights reserved.
 # ------------------------------------------------------------------------------
-#  Author:
+#  Maintainers:
 #    fdk-support@arista.com
 #
 #  Description:
@@ -16,7 +16,6 @@
 #
 # ------------------------------------------------------------------------------
 
-from __future__ import absolute_import, division, print_function
 
 import CliExtension
 
@@ -27,7 +26,7 @@ class ShowTscoreNomacStatusCmd(libapp.cli.ShowEnabledBaseCmd):
     daemon = "TscoreNomacExampleDaemon"
 
     def handler(self, ctx):
-        result = super(ShowTscoreNomacStatusCmd, self).handler(ctx)
+        result = super().handler(ctx)
         result["lastTimestampRaw"] = None
         result["lastTimestamp"] = None
 
@@ -45,9 +44,9 @@ class ShowTscoreNomacStatusCmd(libapp.cli.ShowEnabledBaseCmd):
         return result
 
     def render(self, data):
-        super(ShowTscoreNomacStatusCmd, self).render(data)
-        print("Last timestamp raw: {}".format(data["last_timestamp_raw"]))
-        print("Last timestamp: {}".format(data["last_timestamp"]))
+        super().render(data)
+        print(f"Last timestamp raw: {data['lastTimestampRaw']}")
+        print(f"Last timestamp: {data['lastTimestamp']}")
 
 
 class TriggerCmd(CliExtension.CliCommandClass):

@@ -1,7 +1,7 @@
 # ------------------------------------------------------------------------------
-#  Copyright (c) 2022-2023 Arista Networks, Inc. All rights reserved.
+#  Copyright (c) 2022 Arista Networks, Inc. All rights reserved.
 # ------------------------------------------------------------------------------
-#  Author:
+#  Maintainers:
 #    fdk-support@arista.com
 #
 #  Description:
@@ -21,8 +21,6 @@ from __future__ import absolute_import
 import os
 import json
 import re
-import subprocess
-import time
 from functools import wraps
 
 from . import IS_EOS
@@ -34,7 +32,7 @@ else:
     from PlutoSmbusAccessor import PlutoSmbusDaemonAccessor
 
 
-# -------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 class Si5345(object):
 
     page_register = 0x1
@@ -60,6 +58,9 @@ class Si5345(object):
             address = int(item[0][4:6], 16)
             value = int(item[1], 0)
             self._write_byte_data(address, value, page=page)
+
+    def verify_config(self, fileName):
+        return fileName
 
     @property
     def device_ready(self):
@@ -123,7 +124,6 @@ class LMK05318(object):
             pci=clkgen_interface["pci"],
         )
 
-        self.scdplllock = clkgen_interface["scd_pll_lock"]
         self.partNum = self._get_part_number()
 
     def load_config(self, fileName):
@@ -164,12 +164,58 @@ class LMK05318(object):
         # Now soft reset the chip
         self._soft_reset()
 
+    def verify_config(self, fileName):
+        reg_map = self._reg_map_parser(fileName)
+
+        exclusion_list = [
+            0x004,  # PART_ID
+            0x005,
+            0x006,
+            0x007,
+            # 0x00D,  # APLL and XO Loss of Lock/Source (RO)
+            # 0x00E,  # DPLL Status (RO)
+            # 0x048,  # Output Active Status (RO)
+            # 0x050,  # BAW Lock Detection
+            # 0x07c,  # PLL1_NUM_STAT
+            # 0x07d,
+            # 0x07e,
+            # 0x07f,
+            0x09B,  # NVM Stored CRC
+            0x09D,  # NVM Program Count
+            0x09D,  # NVM Live CRC
+            # 0x0a2,  # RAM Read/Write Data
+            # 0x16f,  # ??? Unknown
+        ]
+
+        for item in reg_map:
+            address = int(item[0], 16)
+            address_bytes = bytearray.fromhex(item[0])
+            data = int(item[1], 16)
+
+            res = self.device.read_byte_data(address_bytes)
+
+            if address not in exclusion_list:
+                if res != data:
+                    print("Address {}, expected {}, got {}".format(hex(address), hex(data), hex(res)))
+
+        return 1
+
     @property
     def device_ready(self):
-        scd_output = subprocess.check_output(["scd", "-i", "0", "read", self.scdplllock[0]])
-        reg_contents = "".join(scd_output.decode().split()).split("==")[1]
-        is_pll_locked = bool((int(reg_contents, 2) >> self.scdplllock[1]) & 1)
-        return is_pll_locked
+        # Check if APLL2 is in PDN
+        # Note - Cannot use PLL Locked status in SCD because this isn't "PLL Locked"
+        # SCD status is actually an "ack" of a good input reference clock only.
+
+        apll2_is_down = (self.device.read_byte_data(bytearray.fromhex("0064")) & 0x01) != 0
+        res = self.device.read_byte_data(bytearray.fromhex("000D")) & 0x0C
+        pll_is_locked = bool((res == 0) or (res == 8 and apll2_is_down))
+
+        # res = self.device.read_byte_data(bytearray.fromhex("000D"))
+        # print("APLL Status Register 0x0D, got {}".format(hex(res)))
+        # res = self.device.read_byte_data(bytearray.fromhex("000E"))
+        # print("DPLL Status Register 0x0E, got {}".format(hex(res)))
+
+        return pll_is_locked
 
     def _soft_reset(self):
         res = self.device.read_byte_data(bytearray.fromhex("000C"))
@@ -179,7 +225,6 @@ class LMK05318(object):
         # Insert a blocking read here to make sure all transactions have completed
         # before moving on
         res = self.device.read_byte_data(bytearray.fromhex("000C"))
-        time.sleep(5)
 
     def _reg_map_parser(self, fileName):
         with open(fileName, "r") as f:  # pylint: disable=unspecified-encoding
@@ -205,7 +250,7 @@ class LMK05318(object):
         return "lmk05318" + revPart
 
 
-# -------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 class ClockGenerator(object):  # pylint:disable=too-many-instance-attributes
     """Clock generator (clkgen) controller."""
 
@@ -225,7 +270,7 @@ class ClockGenerator(object):  # pylint:disable=too-many-instance-attributes
                 self.clkgen = Si5345(interface["clkgen"])
                 self.noClkGen = False
             if interface["clkgen"]["device"] == "LMK05318":
-                if agentIsRunning("ar", "PLSmbusMediator"):
+                if agentIsRunning("ar", "PLSmbusMediator"):  # pylint: disable=used-before-assignment
                     self.clkgen = LMK05318(interface["clkgen"])
                     self.noClkGen = False
                 else:
@@ -239,7 +284,7 @@ Clkgen part left with manufacturers default settings (eth156).\
         if not self.noClkGen:
             self.partNum = self.clkgen.partNum
 
-    def load_profile(self, profile):
+    def load_profile(self, profile, verify=False):
         """Loads a clock generator profile.
 
         Configures clkgen with the specified profile and waits for the device
@@ -268,3 +313,6 @@ Clkgen part left with manufacturers default settings (eth156).\
         self.clkgen.load_config(self.clkprofiledir + config_filename)
         while not self.clkgen.device_ready:
             pass
+
+        if verify:
+            self.clkgen.verify_config(self.clkprofiledir + config_filename)

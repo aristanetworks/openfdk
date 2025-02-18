@@ -59,7 +59,7 @@ For the `lb2` the changes are:
 +        "${ARISTA_FDK_DIR}/src/regfile/reg_file_pkg.vhd",
 +        "${ARISTA_FDK_DIR}/src/regfile/reg_flexi_pkg.vhd",
 +        "${ARISTA_FDK_DIR}/src/yart/yart_i2c.vhd",
-+        "${ARISTA_FDK_DIR}/src/yart/yart_leaf_decode_v2.vhd",
++        "${ARISTA_FDK_DIR}/src/yart/yart_leaf_decode.vhd",
 +        "${ARISTA_FDK_DIR}/src/yart/yart_pkg.vhd",
 +        "${ARISTA_FDK_DIR}/src/yart/yart_reg.vhd",
 +        "${ARISTA_FDK_DIR}/src/yart/yart_tl.vhd",

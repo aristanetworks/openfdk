@@ -1,8 +1,8 @@
 #!/usr/bin/env arista-python
 # ------------------------------------------------------------------------------
-#  Copyright (c) 2021-2023 Arista Networks, Inc. All rights reserved.
+#  Copyright (c) 2021 Arista Networks, Inc. All rights reserved.
 # ------------------------------------------------------------------------------
-#  Author:
+#  Maintainers:
 #    fdk-support@arista.com
 #
 #  Description:
@@ -16,10 +16,8 @@
 #
 # ------------------------------------------------------------------------------
 
-from __future__ import absolute_import, division, print_function
 
 import collections
-import six
 
 import CliExtension
 import TableOutput  # FIXME: TableOutput is not (yet) a public API.
@@ -49,11 +47,11 @@ class ShowTelemExampleStatusCmd(CliExtension.ShowCommandClass):
         return result
 
     def render(self, data):
-        print("Enabled: {}".format("Yes" if data["enabled"] else "No"))
-        print("Running: {}".format("Yes" if data["running"] else "No"))
+        print(f"Enabled: {'Yes' if data['enabled'] else 'No'}")
+        print(f"Running: {'Yes' if data['running'] else 'No'}")
 
         table = TableOutput.createTable(["Setting", "Value"])
-        for key, value in six.iteritems(data["settings"]):
+        for key, value in data["settings"].items():
             table.newRow(key, value)
         print(table.output())
 

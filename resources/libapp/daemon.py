@@ -1,7 +1,7 @@
 # ------------------------------------------------------------------------------
-#  Copyright (c) 2022-2023 Arista Networks, Inc. All rights reserved.
+#  Copyright (c) 2022 Arista Networks, Inc. All rights reserved.
 # ------------------------------------------------------------------------------
-#  Author:
+#  Maintainers:
 #    fdk-support@arista.com
 #
 #  Description:
@@ -72,7 +72,7 @@ class StatusMutator(cli.StatusAccessor, MutableMapping):
         return self.ctx.status_del(self._extend_prefix(key))
 
     def _status_iter(self):
-        for key in self.ctx.status_iter():
+        for key in self.ctx.status_iter():  # pylint: disable=use-yield-from
             yield key
 
 

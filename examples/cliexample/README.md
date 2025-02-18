@@ -12,7 +12,7 @@
 
 Licensed under the [BSD 3-clause license](LICENSE.md)
 
-## Contents                                                                                                                                                                                                                                                                                                                
+## Contents                                                                                                                                                                                                            
 - [`Introduction`](#introduction)
     - [`Usage information`](#usage-information)
     - [`Supported Board Standards and Operating Systems`](#supported-board-standards-and-operating-systems)
@@ -50,8 +50,6 @@ It is compatible with all devices and cloud instances running MOS or EOS.
 
 | Board Standard     | FPGA                 | EOS              | MOS             | Devices                                                                     |
 |--------------------|----------------------|------------------|-----------------|-----------------------------------------------------------------------------|
-| `e_central       ` | XCKU095-FFVB2104-2-E | 4.28.0f or later | 0.37.0 or later | DCS-7130-48E, DCS-7130-48EP, DCS-7130-96E, DCS-7130-96EP                    |
-| `e_leaf          ` | XCKU095-FFVB2104-2-E | 4.28.0f or later | 0.37.0 or later | DCS-7130-48EP, DCS-7130-96EP                                                |
 | `eh_central      ` | XCVU9P-FLGB2104-3-E  | 4.28.0f or later | 0.37.0 or later | DCS-7130-32EB, DCS-7130-48EB, DCS-7130-48EH, DCS-7130-96EB, DCS-7130-96EH   |
 | `eh_leaf         ` | XCVU9P-FLGB2104-3-E  | 4.28.0f or later | 0.37.0 or later | DCS-7130-48EH, DCS-7130-96EH                                                |
 | `l               ` | XCVU7P-FLVB2104-2-E  | 4.28.0f or later | 0.37.0 or later | DCS-7130-48L, DCS-7130-96L                                                  |
@@ -92,7 +90,7 @@ limit to a particular one (e.g. `lb2`) use:
 arista_fdk/examples/cliexample> make BOARDSTD=lb2
 ```
 
-For further details, refer to the Arista FPGA Developer's Kit User Guide.
+For further details, refer to the Arista FPGA Development Kit User Guide.
 
 
 
@@ -108,7 +106,7 @@ To copy and use the example from the Arista FDK, copy the `cliexample` directory
 outside the FDK tree (probably to a new version control repository):
 
 ```bash
-cp -r arista_fdk-2.7.0.openfdk/examples/cliexample mynewproject/
+cp -r arista_fdk-3.0.0.openfdk/examples/cliexample mynewproject/
 ```
 Update the `Makefile` to change:
 
@@ -136,8 +134,8 @@ For example, for a new project, based on `cliexample` called `mynewproject`:
 +BUILD_ID   ?= 1
 
  PROJECT_DIR     = $(CURDIR)
--ARISTA_FDK_DIR ?= $(PROJECT_DIR)/../../../arista_fdk-2.7.0.openfdk
-+ARISTA_FDK_DIR ?= $(PROJECT_DIR)/../arista_fdk-2.7.0.openfdk
+-ARISTA_FDK_DIR ?= $(PROJECT_DIR)/../../../arista_fdk-3.0.0.openfdk
++ARISTA_FDK_DIR ?= $(PROJECT_DIR)/../arista_fdk-3.0.0.openfdk
  ARISTA_SRC_DIR  = $(ARISTA_FDK_DIR)/src
 
  SOURCE_FILES = $(PROJECT_DIR)/src_files.json

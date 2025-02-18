@@ -1,7 +1,7 @@
 # ------------------------------------------------------------------------------
-#  Copyright (c) 2021-2023 Arista Networks, Inc. All rights reserved.
+#  Copyright (c) 2021 Arista Networks, Inc. All rights reserved.
 # ------------------------------------------------------------------------------
-#  Author:
+#  Maintainers:
 #    fdk-support@arista.com
 #
 #  Description:
@@ -144,6 +144,36 @@ class EosRegAccess(object):
         self.write_block((addr >> 8) & 0xFF, b)
 
 
+class PCIeRegAccess(object):
+    def __init__(self, fpgaPCIeDevMngr, bdf, bar=0):
+        self.pcieDevice = fpgaPCIeDevMngr.pcie_devices_by_bdf.get(bdf)
+        self.bar = bar
+
+    def read_block(self, addr, n=32):
+        r = self.pcieDevice.regions[self.bar].read(addr, n)
+        return [ord(x) if isinstance(x, (str, bytes)) else x for x in r]
+
+    def write_block(self, addr, vals):
+        # FIXME: The bytearray call is only needed for Python 2.
+        data = bytes(bytearray(vals))
+        self.pcieDevice.regions[self.bar].write(addr, data)
+
+    def read_reg(self, addr):
+        a = addr << 2
+        r = self.read_block(a, 4)
+        return r[3] << 24 | r[2] << 16 | r[1] << 8 | r[0]
+
+    def write_reg(self, addr, value):
+        a = addr << 2
+        b = [
+            (value) & 0xFF,
+            (value >> 8) & 0xFF,
+            (value >> 16) & 0xFF,
+            (value >> 24) & 0xFF,
+        ]
+        self.write_block(a, b)
+
+
 class RegisterAccessor(object):
     internal = None
 
@@ -156,16 +186,28 @@ class RegisterAccessor(object):
         address=0x72,
         pci=None,
         accelerator=None,
+        fpgaPCIeDevMngr=None,
+        bdf=None,
+        bar=0,
     ):
-        if int(chan_number is not None) + int(bus_number is not None) + int(bool(bus_label)) != 1:
-            raise ValueError("Requires one of (chan_number, bus_number, bus_label)")
+        if (
+            int(fpgaPCIeDevMngr is not None)
+            + int(chan_number is not None)
+            + int(bus_number is not None)
+            + int(bool(bus_label))
+            != 1
+        ):
+            raise ValueError("Requires one of (chan_number, bus_number, bus_label, fpgaPCIeDevMngr)")
         if IS_EOS:
-            label = (
-                bus_number
-                if bus_number is not None
-                else self.__name_to_bus(bus_label or r"i2c-.*-mux \(chan_id {}\)".format(chan_number)) or bus_label
-            )
-            self.internal = EosRegAccess(label, address, pci, accelerator)
+            if bdf is None:
+                label = (
+                    bus_number
+                    if bus_number is not None
+                    else self.__name_to_bus(bus_label or r"i2c-.*-mux \(chan_id {}\)".format(chan_number)) or bus_label
+                )
+                self.internal = EosRegAccess(label, address, pci, accelerator)
+            else:
+                self.internal = PCIeRegAccess(fpgaPCIeDevMngr, bdf, bar)
         else:
             self.internal = MakoRegAccess(mos_label, address)
 

@@ -2,7 +2,7 @@
 
 ## Contents
 
-                                                                                                                                    
+                                                                                        
 - [`Installation`](#installation)
     - [`EOS Installation`](#eos-installation)
     
@@ -34,7 +34,7 @@ Then log into the device and run:
 ```console
 hostname> en
 hostname# conf
-hostname(config)# copy flash:telemexample-XXX.swix extensions:
+hostname(config)# copy flash:telemexample-XXX.swix extension:
 hostname(config)# extension telemexample-XXX.swix
 ```
 

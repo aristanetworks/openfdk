@@ -1,7 +1,7 @@
 --------------------------------------------------------------------------------
--- Copyright (c) 2021-2023 Arista Networks, Inc. All rights reserved.
+-- Copyright (c) 2021 Arista Networks, Inc. All rights reserved.
 --------------------------------------------------------------------------------
--- Author:
+-- Maintainers:
 --   fdk-support@arista.com
 --
 -- Description:
@@ -79,14 +79,13 @@ entity top is
     ddr4_ctrl        : out   ddr4_host2mem_array_t(NUM_DIMMS_C-1 downto 0);
 
     fpga_id          : in    std_logic_vector(2 downto 0);
+    platform_id      : in    std_logic_vector(15 downto 0);
+    boardstd_id      : in    std_logic_vector(15 downto 0);
+    mac_baseaddr     : in    std_logic_vector(47 downto 0);
+    mac_total        : in    std_logic_vector(7 downto 0);
 
-    sysmon_alm       : in    std_logic_vector(15 downto 0);
+    sysmon_temp      : in    std_logic_vector(9 downto 0);
     crc_error        : out   std_logic := '0';
-
-    -- Signals below are deprecated and disabled,
-    -- and will be removed in a future version of the FDK.
-    fpga_dna         : in    std_logic_vector(95 downto 0);
-    mac_addr         : in    slv48_array_t(NUM_GT_PORTS_C downto 1);
 
     -- Signals below are reserved and subject to change.
     reserved_in      : in    top_reserved_in_t;
@@ -101,49 +100,57 @@ architecture rtl of top is
   --------------------------------------------------------------------------------
   -- Constant Declarations
   --------------------------------------------------------------------------------
-  constant FPGA_FAMILY_C               : mm_fpga_family_t := mm_get_fpga_family(FPGA_TARGET_C);
+  constant FPGA_FAMILY_C        : mm_fpga_family_t := mm_get_fpga_family(FPGA_TARGET_C);
 
-  constant PRI_GTREFCLK_C              : string := "PRI";   -- Do not change value
-  constant SEC_GTREFCLK_C              : string := "SEC";   -- Do not change value
+  constant PRI_GTREFCLK_C       : string := "PRI";   -- Do not change value
+  constant SEC_GTREFCLK_C       : string := "SEC";   -- Do not change value
+
+  -- Number of user-triggered timestampers.
+  -- If this value is changed from '1' then the register
+  -- interface will need additional logic to cater for
+  -- multiple user triggers.
+  constant NUM_USER_TIMESTAMPERS_C : positive := 1;
 
   --------------------------------------------------------------------------------
   -- Signal Declarations
   --------------------------------------------------------------------------------
   -- Timing Reference Signals
-  signal pps                           : std_logic;
-  signal pps_n                         : std_logic;
-  signal ts_clk_buf                    : std_logic;
-  signal refclk_ts                     : std_logic;
+  signal pps                    : std_logic;
+  signal pps_n                  : std_logic;
+  signal ts_clk_buf             : std_logic;
+  signal refclk_ts              : std_logic;
 
   -- XCVR Interfacing
-  signal gt_refclk_buf                 : std_logic_vector(NUM_GT_REFCLKS_C-1 downto 0);
+  signal gt_refclk_buf          : std_logic_vector(NUM_GT_REFCLKS_C-1 downto 0);
 
   -- Timestamp Control and Status
-  signal ts_clk_sel                    : std_logic;
-  signal ts_clk_active                 : std_logic;
-  signal ts_ctl_apply_init             : std_logic;
-  signal ts_ctl_apply_init_src         : std_logic_vector(2 downto 0);
-  signal ts_ctl_init_val_ns            : std_logic_vector(63 downto 0);
-  signal ts_ctl_init_val_ts            : std_logic_vector(63 downto 0);
-  signal ts_ctl_apply_add_skip         : std_logic;
-  signal ts_ctl_add_skipn              : std_logic;
-  signal ts_ctl_add_skip_period        : std_logic_vector(31 downto 0);
+  signal ts_clk_sel             : std_logic;
+  signal ts_clk_active          : std_logic;
+  signal ts_ctl_apply_init      : std_logic;
+  signal ts_ctl_apply_init_src  : std_logic_vector(2 downto 0);
+  signal ts_ctl_init_val_ns     : std_logic_vector(63 downto 0);
+  signal ts_ctl_init_val_ts     : std_logic_vector(63 downto 0);
+  signal ts_ctl_apply_add_skip  : std_logic;
+  signal ts_ctl_add_skipn       : std_logic;
+  signal ts_ctl_add_skip_period : std_logic_vector(31 downto 0);
 
-  signal ts_add_skip_inc               : std_logic_vector(1 downto 0);
-  signal ts_result_vld                 : std_logic_vector(1 downto 0);
-  signal ts_result                     : slv64_array_t(1 downto 0);
+  -- PPS Timestamps
+  signal pps_ts_result_vlds     : std_logic_vector(1 downto 0);
+  signal pps_ts_results         : slv64_array_t(1 downto 0);
+  signal pps_ts_add_skip_incs   : std_logic_vector(1 downto 0);
 
-  signal timestamp_trigger             : std_logic_vector(0 downto 0);
-  signal timestamp_vld                 : std_logic_vector(0 downto 0);
-  signal timestamp                     : slv64_array_t(0 downto 0);
+  -- User Timestamps
+  signal user_ts_triggers       : std_logic_vector(NUM_USER_TIMESTAMPERS_C - 1 downto 0);
+  signal user_ts_result_vlds    : std_logic_vector(NUM_USER_TIMESTAMPERS_C - 1 downto 0);
+  signal user_ts_results        : slv64_array_t(NUM_USER_TIMESTAMPERS_C - 1 downto 0);
 
   -- Register Interface
-  signal reg_addr_vld                  : std_logic;
-  signal reg_addr                      : std_logic_vector(15 downto 0);
-  signal reg_rdat_vld                  : std_logic;
-  signal reg_rdat                      : std_logic_vector(31 downto 0);
-  signal reg_wdat_vld                  : std_logic;
-  signal reg_wdat                      : std_logic_vector(31 downto 0);
+  signal reg_addr_vld           : std_logic;
+  signal reg_addr               : std_logic_vector(15 downto 0);
+  signal reg_rdat_vld           : std_logic;
+  signal reg_rdat               : std_logic_vector(31 downto 0);
+  signal reg_wdat_vld           : std_logic;
+  signal reg_wdat               : std_logic_vector(31 downto 0);
 
 --------------------------------------------------------------------------------
 
@@ -154,40 +161,40 @@ begin
   --
   tscore_i : entity work.tscore_wrapper
     generic map (
-      FPGA_FAMILY_G                    => FPGA_FAMILY_C,
-      SYS_CLK_FREQ_G                   => 156,
-      PPS_IN_INVERTED_G                => true,
-      GPIO_IN_INVERTED_G               => true,
-
-      NUM_TS_TRIGGERS_G                => 1
+      FPGA_FAMILY_G          => FPGA_FAMILY_C,
+      SYS_CLK_FREQ_G         => 156,
+      PPS_IN_INVERTED_G      => true,
+      GPIO_IN_INVERTED_G     => true,
+      NUM_TS_TRIGGERS_G      => NUM_USER_TIMESTAMPERS_C
       )
     port map (
-      -- Timing Reference Sources
-      refclk_user                      => refclk_user(0), -- 156.25MHz
-      refclk_ts                        => refclk_ts,
-      pps_in_gpio                      => gpio_in(3),
-      pps_in                           => pps_n,
-
-      -- Register interface
-      reg_clk                          => refclk_25,
-      reg_rst                          => refclk_25_rst,
-      ts_clk_sel                       => ts_clk_sel,
-      ts_clk_active                    => ts_clk_active,
-      ts_ctl_apply_init                => ts_ctl_apply_init,
-      ts_ctl_apply_init_src            => ts_ctl_apply_init_src,
-      ts_ctl_init_val_ns               => ts_ctl_init_val_ns,
-      ts_ctl_init_val_ts               => ts_ctl_init_val_ts,
-      ts_ctl_apply_add_skip            => ts_ctl_apply_add_skip,
-      ts_ctl_add_skipn                 => ts_ctl_add_skipn,
-      ts_ctl_add_skip_period           => ts_ctl_add_skip_period,
-      ts_add_skip_inc                  => ts_add_skip_inc,
-      ts_result_vld                    => ts_result_vld,
-      ts_result                        => ts_result,
-
-      -- TS Trigger Interface
-      trigger                          => timestamp_trigger,
-      trig_timestamp_vld               => timestamp_vld,
-      trig_timestamp                   => timestamp
+      refclk_user            => refclk_user(0), -- 156.25MHz
+      refclk_ts              => refclk_ts,
+      pps_in_gpio            => gpio_in(3),
+      pps_in                 => pps_n,
+      --
+      ts_clk_sel             => ts_clk_sel,
+      --
+      ts_clk_active          => ts_clk_active,
+      --
+      reg_clk                => refclk_25,
+      reg_rst                => refclk_25_rst,
+      ts_ctl_apply_init      => ts_ctl_apply_init,
+      ts_ctl_apply_init_src  => ts_ctl_apply_init_src,
+      ts_ctl_init_val_ts     => ts_ctl_init_val_ts,
+      ts_ctl_init_val_ns     => ts_ctl_init_val_ns,
+      ts_ctl_apply_add_skip  => ts_ctl_apply_add_skip,
+      ts_ctl_add_skipn       => ts_ctl_add_skipn,
+      ts_ctl_add_skip_period => ts_ctl_add_skip_period,
+      --
+      ts_result_vld          => pps_ts_result_vlds,
+      ts_result              => pps_ts_results,
+      ts_add_skip_inc        => pps_ts_add_skip_incs,
+      --
+      trigger                => user_ts_triggers,
+      --
+      trig_timestamp_vld     => user_ts_result_vlds,
+      trig_timestamp         => user_ts_results
       );
 
   --------------------------------------------------------------------------------
@@ -195,85 +202,60 @@ begin
   --
   i2c_slave_i : entity work.i2c_reg_protocol
     port map (
-      clk                              => refclk_25,
-      rst                              => refclk_25_rst,
-      base_addr                        => I2C_BASE_ADDR_G,
+      clk       => refclk_25,
+      rst       => refclk_25_rst,
+      base_addr => I2C_BASE_ADDR_G,
 
       -- I2C Bus interface
-      scl_in                           => i2c_scl_in(1),
-      scl_low_n                        => i2c_scl_out(1),
-      sda_in                           => i2c_sda_in(1),
-      sda_low_n                        => i2c_sda_out(1),
+      scl_in    => i2c_scl_in(1),
+      scl_low_n => i2c_scl_out(1),
+      sda_in    => i2c_sda_in(1),
+      sda_low_n => i2c_sda_out(1),
 
       -- Register Interface
-      reg_avld                         => reg_addr_vld,
-      reg_addr                         => reg_addr,
-      reg_rvld                         => reg_rdat_vld,
-      reg_rdata                        => reg_rdat,
-      reg_wvld                         => reg_wdat_vld,
-      reg_wdata                        => reg_wdat
+      reg_avld  => reg_addr_vld,
+      reg_addr  => reg_addr,
+      reg_rvld  => reg_rdat_vld,
+      reg_rdata => reg_rdat,
+      reg_wvld  => reg_wdat_vld,
+      reg_wdata => reg_wdat
       );
 
   registers_i : entity work.tscore_nomac_registers
     generic map (
-      PROJECT_NAME_G                   => PROJECT_NAME_G
+      PROJECT_NAME_G         => PROJECT_NAME_G
       )
     port map (
-      reg_clk                          => refclk_25,
-      reg_avld                         => reg_addr_vld,
-      reg_addr                         => reg_addr,
-      reg_rvld                         => reg_rdat_vld,
-      reg_rdata                        => reg_rdat,
-      reg_wvld                         => reg_wdat_vld,
-      reg_wdata                        => reg_wdat,
-
-      -- Status
-      fpga_id                          => fpga_id,
-
-      -- Time Stamp Control & Results
-      ts_clk_sel                       => ts_clk_sel,
-      ts_clk_active                    => ts_clk_active,
-
-      ts_ctl_apply_init                => ts_ctl_apply_init,
-      ts_ctl_apply_init_src            => ts_ctl_apply_init_src,
-      ts_ctl_init_val_ns               => ts_ctl_init_val_ns,
-      ts_ctl_init_val_ts               => ts_ctl_init_val_ts,
-      ts_ctl_apply_add_skip            => ts_ctl_apply_add_skip,
-      ts_ctl_add_skipn                 => ts_ctl_add_skipn,
-      ts_ctl_add_skip_period           => ts_ctl_add_skip_period,
-      ts_add_skip_inc                  => ts_add_skip_inc,
-
-      ts_result_vld                    => ts_result_vld,
-      ts_result                        => ts_result,
-
-      trigger                          => timestamp_trigger,
-      trig_timestamp_vld               => timestamp_vld,
-      trig_timestamp                   => timestamp
+      reg_clk                => refclk_25,
+      reg_avld               => reg_addr_vld,
+      reg_addr               => reg_addr,
+      reg_rvld               => reg_rdat_vld,
+      reg_rdata              => reg_rdat,
+      reg_wvld               => reg_wdat_vld,
+      reg_wdata              => reg_wdat,
+      --
+      fpga_id                => fpga_id,
+      --
+      ts_clk_sel             => ts_clk_sel,
+      ts_clk_active          => ts_clk_active,
+      --
+      ts_ctl_apply_init      => ts_ctl_apply_init,
+      ts_ctl_apply_init_src  => ts_ctl_apply_init_src,
+      ts_ctl_init_val_ts     => ts_ctl_init_val_ts,
+      ts_ctl_init_val_ns     => ts_ctl_init_val_ns,
+      ts_ctl_apply_add_skip  => ts_ctl_apply_add_skip,
+      ts_ctl_add_skipn       => ts_ctl_add_skipn,
+      ts_ctl_add_skip_period => ts_ctl_add_skip_period,
+      --
+      pps_ts_result_vlds     => pps_ts_result_vlds,
+      pps_ts_results         => pps_ts_results,
+      pps_ts_add_skip_incs   => pps_ts_add_skip_incs,
+      --
+      user_ts_triggers       => user_ts_triggers,
+      --
+      user_ts_result_vlds    => user_ts_result_vlds,
+      user_ts_results        => user_ts_results
       );
-
-      -- A dummy module which implements a reg_hs_counter.
-      -- This should currently be optimised away.
-      -- FIXME: Use the reg_hs_counter module for something useful in this example.
-      trigger_count_sync_i : entity work.reg_hs_counter
-      generic map (
-        HS_PIPE_G      => 2,
-        HS_CLK_FREQ_G  => 156,
-        REG_CLK_FREQ_G => 25,
-        IS_MASTER_G    => true
-        )
-      port map (
-        -- High-Speed Domain
-        hs_clk        => refclk_user(0),
-        hs_pulse      => '0',
-
-        -- Regfile Domain
-        reg_clk       => refclk_25,
-        master_sample => open,
-        reg_sample    => '0',
-
-        reg_we        => open,
-        reg_count     => open
-        );
 
   --------------------------------------------------------------------------------
   -- Timing References

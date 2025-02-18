@@ -1,7 +1,7 @@
 --------------------------------------------------------------------------------
--- Copyright (c) 2019-2022 Arista Networks, Inc. All rights reserved.
+-- Copyright (c) 2019 Arista Networks, Inc. All rights reserved.
 --------------------------------------------------------------------------------
--- Author:
+-- Maintainers:
 --   fdk-support@arista.com
 --
 -- Description:
@@ -172,15 +172,15 @@ package body board_pkg is
     variable ret_val : gt_cfg_t(h downto l);
   begin
     for i in l to h loop
-      ret_val(i).txdiffctrl    := "10000"; -- TX Diff Swing to 780mV for GTY
-      ret_val(i).txprecursor   := "00000"; -- No precursor
-      ret_val(i).txpostcursor  := "00000"; -- No postcursor
-      ret_val(i).txpolarity    := '0';
-      ret_val(i).txinhibit     := '0';
-      ret_val(i).rxdfeen       := '0';
-      ret_val(i).rxpolarity    := '0';
-      ret_val(i).eyescanreset  := '0';
-      ret_val(i).rxreset       := '0';
+      ret_val(i).txdiffctrl   := 7x"10";                      -- TX Diff Swing to 780mV for GTY
+      ret_val(i).txpostcursor := (others => '0');             -- No postcursor
+      ret_val(i).txprecursor  := (others => (others => '0')); -- No precursor
+      ret_val(i).txpolarity   := '0';
+      ret_val(i).txinhibit    := '0';
+      ret_val(i).rxdfeen      := '0';
+      ret_val(i).rxpolarity   := '0';
+      ret_val(i).rxreset      := '0';
+      ret_val(i).eyescanreset := '0';
     end loop;
     return ret_val;
   end get_gt_config;

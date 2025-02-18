@@ -1,7 +1,7 @@
 --------------------------------------------------------------------------------
--- Copyright (c) 2016-2022 Arista Networks, Inc. All rights reserved.
+-- Copyright (c) 2016 Arista Networks, Inc. All rights reserved.
 --------------------------------------------------------------------------------
--- Author:
+-- Maintainers:
 --   fdk-support@arista.com
 --
 -- Description:
@@ -180,6 +180,8 @@ package amba_pkg is
     rready  : std_logic;
   end record;
 
+  type axi4l_mts_array_t is array(integer range <>) of axi4l_mts_t;
+
   type axi4l_stm_t is record
     awready : std_logic;
     wready  : std_logic;
@@ -191,7 +193,223 @@ package amba_pkg is
     rresp   : std_logic_vector(1 downto 0);
   end record;
 
+  type axi4l_stm_array_t is array(integer range <>) of axi4l_stm_t;
+
+  constant AXI4MML_MTS_DFLT_C : axi4l_mts_t := (awvalid => '0',
+                                                awaddr  => (others => '0'),
+                                                awprot  => (others => '0'),
+                                                wvalid  => '0',
+                                                wdata   => (others => '0'),
+                                                wstrb   => (others => '0'),
+                                                bready  => '0',
+                                                arvalid => '0',
+                                                araddr  => (others => '0'),
+                                                arprot  => (others => '0'),
+                                                rready  => '0');
+
+  constant AXI4MML_STM_DFLT_C : axi4l_stm_t := (awready => '0',
+                                                wready  => '0',
+                                                bvalid  => '0',
+                                                bresp   => (others => '0'),
+                                                arready => '0',
+                                                rvalid  => '0',
+                                                rdata   => (others => '0'),
+                                                rresp   => (others => '0'));
+
+  ------------------------------------------------------------------------
+  -- Define constants for AXI4MM interfaces
+  constant AXI4MM_MDWIDTH_C: integer := 256;
+  constant AXI4MM_MIWIDTH_C: integer := 16;
+  constant AXI4MM_MUWIDTH_C: integer := 64;
+  constant AXI4MM_MAWIDTH_C: integer := 64;
+
+  ------------------------------------------------------------------------
+  -- Define types for AXI4MM interfaces
+  subtype axi4mm_id_t     is std_logic_vector(AXI4MM_MIWIDTH_C-1 downto 0);
+  subtype axi4mm_data_t   is std_logic_vector(AXI4MM_MDWIDTH_C-1 downto 0);
+  subtype axi4mm_wstrb_t  is std_logic_vector(AXI4MM_MDWIDTH_C/8-1 downto 0);
+  subtype axi4mm_addr_t   is std_logic_vector(AXI4MM_MAWIDTH_C-1 downto 0);
+  subtype axi4mm_user_t   is std_logic_vector(AXI4MM_MUWIDTH_C-1 downto 0);
+  subtype axi4mm_prot_t   is std_logic_vector(2 downto 0);
+  subtype axi4mm_cache_t  is std_logic_vector(3 downto 0);
+  subtype axi4mm_region_t is std_logic_vector(3 downto 0);
+  subtype axi4mm_resp_t   is std_logic_vector(1 downto 0);
+  subtype axi4mm_size_t   is std_logic_vector(2 downto 0);
+  subtype axi4mm_burst_t  is std_logic_vector(1 downto 0);
+  subtype axi4mm_len_t    is std_logic_vector(7 downto 0);
+  subtype axi4mm_lock_t   is std_logic;
+  subtype axi4mm_qos_t    is std_logic_vector(3 downto 0);
+
+  ------------------------------------------------------------------------
+  -- Define records for AXI4-MM interfaces
+  -- NOTE: mts => manager to subordinate, stm -> subordinate to manager
+  type axi4mm_mts_addr_channel_t is record
+    addr   : axi4mm_addr_t;
+    user   : axi4mm_user_t;
+    burst  : axi4mm_burst_t;
+    cache  : axi4mm_cache_t;
+    region : axi4mm_region_t;
+    id     : axi4mm_id_t;
+    qos    : axi4mm_qos_t;
+    len    : axi4mm_len_t;
+    lock   : axi4mm_lock_t;
+    prot   : axi4mm_prot_t;
+    size   : axi4mm_size_t;
+    valid  : std_logic;
+  end record;
+
+  constant AXI4MM_MTS_ADDR_CHANNEL_DFLT_C : axi4mm_mts_addr_channel_t := (
+    addr   => (others  => '0'),
+    user   => (others  => '0'),
+    burst  => "01",
+    cache  => (others  => '0'),
+    region => (others  => '0'),
+    id     => (others  => '0'),
+    qos    => (others  => '0'),
+    len    => (others  => '0'),
+    lock   => '0',
+    prot   => (others  => '0'),
+    size   => (others  => '0'),
+    valid  => '0'
+    );
+
+  type axi4mm_stm_addr_channel_t is record
+    ready: std_logic;
+  end record;
+
+  constant AXI4MM_STM_ADDR_CHANNEL_DFLT_C : axi4mm_stm_addr_channel_t := (
+    ready => '0'
+    );
+
+  type axi4mm_mts_read_data_channel_t is record
+    ready: std_logic;
+  end record;
+
+  constant AXI4MM_MTS_READ_DATA_CHANNEL_DFLT_C: axi4mm_mts_read_data_channel_t := (
+    ready => '0'
+    );
+
+  type axi4mm_stm_read_data_channel_t is record
+    data  : axi4mm_data_t;
+    resp  : axi4mm_resp_t;
+    id    : axi4mm_id_t;
+    valid : std_logic;
+    last  : std_logic;
+  end record;
+
+  constant AXI4MM_STM_READ_DATA_CHANNEL_DFLT_C: axi4mm_stm_read_data_channel_t := (
+    data  => (others => '0'),
+    resp  => (others => '0'),
+    id    => (others => '0'),
+    valid => '0',
+    last  => '0'
+    );
+
+  type axi4mm_mts_write_data_channel_t is record
+    data  : axi4mm_data_t;
+    strb  : axi4mm_wstrb_t;
+    last  : std_logic;
+    valid : std_logic;
+  end record;
+
+  constant AXI4MM_MTS_WRITE_DATA_CHANNEL_DFLT_C: axi4mm_mts_write_data_channel_t := (
+    data  => (others => '0'),
+    strb  => (others => '1'),
+    last  => '1',
+    valid => '0'
+    );
+
+  type axi4mm_stm_write_data_channel_t is record
+    ready: std_logic;
+  end record;
+
+  constant AXI4MM_STM_WRITE_DATA_CHANNEL_DFLT_C: axi4mm_stm_write_data_channel_t := (
+    ready => '0'
+    );
+
+  type axi4mm_mts_bresp_channel_t is record
+    ready: std_logic;
+  end record;
+
+  constant AXI4MM_MTS_BRESP_CHANNEL_DFLT_C: axi4mm_mts_bresp_channel_t := (
+    ready => '0'
+    );
+
+  type axi4mm_stm_bresp_channel_t is record
+    id    : axi4mm_id_t;
+    resp  : axi4mm_resp_t;
+    user  : axi4mm_user_t;
+    valid : std_logic;
+  end record;
+
+  constant AXI4MM_STM_BRESP_CHANNEL_DFLT_C: axi4mm_stm_bresp_channel_t := (
+    id    => (others => '0'),
+    resp  => (others => '0'),
+    user  => (others => '0'),
+    valid => '0'
+    );
+
+  type axi4mm_mts_t is record
+    r_addr : axi4mm_mts_addr_channel_t;
+    r_data : axi4mm_mts_read_data_channel_t;
+    w_addr : axi4mm_mts_addr_channel_t;
+    w_data : axi4mm_mts_write_data_channel_t;
+    b_resp : axi4mm_mts_bresp_channel_t;
+  end record;
+  type axi4mm_mts_array_t is array(integer range <>) of axi4mm_mts_t;
+
+  constant AXI4MM_MTS_DFLT_C: axi4mm_mts_t := (
+    r_addr => AXI4MM_MTS_ADDR_CHANNEL_DFLT_C,
+    r_data => AXI4MM_MTS_READ_DATA_CHANNEL_DFLT_C,
+    w_addr => AXI4MM_MTS_ADDR_CHANNEL_DFLT_C,
+    w_data => AXI4MM_MTS_WRITE_DATA_CHANNEL_DFLT_C,
+    b_resp => AXI4MM_MTS_BRESP_CHANNEL_DFLT_C
+    );
+
+  type axi4mm_stm_t is record
+    r_addr: axi4mm_stm_addr_channel_t;
+    r_data: axi4mm_stm_read_data_channel_t;
+    w_addr: axi4mm_stm_addr_channel_t;
+    w_data: axi4mm_stm_write_data_channel_t;
+    b_resp: axi4mm_stm_bresp_channel_t;
+  end record;
+  type axi4mm_stm_array_t is array(integer range <>) of axi4mm_stm_t;
+
+  constant AXI4MM_STM_DFLT_C: axi4mm_stm_t := (
+    r_addr => AXI4MM_STM_ADDR_CHANNEL_DFLT_C,
+    r_data => AXI4MM_STM_READ_DATA_CHANNEL_DFLT_C,
+    w_addr => AXI4MM_STM_ADDR_CHANNEL_DFLT_C,
+    w_data => AXI4MM_STM_WRITE_DATA_CHANNEL_DFLT_C,
+    b_resp => AXI4MM_STM_BRESP_CHANNEL_DFLT_C
+    );
+
+  type axi4mm_bus_params_t is record
+    awidth    : integer range 0 to AXI4MM_MAWIDTH_C;
+    aruwidth  : integer range 0 to AXI4MM_MUWIDTH_C;
+    awuwidth  : integer range 0 to AXI4MM_MUWIDTH_C;
+    dwidth    : integer range 0 to AXI4MM_MDWIDTH_C;
+    idwidth   : integer range 0 to AXI4MM_MIWIDTH_C;
+  end record;
+
+  constant AXI4MM_BUS_PARAMS_DFLT_C: axi4mm_bus_params_t := (
+    awidth    => AXI4MM_MAWIDTH_C,
+    aruwidth  => AXI4MM_MUWIDTH_C,
+    awuwidth  => AXI4MM_MUWIDTH_C,
+    dwidth    => AXI4MM_MDWIDTH_C,
+    idwidth   => AXI4MM_MIWIDTH_C
+  );
+
+  function to_axi4mm_size_t(bwidth: integer) return axi4mm_size_t;
+
 end package amba_pkg;
 
 package body amba_pkg is
+
+  function to_axi4mm_size_t(bwidth: integer) return axi4mm_size_t is
+    constant l2c_bw: natural := log2c(bwidth);
+  begin
+    assert 2**l2c_bw = bwidth report "Error, AXI Bus Width must be a power of 2." severity FAILURE;
+    return std_logic_vector(to_unsigned(l2c_bw-3, 3));
+  end function;
+
 end package body amba_pkg;
