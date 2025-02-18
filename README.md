@@ -3,8 +3,8 @@ Arista FDK
 
 ## Introduction
 
-This is an open-source version of the Arista FPGA Developer's Kit (FDK). For more
-comprehensive documentation, and a developer kit including closed-source code
+This is an open-source version of the Arista FPGA Development Kit (FDK). For more
+comprehensive documentation, and a Development Kit including closed-source code
 visit the 7130 download portal on the [Arista web site](https://www.arista.com/en/support/software-download).
 
 This kit provides the tools and information required to
@@ -89,4 +89,4 @@ The FDK directory structure is as follows:
    files, daemons, documentation, etc.
  * `ipcores`   -- Contains documentation and requirements for IP Cores. The
    source for IP cores is contained within the `src` directory.
- * `src`       -- All source files including Python, FPGA RTL, XCI, etc.
+ * `src`       -- All source files including Python, FPGA RTL, TCL, XCI, etc.

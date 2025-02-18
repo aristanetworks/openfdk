@@ -1,8 +1,8 @@
 #!/usr/bin/env arista-python
 # ------------------------------------------------------------------------------
-#  Copyright (c) 2021-2023 Arista Networks, Inc. All rights reserved.
+#  Copyright (c) 2021 Arista Networks, Inc. All rights reserved.
 # ------------------------------------------------------------------------------
-#  Author:
+#  Maintainers:
 #    fdk-support@arista.com
 #
 #  Description:
@@ -16,7 +16,6 @@
 #
 # ------------------------------------------------------------------------------
 
-from __future__ import absolute_import, division, print_function
 
 import CliExtension
 
@@ -27,7 +26,7 @@ class ShowNullStatusCmd(libapp.cli.ShowEnabledBaseCmd):
     daemon = "NullExampleDaemon"
 
     def handler(self, ctx):
-        result = super(ShowNullStatusCmd, self).handler(ctx)
+        result = super().handler(ctx)
         result["fpgas"] = {}
 
         daemon = ctx.getDaemon(self.daemon)
@@ -43,7 +42,7 @@ class ShowNullStatusCmd(libapp.cli.ShowEnabledBaseCmd):
         return result
 
     def render(self, data):
-        super(ShowNullStatusCmd, self).render(data)
+        super().render(data)
         for f, v in data["fpgas"].items():
             print("{} appName: {}".format(f.title(), v))
 

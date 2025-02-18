@@ -1,7 +1,7 @@
 #-------------------------------------------------------------------------------
-#- Copyright (c) 2021-2023 Arista Networks, Inc. All rights reserved.
+#- Copyright (c) 2021 Arista Networks, Inc. All rights reserved.
 #-------------------------------------------------------------------------------
-#- Author:
+#- Maintainers:
 #-   fdk-support@arista.com
 #-
 #- Description:
@@ -23,11 +23,11 @@
 .SECONDEXPANSION:
 
 PROJECT    ?= telemexample
-VERSION_ID ?= 2.7.0.openfdk
-BUILD_ID   ?= 6
+VERSION_ID ?= 3.0.0.openfdk
+BUILD_ID   ?= 30
 
 PROJECT_DIR         = $(CURDIR)
-ARISTA_FDK_VERSION ?= 2.7.0.openfdk
+ARISTA_FDK_VERSION ?= 3.0.0.openfdk
 ARISTA_FDK_DIR     ?= $(PROJECT_DIR)/../../../arista_fdk-$(ARISTA_FDK_VERSION)
 ARISTA_SRC_DIR      = $(ARISTA_FDK_DIR)/src
 

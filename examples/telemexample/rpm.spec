@@ -1,7 +1,7 @@
 #-------------------------------------------------------------------------------
 #- Copyright (c) 2021 Arista Networks, Inc. All rights reserved.
 #-------------------------------------------------------------------------------
-#- Author:
+#- Maintainers:
 #-   fdk-support@arista.com
 #-
 #- Description:
@@ -30,6 +30,12 @@ Summary:        %{summary}
 
 License:        Commercial
 Source:         %{source}
+
+# Buildrequire both python2 and python3
+BuildRequires: python2-devel python3-devel
+
+# Pre-compile for python3
+%define __python python3
 
 AutoReqProv:    no
 
@@ -76,7 +82,7 @@ fi
 #if [ -d /opt/apps/%{appname}/www ]; then
 #    ln -sf /opt/apps/%{appname}/www /usr/share/nginx/html/apps/%{appname}
 #fi
-for d in /usr/lib/python[23].*/site-packages; do
+for d in /usr/lib*/python[23].*/site-packages; do
     ln -sf /opt/apps/%{appname} $d/%{appname}
 %if 0%{?cliplugins:1}
     mkdir -p $d/CliPlugin
@@ -89,7 +95,7 @@ exit 0
 %preun
 if [ $1 == 0 ]; then
     # uninstalling
-    for d in /usr/share/nginx/html/apps /usr/lib/python[23].*/site-packages; do
+    for d in /usr/share/nginx/html/apps /usr/lib*/python[23].*/site-packages; do
         if [ -L $d/%{appname} ]; then
             rm -f $d/%{appname}
         fi

@@ -1,7 +1,7 @@
 --------------------------------------------------------------------------------
 -- Copyright (c) 2023 Arista Networks, Inc. All rights reserved.
 --------------------------------------------------------------------------------
--- Author:
+-- Maintainers:
 --   fdk-support@arista.com
 --
 -- Description:
@@ -31,15 +31,15 @@ use work.metachron_pkg.all;
 entity tscore is
   generic (
     -- The FPGA family.
-    FPGA_FAMILY_G      : mm_fpga_family_t := MM_FPGA_ULTRASCALEP;
+    FPGA_FAMILY_G           : mm_fpga_family_t := MM_FPGA_ULTRASCALEP;
     -- The system clock frequency.
-    SYS_CLK_FREQ_G     : natural          := 156;
+    SYS_CLK_FREQ_G          : natural          := 156;
     -- Whether the PPS input is inverted.
-    PPS_IN_INVERTED_G  : boolean          := true;
+    PPS_IN_INVERTED_G       : boolean          := true;
     -- Whether the GPIO input is inverted.
-    GPIO_IN_INVERTED_G : boolean          := true;
+    GPIO_IN_INVERTED_G      : boolean          := true;
     -- Number of user-triggered timestampers.
-    NUM_TS_TRIGGERS_G  : natural          := 1
+    NUM_USER_TIMESTAMPERS_G : natural          := 1
     );
   port (
     -- Timing Reference Sources
@@ -70,25 +70,25 @@ entity tscore is
     -- bit 0 = pps_in_gpio
     -- bit 1 = pps_in
     -- Results will be synchonised into `reg_clk` domain.
-    ts_result_vld          : out std_logic_vector(1 downto 0);
-    ts_result              : out slv64_array_t(1 downto 0);
-    ts_add_skip_inc        : out std_logic_vector(1 downto 0);
+    pps_ts_result_vlds      : out std_logic_vector(1 downto 0);
+    pps_ts_results          : out slv64_array_t(1 downto 0);
+    pps_ts_add_skip_incs    : out std_logic_vector(1 downto 0);
     --
     -- User Timestamp Trigger
     -- User's trigger will be synchronised into the `ts_clk` domain.
-    trigger                : in std_logic_vector(NUM_TS_TRIGGERS_G - 1 downto 0) := (others => '0');
+    user_ts_triggers        : in std_logic_vector(NUM_USER_TIMESTAMPERS_G - 1 downto 0) := (others => '0');
     -- User Timestamp Results Interface
-    -- User timestamp results will be synchronised into the `trig_timestamp_clks` domain.
-    trig_timestamp_clks    : in std_logic_vector(NUM_TS_TRIGGERS_G - 1 downto 0) := (others => '0');
-    trig_timestamp_vld     : out std_logic_vector(NUM_TS_TRIGGERS_G - 1 downto 0);
-    trig_timestamp         : out slv64_array_t(NUM_TS_TRIGGERS_G - 1 downto 0)
+    -- User timestamp results will be synchronised into the `user_ts_result_clks` domain.
+    user_ts_result_clks     : in std_logic_vector(NUM_USER_TIMESTAMPERS_G - 1 downto 0) := (others => '0');
+    user_ts_result_vlds     : out std_logic_vector(NUM_USER_TIMESTAMPERS_G - 1 downto 0);
+    user_ts_results         : out slv64_array_t(NUM_USER_TIMESTAMPERS_G - 1 downto 0)
     );
 end entity tscore;
 
 architecture rtl of tscore is
 
-  signal timestamp_clk : std_logic;
-  signal cntr_signals  : metachron_counter_control_t;
+  signal ts_clk       : std_logic;
+  signal cntr_control : metachron_counter_control_t;
 
 begin
 
@@ -104,56 +104,65 @@ begin
       GPIO_IN_INVERTED_G => GPIO_IN_INVERTED_G
       )
     port map (
-      sys_clk              => refclk_user,
-      ts_ref_clk           => refclk_ts,
-      pps_in_gpio          => pps_in_gpio,
-      pps_in               => pps_in,
+      -- Timing Reference Sources
+      refclk_user            => refclk_user,
+      refclk_ts              => refclk_ts,
+      pps_in_gpio            => pps_in_gpio,
+      pps_in                 => pps_in,
       --
-      ts_clk_sel           => ts_clk_sel,
-      ts_clk_active        => ts_clk_active,
+      -- Timestamp clock selection
+      -- '0' = from internal 156.25 MHz source
+      -- '1' = from external 100 MHz source
+      ts_clk_sel             => ts_clk_sel,
+      ts_clk_active          => ts_clk_active,
       --
-      -- Timestamp clock output
-      ts_clk               => timestamp_clk,
+      -- Timestamp clock
+      ts_clk                 => ts_clk,
       --
-      reg_clk              => reg_clk,
-      reg_rst              => reg_rst,
-      ctlr_apply_init      => ts_ctl_apply_init,
-      ctlr_apply_init_src  => ts_ctl_apply_init_src,
-      ctlr_init_val_ts     => ts_ctl_init_val_ts,
-      ctlr_init_val_ns     => ts_ctl_init_val_ns,
-      ctlr_apply_add_skip  => ts_ctl_apply_add_skip,
-      ctlr_add_skipn       => ts_ctl_add_skipn,
-      ctlr_add_skip_period => ts_ctl_add_skip_period,
+      -- Register interface
+      reg_clk                => reg_clk,
+      reg_rst                => reg_rst,
+      ts_ctl_apply_init      => ts_ctl_apply_init,
+      ts_ctl_apply_init_src  => ts_ctl_apply_init_src,
+      ts_ctl_init_val_ts     => ts_ctl_init_val_ts,
+      ts_ctl_init_val_ns     => ts_ctl_init_val_ns,
+      ts_ctl_apply_add_skip  => ts_ctl_apply_add_skip,
+      ts_ctl_add_skipn       => ts_ctl_add_skipn,
+      ts_ctl_add_skip_period => ts_ctl_add_skip_period,
       --
-      ts_result_vld        => ts_result_vld,
-      ts_result            => ts_result,
-      ts_add_skip_inc      => ts_add_skip_inc,
-      -- Counter control output
-      cntr_signals         => cntr_signals
+      -- PPS timestamps
+      -- 0 = pps_in_gpio, 1 = pps_in
+      -- Results will be synchonised into `reg_clk` domain.
+      pps_ts_result_vlds     => pps_ts_result_vlds,
+      pps_ts_results         => pps_ts_results,
+      pps_ts_add_skip_incs   => pps_ts_add_skip_incs,
+      --
+      -- Counter controls
+      cntr_control           => cntr_control
       );
 
   --------------------------------------------------------------------------------
   -- Timestamp Generation
   --------------------------------------------------------------------------------
 
-  gen_timestampers : for i in 0 to NUM_TS_TRIGGERS_G - 1 generate
+  gen_timestampers : for i in 0 to NUM_USER_TIMESTAMPERS_G - 1 generate
 
     timestamper_i : entity work.timestamper
       port map (
         reg_clk      => reg_clk,
         reg_rst      => reg_rst,
         -- Timestamp clock input
-        ts_clk       => timestamp_clk,
-        -- Counter control input - uses `reg_clk` and `ts_clk`
-        cntr_signals => cntr_signals,
+        ts_clk       => ts_clk,
+        -- Counter control input - uses `reg_clk` and `ts_clk`.
+        cntr_signals => cntr_control,
         -- Trigger will be synchronised into `ts_clk` domain.
-        trigger      => trigger(i),
+        trigger      => user_ts_triggers(i),
         trigger_out  => open,
-        -- Timestamp results will be synchronised into the `trig_timestamp_clks` domain.
-        result_vld   => trig_timestamp_vld(i),
-        result       => trig_timestamp(i),
-        --
-        result_clk   => trig_timestamp_clks(i)
+        -- Timestamp results will be synchronised into the `user_ts_result_clks` domain.
+        result_vld   => user_ts_result_vlds(i),
+        result       => user_ts_results(i),
+        -- Clock used to deliver timestamp result.
+        result_clk   => user_ts_result_clks(i)
         );
 
   end generate;

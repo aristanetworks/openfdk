@@ -1,7 +1,7 @@
 # ------------------------------------------------------------------------------
-#  Copyright (c) 2021-2023 Arista Networks, Inc. All rights reserved.
+#  Copyright (c) 2021 Arista Networks, Inc. All rights reserved.
 # ------------------------------------------------------------------------------
-#  Author:
+#  Maintainers:
 #    fdk-support@arista.com
 #
 #  Description:
@@ -194,7 +194,7 @@ def show_tscore_nomac_status(ctx):
 def trigger(ctx=None):
     """trigger - trigger timestamp
     Usage: trigger
-    Group: Application TSCore
+    Group: Application tscore_nomac
     Mode: config-app-tscore_nomac
     """
     app = ctx.mode_ctx["app"]
@@ -210,7 +210,7 @@ def trigger(ctx=None):
 def zap_daemon(ctx=None):
     """zap daemon - restart the synchronisation daemon
     Usage: zap daemon
-    Group: Application TSCore
+    Group: Application tscore_nomac
     Mode: config-app-tscore_nomac
     Hidden: hidden - debug
     """
@@ -222,9 +222,9 @@ def zap_daemon(ctx=None):
 
 @mosapi.cli_command
 def read_timestamp(ctx=None):
-    """read timestamp - read the timestamp from the tyme sync module
+    """read timestamp - read the timestamp from the time sync module
     Usage: read timestamp
-    Group: Application TSCore
+    Group: Application tscore_nomac
     Mode: config-app-tscore_nomac
     """
     app = ctx.mode_ctx["app"]
@@ -247,7 +247,7 @@ def read_timestamp(ctx=None):
 def show_registers(ctx):
     """show registers - Show all registers
     Usage: show registers
-    Group: Application TScore
+    Group: Application tscore_nomac
     Mode: config-app-tscore_nomac
     """
     app = ctx.mode_ctx["app"]
@@ -260,7 +260,7 @@ def show_registers(ctx):
 def read_register(ctx, name=""):
     """read register - read from register by name
     Usage: read register NAME
-    Group: Application TScore
+    Group: Application tscore_nomac
     Mode: config-app-tscore_nomac
     """
     app = ctx.mode_ctx["app"]
@@ -273,7 +273,7 @@ def read_register(ctx, name=""):
 def write_register(ctx, name="", value=""):
     """write register - write to register by name
     Usage: write register NAME HEXNUMBER
-    Group: Application TScore
+    Group: Application tscore_nomac
     Mode: config-app-tscore_nomac
     """
     app = ctx.mode_ctx["app"]

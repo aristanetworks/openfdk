@@ -1,8 +1,8 @@
 #!/usr/bin/env arista-python
 # ------------------------------------------------------------------------------
-#  Copyright (c) 2021-2023 Arista Networks, Inc. All rights reserved.
+#  Copyright (c) 2021 Arista Networks, Inc. All rights reserved.
 # ------------------------------------------------------------------------------
-#  Author:
+#  Maintainers:
 #    fdk-support@arista.com
 #
 #  Description:
@@ -15,8 +15,6 @@
 #    license-bsd-3-clause
 #
 # ------------------------------------------------------------------------------
-
-from __future__ import absolute_import, division, print_function
 
 import logging
 import sys

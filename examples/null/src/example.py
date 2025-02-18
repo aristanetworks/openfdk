@@ -1,7 +1,7 @@
 # ------------------------------------------------------------------------------
-#  Copyright (c) 2021-2023 Arista Networks, Inc. All rights reserved.
+#  Copyright (c) 2021 Arista Networks, Inc. All rights reserved.
 # ------------------------------------------------------------------------------
-#  Author:
+#  Maintainers:
 #    fdk-support@arista.com
 #
 #  Description:
@@ -43,8 +43,6 @@ class Example(mosapi.App):
         # And validate they are part of a compatibility list for this application...
         for f in self.fpga_devices:
             if f.board_standard in (
-                "e_central",
-                "e_leaf",
                 "eh_central",
                 "eh_leaf",
                 "l",
@@ -109,8 +107,6 @@ class Example(mosapi.App):
 # -------------------------------------------------------------------------------
 # CLI command to show basic status
 # -------------------------------------------------------------------------------
-
-
 @mosapi.cli_command
 def show_null_status(ctx):
     """show null status - show null status

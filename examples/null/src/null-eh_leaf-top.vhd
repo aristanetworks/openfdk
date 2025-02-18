@@ -1,7 +1,7 @@
 --------------------------------------------------------------------------------
--- Copyright (c) 2021-2023 Arista Networks, Inc. All rights reserved.
+-- Copyright (c) 2021 Arista Networks, Inc. All rights reserved.
 --------------------------------------------------------------------------------
--- Author:
+-- Maintainers:
 --   fdk-support@arista.com
 --
 -- Description:
@@ -82,18 +82,17 @@ entity top is
     inter_gpb_diff    : inout std_logic_vector(NUM_INTER_GPB_IFS_C*NUM_IDIFF_C-1 downto 0);
     inter_gpb_gpio    : inout std_logic_vector(NUM_INTER_GPB_IFS_C*NUM_IGPIO_C-1 downto 0);
 
-    fpga_id          : in    std_logic_vector(2 downto 0);
+    fpga_id           : in    std_logic_vector(2 downto 0);
+    platform_id       : in    std_logic_vector(15 downto 0);
+    boardstd_id       : in    std_logic_vector(15 downto 0);
+    mac_baseaddr      : in    std_logic_vector(47 downto 0);
+    mac_total         : in    std_logic_vector(7 downto 0);
 
-    sysmon_alm       : in    std_logic_vector(15 downto 0);
-
-    -- Signals below are deprecated and disabled,
-    -- and will be removed in a future version of the FDK.
-    fpga_dna         : in    std_logic_vector(95 downto 0);
-    mac_addr         : in    slv48_array_t(NUM_GT_PORTS_C downto 1);
+    sysmon_temp       : in    std_logic_vector(9 downto 0);
 
     -- Signals below are reserved and subject to change.
-    reserved_in      : in    top_reserved_in_t;
-    reserved_out     : out   top_reserved_out_t := TOP_RESERVED_OUT_DFLT_C
+    reserved_in       : in    top_reserved_in_t;
+    reserved_out      : out   top_reserved_out_t := TOP_RESERVED_OUT_DFLT_C
     );
 end entity top;
 
@@ -217,7 +216,7 @@ begin
   begin
     if rising_edge(emc_clk) then
       gpio_tri(0) <= gpio_meta;
-      gpio_meta   := or_reduce(sysmon_alm);
+      gpio_meta   := or_reduce(sysmon_temp);
     end if;
   end process;
 

@@ -1,7 +1,7 @@
 # ------------------------------------------------------------------------------
-#  Copyright (c) 2021-2023 Arista Networks, Inc. All rights reserved.
+#  Copyright (c) 2021 Arista Networks, Inc. All rights reserved.
 # ------------------------------------------------------------------------------
-#  Author:
+#  Maintainers:
 #    fdk-support@arista.com
 #
 #  Description:
@@ -31,8 +31,9 @@ from . import (
     daemon,
     device,
     eossdk_utils,
-    eossdk_wrappers,
+    eossdk_helpers,
     loghandler,
+    network,
     pcie,
     register_accessor,
     register_file,

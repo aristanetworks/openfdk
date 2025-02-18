@@ -1,7 +1,7 @@
 # ------------------------------------------------------------------------------
-#  Copyright (c) 2021-2023 Arista Networks, Inc. All rights reserved.
+#  Copyright (c) 2021 Arista Networks, Inc. All rights reserved.
 # ------------------------------------------------------------------------------
-#  Author:
+#  Maintainers:
 #    fdk-support@arista.com
 #
 #  Description:
@@ -27,6 +27,9 @@ class PIController(object):
         self.i = ival
         self.clamp = clamp
         self.i_effort = integral
+        # Initial values of the previous effort and error.
+        self.effort_1 = integral
+        self.error_1 = 0
 
     def step(self, error):
         p_effort = error * self.p
@@ -41,8 +44,34 @@ class PIController(object):
         self.i_effort = i_effort
         return effort
 
+    def incremental_PI(self, error):
+        # The naming convention is:
+        # _0 = the current time
+        # _1 = one sample period ago (the previous value)
+
+        # Constants for the "incremental" version of the PI controller
+        K0 = self.p + self.i / 2.0
+        K1 = -self.p + self.i / 2.0
+
+        # "Incremental" version of the PI controller
+        delta_effort = K0 * error + K1 * self.error_1
+        effort_0 = self.effort_1 + delta_effort
+
+        # Clamp the effort to the limit of the allowable control effort.
+        # In this case, there is no change in the control effort.
+        if effort_0 > self.clamp:
+            effort_0 = self.clamp
+        elif effort_0 < -self.clamp:
+            effort_0 = -self.clamp
+
+        # Store the `effort[n]` and `error[n]` for use in the next iteration
+        # where they will be `effort[n-1]` and `error[n-1]`
+        self.effort_1 = effort_0
+        self.error_1 = error
+        return effort_0
+
     def __call__(self, error):
-        return self.step(error)
+        return self.incremental_PI(error)
 
     def __str__(self):
         return "<PI: P({}) I({}:{})>".format(self.p, self.i, self.i_effort)

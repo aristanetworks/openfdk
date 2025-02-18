@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # ------------------------------------------------------------------------------
-#  Copyright (c) 2021-2023 Arista Networks, Inc. All rights reserved.
+#  Copyright (c) 2021 Arista Networks, Inc. All rights reserved.
 # ------------------------------------------------------------------------------
-#  Author:
+#  Maintainers:
 #    fdk-support@arista.com
 #
 #  Description:
@@ -65,7 +65,7 @@ def debug_fn(func):
 
 
 class SdkAgentMetaClass(type):
-    def __new__(cls, classname, bases, classDict):
+    def __new__(mcs, classname, bases, classDict):
         """Wraps all functions in this class that start with "on_" with
         the above debug_fn"""
         newClassDict = {}
@@ -74,7 +74,7 @@ class SdkAgentMetaClass(type):
                 # Wrap all "on_" handler functions with debugging helper code.
                 attribute = debug_fn(attribute)
             newClassDict[attributeName] = attribute
-        return type.__new__(cls, classname, bases, newClassDict)
+        return type.__new__(mcs, classname, bases, newClassDict)
 
 
 # Class to inherit from:

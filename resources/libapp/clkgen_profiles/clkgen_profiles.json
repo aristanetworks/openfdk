@@ -15,9 +15,15 @@
       "lb2":{"si5345": {"config_file": "default_lb2_lyrebird_si5345.txt"}}
     },
     "tamarama": {
-      "lb2":{"lmk05318": {"config_file": "default_lb2_tamarama_lmk05318.txt"}}
+      "lb2": {
+        "lmk05318": {"config_file": "default_lb2_tamarama_lmk05318.txt"},
+        "lmk05318b":{"config_file": "default_lb2_tamarama_lmk05318.txt"}
+        }
     },
     "malabar": {
+      "lb2":{"lmk05318b": {"config_file": "default_lb2_malabar_lmk05318b.txt"}}
+    },
+    "freshwater": {
       "lb2":{"lmk05318b": {"config_file": "default_lb2_malabar_lmk05318b.txt"}}
     }
   },
@@ -36,9 +42,15 @@
       "lb2":{"si5345": {"config_file": "default_lb2_lyrebird_si5345.txt"}}
     },
     "tamarama": {
-      "lb2":{"lmk05318": {"config_file": "default_lb2_tamarama_lmk05318.txt"}}
+      "lb2": {
+        "lmk05318": {"config_file": "default_lb2_tamarama_lmk05318.txt"},
+        "lmk05318b":{"config_file": "default_lb2_tamarama_lmk05318.txt"}
+        }
     },
     "malabar": {
+      "lb2":{"lmk05318b": {"config_file": "default_lb2_malabar_lmk05318b.txt"}}
+    },
+    "freshwater": {
       "lb2":{"lmk05318b": {"config_file": "default_lb2_malabar_lmk05318b.txt"}}
     }
   },
@@ -57,9 +69,15 @@
       "lb2":{"si5345": {"config_file": "eth161_lb2_lyrebird_si5345.txt"}}
     },
     "tamarama": {
-      "lb2":{"lmk05318": {"config_file": "eth161_lb2_tamarama_lmk05318.txt"}}
+      "lb2": {
+        "lmk05318": {"config_file": "eth161_lb2_tamarama_lmk05318.txt"},
+        "lmk05318b":{"config_file": "eth161_lb2_tamarama_lmk05318b.txt"}
+        }
     },
     "malabar": {
+      "lb2":{"lmk05318b": {"config_file": "eth161_lb2_malabar_lmk05318b.txt"}}
+    },
+    "freshwater": {
       "lb2":{"lmk05318b": {"config_file": "eth161_lb2_malabar_lmk05318b.txt"}}
     }
   },

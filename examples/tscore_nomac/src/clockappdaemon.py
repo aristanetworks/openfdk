@@ -1,7 +1,7 @@
 # ------------------------------------------------------------------------------
-#  Copyright (c) 2021-2023 Arista Networks, Inc. All rights reserved.
+#  Copyright (c) 2021 Arista Networks, Inc. All rights reserved.
 # ------------------------------------------------------------------------------
-#  Author:
+#  Maintainers:
 #    fdk-support@arista.com
 #
 #  Description:
@@ -831,7 +831,7 @@ def default_ts_clock_source(ctx=None):
 
 
 def capv():
-    return "0.3"
+    return "0.4"
 
 
 def caiv():

@@ -1,7 +1,7 @@
 # ------------------------------------------------------------------------------
-#  Copyright (c) 2021-2023 Arista Networks, Inc. All rights reserved.
+#  Copyright (c) 2021 Arista Networks, Inc. All rights reserved.
 # ------------------------------------------------------------------------------
-#  Author:
+#  Maintainers:
 #    fdk-support@arista.com
 #
 #  Description:
@@ -18,8 +18,9 @@
 from __future__ import absolute_import, print_function
 import collections
 import re
+import json
 import six
-from . import serial
+from . import IS_EOS, device, serial
 
 if six.PY3:
     from collections.abc import Mapping, MutableSet
@@ -39,6 +40,15 @@ except ImportError:
             pass
 
     CliExtension = MockedCliExtension()
+
+try:
+    import eossdk
+except ImportError:
+
+    class MockSDK:
+        pass
+
+    eossdk = MockSDK()
 
 
 class ConfigCommandClass(CliExtension.CliCommandClass):
@@ -161,7 +171,7 @@ class StatusAccessor(Mapping, dict):
             m = prog.match(key)
             if m:
                 keys.add(m.group(1) or int(m.group(2)))
-        for key in keys:
+        for key in keys:  # pylint: disable=use-yield-from
             yield key
 
     def __len__(self):
@@ -184,7 +194,7 @@ def _tokenize(syntax, optionals=True):
         syntax = re.sub(r"\[([^]]+)\]", r"\1", syntax)
     else:
         syntax = re.sub(r"\[([^]]+)\]", r"", syntax)
-    for token in syntax.split():
+    for token in syntax.split():  # pylint: disable=use-yield-from
         yield token
 
 
@@ -199,6 +209,25 @@ def running_config(ctx):
         result.append("no disabled")
 
     return result
+
+
+def fpga_options(ctx):  # pylint: disable=unused-argument
+    return device.get_fpga_identifiers()
+
+
+def get_eth_intfs(ctx):
+    # pylint: disable=unused-argument
+    if IS_EOS:
+        if not hasattr(get_eth_intfs, "eth_intfs"):
+            sdk = eossdk.Sdk("libappIntfGetter")
+            eapi = sdk.get_eapi_mgr()
+            ethIntfsList = list(
+                json.loads(eapi.run_show_cmd("show interfaces status").responses()[0])["interfaceStatuses"].keys()
+            )
+            ethIntfsList = filter(lambda intf: intf.startswith("Eth"), ethIntfsList)
+            get_eth_intfs.eth_intfs = {k: k for k in ethIntfsList}
+        return get_eth_intfs.eth_intfs
+    return []
 
 
 class ShowEnabledBaseCmd(CliExtension.ShowCommandClass):

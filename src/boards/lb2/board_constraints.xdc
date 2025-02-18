@@ -1,7 +1,7 @@
 #-------------------------------------------------------------------------------
-#- Copyright (c) 2019-2022 Arista Networks, Inc. All rights reserved.
+#- Copyright (c) 2019 Arista Networks, Inc. All rights reserved.
 #-------------------------------------------------------------------------------
-#- Author:
+#- Maintainers:
 #-   fdk-support@arista.com
 #-
 #- Description:
@@ -89,8 +89,8 @@ create_clock -period 2500.000 -name i2c_clk_5     [get_ports {i2c_scl[5]}]
 create_clock -period 2500.000 -name i2c_clk_6     [get_ports {i2c_scl[6]}]
 
 create_generated_clock -name sem_clk -source [get_pins bufg_sem_clock/I] -divide_by 2 [get_pins bufg_sem_clock/O]
-create_generated_clock -name refclk_25 [get_pins -hier -filter {NAME =~ arista_sysctl_i/refclk_pll_i/*CLKOUT0}]
-create_generated_clock -name refclk_50 [get_pins -hier -filter {NAME =~ arista_sysctl_i/refclk_pll_i/*CLKOUT1}]
+create_generated_clock -name refclk_25 [get_pins -hier -filter {NAME =~ arista_sysctl_i*/refclk_pll_i/*CLKOUT0}]
+create_generated_clock -name refclk_50 [get_pins -hier -filter {NAME =~ arista_sysctl_i*/refclk_pll_i/*CLKOUT1}]
 
 
 ################################################################################

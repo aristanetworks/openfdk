@@ -1,7 +1,7 @@
 --------------------------------------------------------------------------------
--- Copyright (c) 2017-2020 Arista Networks, Inc. All rights reserved.
+-- Copyright (c) 2017 Arista Networks, Inc. All rights reserved.
 --------------------------------------------------------------------------------
--- Author:
+-- Maintainers:
 --   fdk-support@arista.com
 --
 -- Description:

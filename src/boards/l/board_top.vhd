@@ -1,7 +1,7 @@
 --------------------------------------------------------------------------------
--- Copyright (c) 2019-2022 Arista Networks, Inc. All rights reserved.
+-- Copyright (c) 2019 Arista Networks, Inc. All rights reserved.
 --------------------------------------------------------------------------------
--- Author:
+-- Maintainers:
 --   fdk-support@arista.com
 --
 -- Description:
@@ -187,11 +187,11 @@ architecture struct of board_top is
   ------------------------------------------------------------------------------
   -- Local Constants
   ------------------------------------------------------------------------------
-  constant DISABLE_SYSCTL_REGS_C : boolean := false;
-  constant DISABLE_SYSCTL_SEM_C  : boolean := false;
-  CONSTANT ENABLE_TEMP_REG_C     : boolean := true;
-  constant EN_TEST_LOGIC_C       : boolean := false;
-  constant EN_TEST_GPIO_C        : boolean := false;
+  constant EN_SYSCTL_REGS_C : boolean := true;
+  constant EN_SYSCTL_SEM_C  : boolean := true;
+  constant EN_TEMP_REG_C    : boolean := true;
+  constant EN_TEST_LOGIC_C  : boolean := false;
+  constant EN_TEST_GPIO_C   : boolean := false;
 
   ------------------------------------------------------------------------------
   -- Signal Declarations
@@ -234,7 +234,11 @@ architecture struct of board_top is
   signal sem_error        : std_logic;
 
   signal fpga_id_i        : std_logic_vector(2 downto 0);
-  signal sysmon_alm       : std_logic_vector(15 downto 0);
+  signal platform_id      : std_logic_vector(15 downto 0);
+  signal boardstd_id      : std_logic_vector(15 downto 0);
+  signal mac_baseaddr     : std_logic_vector(47 downto 0);
+  signal mac_total        : std_logic_vector(7 downto 0);
+  signal sysmon_temp      : std_logic_vector(9 downto 0);
 
   signal top_reserved_in  : top_reserved_in_t;
   signal top_reserved_out : top_reserved_out_t := TOP_RESERVED_OUT_DFLT_C;
@@ -246,55 +250,55 @@ begin
   ------------------------------------------------------------------------------
   proj_top_i : entity work.top
     port map (
-      refclk_25         => refclk_25,
-      refclk_25_rst     => refclk_25_rst,
-      refclk_50         => refclk_50,
-      refclk_50_rst     => refclk_50_rst,
+      refclk_25        => refclk_25,
+      refclk_25_rst    => refclk_25_rst,
+      refclk_50        => refclk_50,
+      refclk_50_rst    => refclk_50_rst,
 
-      refclk_user       => refclk_user,
-      refclk_out        => refclk_out,
+      refclk_user      => refclk_user,
+      refclk_out       => refclk_out,
 
-      pps_in_n          => pps_in_n,
-      pps_out           => pps_out,
-      ts_clk_in         => ts_clk_in,
-      ts_diff_clk       => ts_diff_clk,
-      ts_clk_out        => ts_clk_out,
+      pps_in_n         => pps_in_n,
+      pps_out          => pps_out,
+      ts_clk_in        => ts_clk_in,
+      ts_diff_clk      => ts_diff_clk,
+      ts_clk_out       => ts_clk_out,
 
-      sync_in           => sync_in,
-      sync_out          => sync_out,
+      sync_in          => sync_in,
+      sync_out         => sync_out,
 
-      i2c_scl_in        => i2c_scl_in,
-      i2c_scl_out       => i2c_scl_out,
-      i2c_sda_in        => i2c_sda_in,
-      i2c_sda_out       => i2c_sda_out,
-      gpio_in           => gpio_in,
-      gpio_out          => gpio_out,
-      gpio_tri          => gpio_tri,
+      i2c_scl_in       => i2c_scl_in,
+      i2c_scl_out      => i2c_scl_out,
+      i2c_sda_in       => i2c_sda_in,
+      i2c_sda_out      => i2c_sda_out,
+      gpio_in          => gpio_in,
+      gpio_out         => gpio_out,
+      gpio_tri         => gpio_tri,
 
-      gt_cfg            => gt_cfg,
-      gt_refclk         => gt_refclk,
-      gt_tx             => gt_tx,
-      gt_rx             => gt_rx,
+      gt_cfg           => gt_cfg,
+      gt_refclk        => gt_refclk,
+      gt_tx            => gt_tx,
+      gt_rx            => gt_rx,
 
-      pcie_root2ep      => pcie_root2ep,
-      pcie_ep2root      => pcie_ep2root,
+      pcie_root2ep     => pcie_root2ep,
+      pcie_ep2root     => pcie_ep2root,
 
-      ddr4_sysclk       => ddr4_sysclk,
-      ddr4_data_strobe  => ddr4_data_strobe,
-      ddr4_ctrl         => ddr4_ctrl,
+      ddr4_sysclk      => ddr4_sysclk,
+      ddr4_data_strobe => ddr4_data_strobe,
+      ddr4_ctrl        => ddr4_ctrl,
 
-      fpga_id           => fpga_id_i,
-      sysmon_alm        => sysmon_alm,
+      fpga_id          => fpga_id_i,
+      platform_id      => platform_id,
+      boardstd_id      => boardstd_id,
+      mac_baseaddr     => mac_baseaddr,
+      mac_total        => mac_total,
 
-      crc_error         => usr_crc_error,
-
-      -- Deprecated signals
-      fpga_dna          => (others => '0'),
-      mac_addr          => (others => (others => '0')),
+      sysmon_temp      => sysmon_temp,
+      crc_error        => usr_crc_error,
 
       -- Reserved signals
-      reserved_in       => top_reserved_in,
-      reserved_out      => top_reserved_out
+      reserved_in      => top_reserved_in,
+      reserved_out     => top_reserved_out
       );
 
   crc_error <= usr_crc_error or sem_error;
@@ -469,10 +473,10 @@ begin
   arista_sysctl_i : entity work.arista_sysctl_v2
     generic map (
       ENABLE_SYSMON_G => true,
-      ENABLE_TEMP_G   => ENABLE_TEMP_REG_C,
+      ENABLE_TEMP_G   => EN_TEMP_REG_C,
       ENABLE_EEPROM_G => true,
-      ENABLE_SEM_G    => not DISABLE_SYSCTL_SEM_C,
-      ENABLE_PHYCFG_G => not DISABLE_SYSCTL_REGS_C,
+      ENABLE_SEM_G    => EN_SYSCTL_SEM_C,
+      ENABLE_PHYCFG_G => EN_SYSCTL_REGS_C,
 
       ENABLE_TEST_LOGIC_G  => EN_TEST_LOGIC_C,
       ENABLE_TEST_GPIO_G   => EN_TEST_GPIO_C,
@@ -522,11 +526,11 @@ begin
       gt_cfg        => gt_cfg,
       hermes_cfg    => top_reserved_in.hermes_cfg,
 
-      mac_baseaddr  => top_reserved_in.mac_baseaddr,
-      mac_total     => top_reserved_in.mac_total,
+      mac_baseaddr  => mac_baseaddr,
+      mac_total     => mac_total,
       bitstream_id  => top_reserved_in.bitstream_id,
-      platform_id   => top_reserved_in.platform_id,
-      boardstd_id   => top_reserved_in.boardstd_id,
+      platform_id   => platform_id,
+      boardstd_id   => boardstd_id,
       fpga_id       => fpga_id_i,
 
       i2c_scl_in    => i2c_scl_in,
@@ -539,8 +543,9 @@ begin
       gpio_tri      => gpio_tri,
 
       eeprom_sts    => top_reserved_in.eeprom_sts,
-      sysmon_temp   => top_reserved_in.sysmon_temp,
-      sysmon_alm    => sysmon_alm,
+      sysmon_temp   => sysmon_temp,
+      sysmon_alm    => top_reserved_in.sysmon_alm,
+      sem_enable    => top_reserved_out.sem_enable,
       sem_error     => sem_error,
       sem_status    => top_reserved_in.sem_status
       );

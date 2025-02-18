@@ -2,7 +2,7 @@
 # ------------------------------------------------------------------------------
 #  Copyright (c) 2023 Arista Networks, Inc. All rights reserved.
 # ------------------------------------------------------------------------------
-#  Author:
+#  Maintainers:
 #    fdk-support@arista.com
 #
 #  Description:
@@ -17,8 +17,6 @@
 #
 # ------------------------------------------------------------------------------
 
-
-from __future__ import absolute_import, division, print_function
 
 import logging
 import sys
@@ -56,7 +54,7 @@ class TscoreNomacExampleDaemon(
     def get_readable_timestamp(self):
         high = self.regfile.example_ts_0.timestamp_high
         low = self.regfile.example_ts_0.timestamp_low
-        return "{}.{:09d}".format(datetime.utcfromtimestamp(high), low)
+        return f"{datetime.utcfromtimestamp(high)}.{low:09d}"
 
     # inherited from AgentHandler
     # http://aristanetworks.github.io/EosSdk/docs/2.10.0/ref/agent.html
@@ -79,13 +77,13 @@ class TscoreNomacExampleDaemon(
         self.fpga = fpga
 
         # The bitfiles are suffixed with the board standard string.
-        bitfile = "{}/fpga/tscore_nomac-{}.bit".format(self.app_path, fpga.board_standard)
+        bitfile = f"{self.app_path}/fpga/tscore_nomac-{fpga.board_standard}.bit"
         fpga.load_image(bitfile)
         self.status["Image"] = bitfile
 
         # Set up a register file.
         self.regfile = libapp.register_file.RegisterFile(
-            "{}/fpga/tscore_nomac_registers.csv".format(self.app_path), fpga.communicator
+            f"{self.app_path}/fpga/tscore_nomac_registers.csv", fpga.communicator
         )
 
         # Demonstrate that registers can be read immediately.

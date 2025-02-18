@@ -1,7 +1,7 @@
 #-------------------------------------------------------------------------------
-#- Copyright (c) 2019-2023 Arista Networks, Inc. All rights reserved.
+#- Copyright (c) 2019 Arista Networks, Inc. All rights reserved.
 #-------------------------------------------------------------------------------
-#- Author:
+#- Maintainers:
 #-   fdk-support@arista.com
 #-
 #- Description:
@@ -93,7 +93,7 @@ namespace eval Project {
         set arista_fdk_dir [file normalize $fdk_dir]
         set project_dir    [file normalize [file dirname $proj_cfg]/..]
         set build_dir      [file normalize [file dirname $proj_dir]/..]
-        
+
         set brd_std  [config_to_brdstd $proj_cfg]
         set fpga     [get_fpga $brd_std $arista_fdk_dir]
 
@@ -111,5 +111,22 @@ namespace eval Project {
         if {$vhdl_ftype != ""} {
             set_property "file_type" $vhdl_ftype [get_files {*.vhd *.vhdl}]
         }
+    }
+
+    proc generate_ipcore {tfile} {
+        set tfile_list  [split $tfile "/"]
+        set fpga        [lindex $tfile_list 2]
+        set tcl_fname   [lindex $tfile_list [llength $tfile_list]-1]
+        set ipcore_name [lindex [split $tcl_fname "."] 0]
+        set ipcore_dir  [pwd]
+        set build_dir   [file normalize $ipcore_dir/$ipcore_name]
+
+        create_project -in_memory
+        set_part $fpga
+        set_property target_language VHDL [current_project]
+        source $tcl_fname -notrace
+        generate_target -force instantiation_template [get_ips $ipcore_name]
+
+        file copy -force $ipcore_dir/$ipcore_name/$ipcore_name.xci $ipcore_dir/$ipcore_name.xci
     }
 }

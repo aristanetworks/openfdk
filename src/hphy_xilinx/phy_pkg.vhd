@@ -1,7 +1,7 @@
 --------------------------------------------------------------------------------
 -- Copyright (c) 2021 Arista Networks, Inc. All rights reserved.
 --------------------------------------------------------------------------------
--- Author:
+-- Maintainers:
 --   fdk-support@arista.com
 --
 -- Description:
@@ -38,6 +38,7 @@ package phy_pkg is
   constant QPLLMODE_25G_156R_C : std_logic_vector := 8x"02";
   constant QPLLMODE_10G_161R_C : std_logic_vector := 8x"03";
   constant QPLLMODE_25G_161R_C : std_logic_vector := 8x"04";
+  constant QPLLMODE_2G5_156R_C : std_logic_vector := 8x"05";
 
   constant GTMODE_10G32_C : std_logic_vector := 8x"00";
   constant GTMODE_1G32_C  : std_logic_vector := 8x"01";
@@ -46,6 +47,7 @@ package phy_pkg is
   constant GTMODE_10G20_C : std_logic_vector := 8x"04";
   constant GTMODE_25G64_C : std_logic_vector := 8x"05";
   constant GTMODE_25G80_C : std_logic_vector := 8x"06";
+  constant GTMODE_1G8_C   : std_logic_vector := 8x"07";
 
   -- Define a GT configuration type for all
   type qpll_cfg_t is
@@ -60,45 +62,46 @@ package phy_pkg is
 
   type gt_cfg_subt is
   record
-    txdiffctrl    : std_logic_vector(4 downto 0);
-    txprecursor   : std_logic_vector(4 downto 0);
-    txpostcursor  : std_logic_vector(4 downto 0);
-    txpolarity    : std_logic;
-    txinhibit     : std_logic;
-    rxdfeen       : std_logic;
-    rxpolarity    : std_logic;
-    eyescanreset  : std_logic;
-    rxreset       : std_logic;
+    txdiffctrl   : std_logic_vector(6 downto 0); -- AKA Main Cursor
+    txpostcursor : std_logic_vector(5 downto 0);
+    txprecursor  : slv6_array_t(2 downto 0);
+    txpolarity   : std_logic;
+    txinhibit    : std_logic;
+    rxdfeen      : std_logic;
+    rxpolarity   : std_logic;
+    rxinhibit    : std_logic;
+    rxreset      : std_logic;
+    eyescanreset : std_logic;
   end record;
   type gt_cfg_t is array (natural range <>) of gt_cfg_subt;
-  constant GT_CFG_DFLT_C : gt_cfg_subt := (txdiffctrl   => "00000",
-                                           txprecursor  => "00000",
-                                           txpostcursor => "00000",
+  constant GT_CFG_DFLT_C : gt_cfg_subt := (txdiffctrl   => (others => '0'),
+                                           txpostcursor => (others => '0'),
+                                           txprecursor  => (others => (others => '0')),
                                            txpolarity   => '0',
                                            txinhibit    => '0',
                                            rxdfeen      => '0',
                                            rxpolarity   => '0',
-                                           eyescanreset => '0',
-                                           rxreset      => '0');
+                                           rxinhibit    => '0',
+                                           rxreset      => '0',
+                                           eyescanreset => '0');
 
   -- Define a GT status type for all
   type gt_sts_t is
   record
     qpllmode  : slv8_array_t(1 downto 0);
     txmode    : std_logic_vector(7 downto 0);
+    txinhibit : std_logic;
     txprbs    : std_logic_vector(3 downto 0);
+    txber     : std_logic_vector(31 downto 0);
+    txser     : std_logic_vector(31 downto 0);
     rxmode    : std_logic_vector(7 downto 0);
+    rxinhibit : std_logic;
     rxprbs    : std_logic_vector(3 downto 0);
     rxprbslck : std_logic;
     rxprbserr : std_logic;
     loopback  : std_logic_vector(2 downto 0);
   end record;
   type gt_sts_array_t is array (natural range <>) of gt_sts_t;
-
-
-  ---- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-  -- Function and procedure prototypes
-  ---- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
   ---- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   -- Component Definitions

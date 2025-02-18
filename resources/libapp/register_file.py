@@ -1,7 +1,7 @@
 # ------------------------------------------------------------------------------
-#  Copyright (c) 2018-2023 Arista Networks, Inc. All rights reserved.
+#  Copyright (c) 2018 Arista Networks, Inc. All rights reserved.
 # ------------------------------------------------------------------------------
-#  Author:
+#  Maintainers:
 #    fdk-support@arista.com
 #
 #  Description:
@@ -45,7 +45,7 @@ def Retryable(retry_list):
                     import __main__  # pylint: disable=import-outside-toplevel
 
                     last_exc = e
-                    scriptname = os.path.basename(__main__.__file__)
+                    scriptname = os.path.basename(getattr(__main__, "__file__", __main__.__name__))
                     logging.error(
                         "%s: %s failed: %s. Retrying in %fs",
                         scriptname,

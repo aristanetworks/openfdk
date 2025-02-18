@@ -1,8 +1,8 @@
 #!/usr/bin/env arista-python
 # ------------------------------------------------------------------------------
-#  Copyright (c) 2021-2023 Arista Networks, Inc. All rights reserved.
+#  Copyright (c) 2021 Arista Networks, Inc. All rights reserved.
 # ------------------------------------------------------------------------------
-#  Author:
+#  Maintainers:
 #    fdk-support@arista.com
 #
 #  Description:
@@ -16,8 +16,6 @@
 #
 # ------------------------------------------------------------------------------
 
-from __future__ import absolute_import, division, print_function
-
 import CliExtension
 
 from cliexample import libapp
@@ -27,7 +25,7 @@ class ShowCliExampleStatusCmd(libapp.cli.ShowEnabledBaseCmd):
     daemon = "CliExampleDaemon"
 
     def handler(self, ctx):
-        result = super(ShowCliExampleStatusCmd, self).handler(ctx)
+        result = super().handler(ctx)
         result["status"] = {}
 
         daemon = ctx.getDaemon("CliExampleDaemon")
@@ -44,10 +42,10 @@ class ShowCliExampleStatusCmd(libapp.cli.ShowEnabledBaseCmd):
         return result
 
     def render(self, data):
-        super(ShowCliExampleStatusCmd, self).render(data)
+        super().render(data)
         print("CliExample status store:")
         for k, v in data["status"].items():
-            print("  {}\t{}".format(k, v))
+            print(f"  {k}\t{v}")
 
 
 class IpAddressCmd(libapp.cli.ConfigCommandClass):

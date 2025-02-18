@@ -1,7 +1,7 @@
 --------------------------------------------------------------------------------
--- Copyright (c) 2021-2023 Arista Networks, Inc. All rights reserved.
+-- Copyright (c) 2021 Arista Networks, Inc. All rights reserved.
 --------------------------------------------------------------------------------
--- Author:
+-- Maintainers:
 --   fdk-support@arista.com
 --
 -- Description:
@@ -79,14 +79,13 @@ entity top is
     ddr4_ctrl        : out   ddr4_host2mem_array_t(NUM_DIMMS_C-1 downto 0);
 
     fpga_id          : in    std_logic_vector(2 downto 0);
+    platform_id      : in    std_logic_vector(15 downto 0);
+    boardstd_id      : in    std_logic_vector(15 downto 0);
+    mac_baseaddr     : in    std_logic_vector(47 downto 0);
+    mac_total        : in    std_logic_vector(7 downto 0);
 
-    sysmon_alm       : in    std_logic_vector(15 downto 0);
+    sysmon_temp      : in    std_logic_vector(9 downto 0);
     crc_error        : out   std_logic := '0';
-
-    -- Signals below are deprecated and disabled,
-    -- and will be removed in a future version of the FDK.
-    fpga_dna         : in    std_logic_vector(95 downto 0);
-    mac_addr         : in    slv48_array_t(NUM_GT_PORTS_C downto 1);
 
     -- Signals below are reserved and subject to change.
     reserved_in      : in    top_reserved_in_t;

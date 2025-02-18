@@ -32,7 +32,7 @@ Then log into the device and run:
 ```console
 hostname> en
 hostname# conf
-hostname(config)# copy flash:tscore_nomac-XXX.swix extensions:
+hostname(config)# copy flash:tscore_nomac-XXX.swix extension:
 hostname(config)# extension tscore_nomac-XXX.swix
 ```
 
@@ -89,8 +89,8 @@ The application can be started via the ``no disabled`` command:
 
 ```
 test_dut#config
-test_dut(config)#tscode_nomac
-test_dut(config-tscode_nomac)#no disabled
+test_dut(config)#tscore_nomac
+test_dut(config-tscore_nomac)#no disabled
 ```
 
 at which point the FPGA will take some small amount of time to program, and following
@@ -128,8 +128,8 @@ The application can be started via the ``no shutdown`` command:
 
 ```
 test_dut#config
-test_dut(config)#tscode_nomac
-test_dut(config-tscode_nomac)#no shutdown
+test_dut(config)#tscore_nomac
+test_dut(config-tscore_nomac)#no shutdown
 ```
 
 at which point the FPGA will take some small amount of time to program, and following
