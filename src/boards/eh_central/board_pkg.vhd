@@ -167,6 +167,7 @@ package body board_pkg is
       ret_val(i).txprecursor  := (others => (others => '0')); -- No precursor
       ret_val(i).txpolarity   := '0';
       ret_val(i).txinhibit    := '0';
+      ret_val(i).rxinhibit    := '0';
       ret_val(i).rxdfeen      := '0';
       ret_val(i).rxpolarity   := '0';
       ret_val(i).rxreset      := '0';

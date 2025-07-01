@@ -35,7 +35,10 @@ from . import (
     loghandler,
     network,
     pcie,
+    profiles,
     register_accessor,
     register_file,
     subprocess,
+    sysctl,
+    tuning,
 )

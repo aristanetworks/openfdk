@@ -96,13 +96,13 @@ class ConfigItem(Mapping):
             return self.value[key]
 
     def __iter__(self):
-        return iter(self.value)
+        return iter(self.value or self.key)
 
     def __len__(self):
-        return len(self.value)
+        return len(self.value or self.key)
 
     def __str__(self):
-        return " ".join(str(value) for value in six.itervalues(self.value))
+        return " ".join(str(value) for value in six.itervalues(self))
 
     def matches(self, args):
         if isinstance(args, six.string_types):
@@ -141,9 +141,14 @@ class StatusAccessor(Mapping, dict):
     exceptions.
     """
 
-    def __init__(self, ctx, prefix=""):
-        object.__setattr__(self, "ctx", ctx)
-        object.__setattr__(self, "prefix", prefix)
+    def __init__(self, ctx, path="", parent=None):
+        self._ctx = ctx
+        self._path = path
+        self._parent = parent
+        self._index = parent._index if parent is not None else {}
+        if parent is None:
+            for key in self._status_iter():
+                self._add_path(key)
 
     def __getattr__(self, name):
         try:
@@ -156,36 +161,63 @@ class StatusAccessor(Mapping, dict):
         # 1. From CliExtension, where missing keys return None.
         # 2. From EosSdk, where missing keys return an empty string.
         # This code doesn't distinguish between the two cases.
-        data = self.ctx.status(self._extend_prefix(key))
+        data = self._ctx.status(self._extend_path(key))
         if not data:
-            status = StatusAccessor(self.ctx, self._extend_prefix(key))
-            if not status:
-                raise KeyError
-            return status
+            return self._create(key)
         return serial.loads(data)
 
     def __iter__(self):
-        prog = re.compile(re.escape(self.prefix) + r"(?:(?:\A|/)([^/\[\]]+)|\[([^/\[\]]+)\])")
-        keys = set()
-        for key in self._status_iter():
-            m = prog.match(key)
-            if m:
-                keys.add(m.group(1) or int(m.group(2)))
-        for key in keys:  # pylint: disable=use-yield-from
-            yield key
+        return iter(self._index.get(self._path, set()))
 
     def __len__(self):
         return sum(1 for _ in self)
 
-    def _extend_prefix(self, key):
+    def __repr__(self):
+        return "{0.__class__.__name__}({1!r})".format(self, dict(self.items()))
+
+    def _add_path(self, full_path):
+        path = full_path
+        while path:
+            path, key = self._rsplit_path(path)
+            self._index.setdefault(path, set()).add(key)
+
+    def _asdict(self):
+        result = {}
+        for key, value in six.iteritems(self):
+            result[key] = value._asdict() if hasattr(value, "_asdict") else value
+        return result
+
+    def _create(self, key):
+        if key not in self._index.get(self._path, set()):
+            raise KeyError(key)
+        return self.__class__(self._ctx, self._extend_path(key), self)
+
+    def _del_path(self, path):
+        while path:
+            path, key = self._rsplit_path(path)
+            self._index.get(path, set()).discard(key)
+            if self._index.get(path):
+                break
+            self._index.pop(path, None)
+
+    def _extend_path(self, key):
         if isinstance(key, six.integer_types):
-            key = "{}[{}]".format(self.prefix, key)
-        elif self.prefix:
-            key = "{}/{}".format(self.prefix, key)
+            key = "{}[{}]".format(self._path, key)
+        elif self._path:
+            key = "{}/{}".format(self._path, key)
         return key
 
+    @staticmethod
+    def _rsplit_path(path):
+        if path[-1] == "]":
+            head, tail = path[:-1].rsplit("[", 1)
+            return head, int(tail)
+        if "/" in path:
+            return path.rsplit("/", 1)
+        return "", path
+
     def _status_iter(self):
-        for key, _ in self.ctx.statusIter():
+        for key, _ in self._ctx.statusIter():
             yield key
 
 

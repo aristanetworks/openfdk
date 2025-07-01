@@ -38,7 +38,10 @@
         "${ARISTA_FDK_DIR}/src/seu/ip/xcvu9p-flgb2104-3-e/sem_mit_100M/sem_mit_100M.xci",
         "${ARISTA_FDK_DIR}/src/seu/ip/xcvu9p-flgb2104-3-e/sem_mit_78M125/sem_mit_78M125.xci",
         "${ARISTA_FDK_DIR}/src/seu/ip/xcvu9p-flgb2104-3-e/sem_mit_test_100M/sem_mit_test_100M.xci",
+        "${ARISTA_FDK_DIR}/src/seu/ip/xcvu9p-flgb2104-3-e/sem_mit_test_78M125/sem_mit_test_78M125.xci",
         "${ARISTA_FDK_DIR}/src/seu/xil_sem.vhd",
+        "${ARISTA_FDK_DIR}/src/seu/xil_sem_pkg.vhd",
+        "${ARISTA_FDK_DIR}/src/seu/xil_sem_reg.vhd",
         "${ARISTA_FDK_DIR}/src/spi/spi_master.vhd",
         "${ARISTA_FDK_DIR}/src/synchroniser/sync_pulse.vhd",
         "${ARISTA_FDK_DIR}/src/synchroniser/sync_tgl_to_pulse.vhd",
@@ -63,8 +66,8 @@
         "${PROJECT_DIR}/src/tscore_nomac_registers.vhd"
     ],
     "constrs_1": [
-        "${PROJECT_DIR}/src/tscore_nomac-lb2-top.xdc",
         "${ARISTA_FDK_DIR}/src/boards/lb2/board_constraints.xdc",
-        "${ARISTA_FDK_DIR}/src/ts_ipcore/tscore.xdc"
+        "${ARISTA_FDK_DIR}/src/ts_ipcore/tscore.xdc",
+        "${PROJECT_DIR}/src/tscore_nomac-lb2-top.xdc"
     ]
 }

@@ -65,8 +65,6 @@ architecture rtl of i2c_base_slave is
   ----------------------------------------------------------------------
   -- Signal Declarations
   ----------------------------------------------------------------------
-  signal scl_m        : std_logic := '1';
-  signal sda_m        : std_logic := '1';
   signal scl_i        : std_logic := '1';
   signal sda_i        : std_logic := '1';
 
@@ -107,15 +105,21 @@ begin
   ----------------------------------------------------------------------
   -- Synchronise I2C
   ----------------------------------------------------------------------
-  process (sample_clk)
-  begin
-    if rising_edge(sample_clk) then
-      scl_m <= scl_in;
-      sda_m <= sda_in;
-      scl_i <= scl_m;
-      sda_i <= sda_m;
-    end if;
-  end process;
+  u_scl_sync : entity work.synchroniser
+    generic map (INIT_G => '1')
+    port map (
+      clk    => sample_clk,
+      a      => scl_in,
+      a_sync => scl_i
+      );
+
+  u_sda_sync : entity work.synchroniser
+    generic map (INIT_G => '1')
+    port map (
+      clk    => sample_clk,
+      a      => sda_in,
+      a_sync => sda_i
+      );
 
   -----------------------------------------------------------------------
   -- Due to glitches happening on scl and sda for CSeries platforms, need

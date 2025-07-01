@@ -57,12 +57,12 @@ EXTRA_APP_DIRS ?=
 #-------------------------------------------------------------------------------
 
 PYTHON2_ENV = $(BUILD_DIR)/python2_env
-PYTHON2 	= $(PYTHON2_ENV)/bin/python
+PYTHON2     = $(PYTHON2_ENV)/bin/python
 PIP2        = $(PYTHON2_ENV)/bin/pip
 
 PYTHON3_ENV = $(BUILD_DIR)/python3_env
-PYTHON3 = $(PYTHON3_ENV)/bin/python
-PIP3    = $(PYTHON3_ENV)/bin/pip
+PYTHON3     = $(PYTHON3_ENV)/bin/python
+PIP3        = $(PYTHON3_ENV)/bin/pip
 
 $(PYTHON2_ENV):
 	virtualenv --quiet $@
@@ -105,6 +105,12 @@ APP_REGS     = $(patsubst $(PROJECT_DIR)/src/%,$(APP_STAGING_DIR)/fpga/%,$(REGFI
 APP_FILES    = $(patsubst $(ARISTA_FDK_DIR)/resources/%,$(APP_STAGING_DIR)/%, \
                  $(patsubst $(PROJECT_DIR)/src/%,$(APP_STAGING_DIR)/%,$(APPFILES))) \
                  $$(EXTRA_APP_FILES)
+DRIVER_REGS  = $(if $(shell jq 'select( \
+				    with_entries( \
+				        select(.key | contains("sources")) \
+					) | .[][] | contains("arista_sysctl_v2.vhd") \
+				)' $(wildcard src/*-cfg.json)), \
+		 $(APP_STAGING_DIR)/fpga/arista_sysctl_v2.csv)
 DRIVER_FILES = $(patsubst $(ARISTA_FDK_DIR)/src/%,$(APP_STAGING_DIR)/drivers/%,$(DRIVERFILES))
 
 $(APP_STAGING_DIR)/%.py: \
@@ -115,10 +121,22 @@ $(APP_STAGING_DIR)/%.py: \
 		-e "s/__buildid__\s*=\s*0/__buildid__ = $(BUILD_ID)/" \
 		$< > $@
 
-$(APP_STAGING_DIR)/fpga/% \
 $(APP_STAGING_DIR)/%: \
 			$(PROJECT_DIR)/src/%
 	@mkdir -p $(@D)
+	cp $< $@
+
+$(APP_STAGING_DIR)/fpga:
+	@mkdir -p $@
+
+$(APP_STAGING_DIR)/fpga/%: \
+			$(PROJECT_DIR)/src/% \
+			| $$(@D)
+	cp $< $@
+
+$(APP_STAGING_DIR)/fpga/arista_sysctl_v2.csv: \
+			$(ARISTA_FDK_DIR)/src/arista_sysctl/arista_sysctl_v2.csv \
+			| $$(@D)
 	cp $< $@
 
 $(APP_STAGING_DIR)/eos:
@@ -167,6 +185,7 @@ $(APP_TARBALL): \
 			$(APP_BITS) \
 			$(APP_REGS) \
 			$(APP_FILES) \
+			$(DRIVER_REGS) \
 			$(DRIVER_FILES) \
 			$(abspath $(patsubst %,$(APP_STAGING_ROOT)/%,$(APP_DAEMONS)))
 
@@ -337,10 +356,11 @@ $(APP_SWIX): \
 	@mkdir -p $(@D)
 	@cp $(SWIX_RPM) $(SWIX_BUILD_DIR)
 	@cd $(SWIX_BUILD_DIR) \
-	    && python3 -m venv $(SWITOOLS_VENV) \
-	    && source $(SWITOOLS_VENV)/bin/activate \
-	    && python3 -m pip install switools \
-	    && python3 $(SWITOOLS_VENV)/bin/swix-create -i $(APP_MANIFEST_YAML) $(@F) $(<F) $(APP_SQUASHFS) $(APP_SWIX_EXTRA_RPMS)
+		&& python3 -m venv $(SWITOOLS_VENV) \
+		&& source $(SWITOOLS_VENV)/bin/activate \
+		&& python3 -m pip install --upgrade pip \
+		&& python3 -m pip install jsonschema==3.2.0 pyparsing==3.1.2 PyYAML==6.0.1 M2Crypto==0.42.0 switools==1.2 \
+		&& python3 $(SWITOOLS_VENV)/bin/swix-create -i $(APP_MANIFEST_YAML) $(@F) $(<F) $(APP_SQUASHFS) $(APP_SWIX_EXTRA_RPMS)
 	@mv $(SWIX_BUILD_DIR)/$(@F) $@
 endif # ifneq ($(APP_SWIX),)
 

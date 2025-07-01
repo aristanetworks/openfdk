@@ -13,6 +13,7 @@
 #
 # ------------------------------------------------------------------------------
 
+
 # Decorator to format the docstring before passing the function to another decorator
 def format_docstring(*p, **k):
     def format_docstring_deco(func):

@@ -240,6 +240,21 @@ package amba_pkg is
   subtype axi4mm_lock_t   is std_logic;
   subtype axi4mm_qos_t    is std_logic_vector(3 downto 0);
 
+  type axi4mm_id_array_t     is array (integer range <>) of axi4mm_id_t;
+  type axi4mm_data_array_t   is array (integer range <>) of axi4mm_data_t;
+  type axi4mm_wstrb_array_t  is array (integer range <>) of axi4mm_wstrb_t;
+  type axi4mm_addr_array_t   is array (integer range <>) of axi4mm_addr_t;
+  type axi4mm_user_array_t   is array (integer range <>) of axi4mm_user_t;
+  type axi4mm_prot_array_t   is array (integer range <>) of axi4mm_prot_t;
+  type axi4mm_cache_array_t  is array (integer range <>) of axi4mm_cache_t;
+  type axi4mm_region_array_t is array (integer range <>) of axi4mm_region_t;
+  type axi4mm_resp_array_t   is array (integer range <>) of axi4mm_resp_t;
+  type axi4mm_size_array_t   is array (integer range <>) of axi4mm_size_t;
+  type axi4mm_burst_array_t  is array (integer range <>) of axi4mm_burst_t;
+  type axi4mm_len_array_t    is array (integer range <>) of axi4mm_len_t;
+  type axi4mm_lock_array_t   is array (integer range <>) of axi4mm_lock_t;
+  type axi4mm_qos_array_t    is array (integer range <>) of axi4mm_qos_t;
+
   ------------------------------------------------------------------------
   -- Define records for AXI4-MM interfaces
   -- NOTE: mts => manager to subordinate, stm -> subordinate to manager

@@ -29,8 +29,13 @@
         "${ARISTA_FDK_DIR}/src/seu/ip/xcvu9p-flgb2104-3-e/sem_mit_100M/sem_mit_100M.xci",
         "${ARISTA_FDK_DIR}/src/seu/ip/xcvu9p-flgb2104-3-e/sem_mit_78M125/sem_mit_78M125.xci",
         "${ARISTA_FDK_DIR}/src/seu/ip/xcvu9p-flgb2104-3-e/sem_mit_test_100M/sem_mit_test_100M.xci",
+        "${ARISTA_FDK_DIR}/src/seu/ip/xcvu9p-flgb2104-3-e/sem_mit_test_78M125/sem_mit_test_78M125.xci",
         "${ARISTA_FDK_DIR}/src/seu/xil_sem.vhd",
+        "${ARISTA_FDK_DIR}/src/seu/xil_sem_pkg.vhd",
+        "${ARISTA_FDK_DIR}/src/seu/xil_sem_reg.vhd",
         "${ARISTA_FDK_DIR}/src/spi/spi_master.vhd",
+        "${ARISTA_FDK_DIR}/src/synchroniser/sync_tgl_to_pulse.vhd",
+        "${ARISTA_FDK_DIR}/src/synchroniser/sync_vec.vhd",
         "${ARISTA_FDK_DIR}/src/synchroniser/synchroniser.vhd",
         "${ARISTA_FDK_DIR}/src/yart/yart_i2c.vhd",
         "${ARISTA_FDK_DIR}/src/yart/yart_leaf_decode.vhd",
@@ -45,7 +50,7 @@
         "${PROJECT_DIR}/src/null_registers.vhd"
     ],
     "constrs_1": [
-        "${PROJECT_DIR}/src/null-lb2-top.xdc",
-        "${ARISTA_FDK_DIR}/src/boards/lb2/board_constraints.xdc"
+        "${ARISTA_FDK_DIR}/src/boards/lb2/board_constraints.xdc",
+        "${PROJECT_DIR}/src/null-lb2-top.xdc"
     ]
 }

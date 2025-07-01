@@ -206,6 +206,9 @@ package metamako_pkg is
   subtype slv160_t is std_logic_vector(159 downto 0);
   type slv160_array_t is array (natural range <>) of slv160_t;
 
+  subtype slv204_t is std_logic_vector(203 downto 0);
+  type slv204_array_t is array (natural range <>) of slv204_t;
+
   subtype slv256_t is std_logic_vector(255 downto 0);
   type slv256_array_t is array (natural range <>) of slv256_t;
 
@@ -449,26 +452,33 @@ package metamako_pkg is
   function or_reduce (arg1    : boolean_array_t) return boolean;
   function and_reduce (arg1   : boolean_array_t) return boolean;
 
-  function resize_slv (arg1   : std_logic_vector; arg2 : natural) return std_logic_vector;
-  function to_sl (arg1        : boolean) return std_logic;
-  function to_slv (arg1       : natural; arg2 : natural) return std_logic_vector;
-  function to_slv (a          : boolean_array_t) return std_logic_vector;
-  function to_boolean (arg1   : std_logic) return boolean;
-  function to_boolean (arg1   : integer) return boolean;
-  function to_int (arg1       : boolean) return natural;
-  function to_int (arg1       : std_logic) return natural;
-  function imin (arg1         : integer; arg2 : integer) return integer;
-  function imax (arg1         : integer; arg2 : integer) return integer;
-  function imin (arg1         : integer_array_t) return integer;
-  function imax (arg1         : integer_array_t) return integer;
-  function imax (arg1         : integer_array_t; arg2 : integer_array_t) return integer_array_t;
-  function rmin (arg1         : real; arg2 : real) return real;
-  function rmax (arg1         : real; arg2 : real) return real;
-  function sum (arg1          : boolean_array_t) return natural;
-  function sum (arg1          : integer_array_t) return integer;
-  function sum (arg1          : natural_array_t) return natural;
-  function in_array (arg1     : integer; arg2 : integer_array_t) return boolean;
-  function pos_in_array (arg1 : integer; arg2 : integer_array_t) return integer;
+  -- Vivado 2023.1 does not seem to or/and reduce a boolean_array with a boolean
+  -- correctly (seems to only reduce it with 1 bit of the array), so these
+  -- functions perform that operation.
+  function or_reduce (arg1    : boolean_array_t; arg2 : boolean) return boolean_array_t;
+  function and_reduce (arg1   : boolean_array_t; arg2 : boolean) return boolean_array_t;
+
+  function resize_slv (arg1       : std_logic_vector; arg2 : natural) return std_logic_vector;
+  function to_sl (arg1            : boolean) return std_logic;
+  function to_slv (arg1           : natural; arg2 : natural) return std_logic_vector;
+  function to_slv (a              : boolean_array_t) return std_logic_vector;
+  function to_boolean (arg1       : std_logic) return boolean;
+  function to_boolean_array (arg1 : std_logic_vector) return boolean_array_t;
+  function to_boolean (arg1       : integer) return boolean;
+  function to_int (arg1           : boolean) return natural;
+  function to_int (arg1           : std_logic) return natural;
+  function imin (arg1             : integer; arg2 : integer) return integer;
+  function imax (arg1             : integer; arg2 : integer) return integer;
+  function imin (arg1             : integer_array_t) return integer;
+  function imax (arg1             : integer_array_t) return integer;
+  function imax (arg1             : integer_array_t; arg2 : integer_array_t) return integer_array_t;
+  function rmin (arg1             : real; arg2 : real) return real;
+  function rmax (arg1             : real; arg2 : real) return real;
+  function sum (arg1              : boolean_array_t) return natural;
+  function sum (arg1              : integer_array_t) return integer;
+  function sum (arg1              : natural_array_t) return natural;
+  function in_array (arg1         : integer; arg2 : integer_array_t) return boolean;
+  function pos_in_array (arg1     : integer; arg2 : integer_array_t) return integer;
 
   function extend (arg  : std_ulogic;
                    size : natural) return std_logic_vector;
@@ -587,7 +597,15 @@ package metamako_pkg is
                true_value, false_value : severity_level)
     return severity_level;
 
+  function iif(test                    : boolean;
+               true_value, false_value : slv64_array_t)
+    return slv64_array_t;
+
   function "-" (a, b : integer_array_t) return integer_array_t;
+  function "-" (a: integer_array_t; b: integer) return integer_array_t;
+  function "-" (a: integer; b: integer_array_t) return integer_array_t;
+
+  function "**" (a: integer; b: integer_array_t) return integer_array_t;
 
 end package metamako_pkg;
 
@@ -890,6 +908,24 @@ package body metamako_pkg is
     return rslt;
   end function and_reduce;
 
+  function or_reduce (arg1 : boolean_array_t; arg2 : boolean) return boolean_array_t is
+    variable r : boolean_array_t(arg1'range);
+  begin
+    for i in arg1'range loop
+      r(i) := arg1(i) or arg2;
+    end loop;
+    return r;
+  end function;
+
+  function and_reduce (arg1 : boolean_array_t; arg2 : boolean) return boolean_array_t is
+    variable r : boolean_array_t(arg1'range);
+  begin
+    for i in arg1'range loop
+      r(i) := arg1(i) and arg2;
+    end loop;
+    return r;
+  end function;
+
   ---- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
   function resize_slv (arg1 : std_logic_vector; arg2 : natural) return std_logic_vector is
@@ -932,6 +968,15 @@ package body metamako_pkg is
       return false;
     end if;
   end function to_boolean;
+
+  function to_boolean_array (arg1 : std_logic_vector) return boolean_array_t is
+    variable r : boolean_array_t(arg1'range);
+  begin
+    for i in r'range loop
+      r(i) := to_boolean(arg1(i));
+    end loop;
+    return r;
+  end function to_boolean_array;
 
   function to_boolean (arg1 : integer) return boolean is
   begin
@@ -1527,6 +1572,17 @@ package body metamako_pkg is
     end if;
   end function;
 
+  function iif(test                    : boolean;
+               true_value, false_value : slv64_array_t)
+    return slv64_array_t is
+  begin
+    if test then
+      return true_value;
+    else
+      return false_value;
+    end if;
+  end function;
+
   function "-" (a, b : integer_array_t)
     return integer_array_t is
     variable retval : integer_array_t(a'range);
@@ -1534,6 +1590,35 @@ package body metamako_pkg is
     assert a'length = b'length report "can't subtract different length vectors" severity error;
     for i in a'range loop
       retval(i) := a(i) - b(i);
+    end loop;
+    return retval;
+  end function;
+
+  function "-" (a: integer_array_t; b: integer)
+    return integer_array_t is
+    variable retval : integer_array_t(a'range);
+  begin
+    for i in a'range loop
+      retval(i) := a(i) - b;
+    end loop;
+    return retval;
+  end function;
+
+  function "-" (a: integer; b: integer_array_t)
+    return integer_array_t is
+    variable retval : integer_array_t(b'range);
+  begin
+    for i in b'range loop
+      retval(i) := a - b(i);
+    end loop;
+    return retval;
+  end function;
+
+  function "**" (a: integer; b: integer_array_t) return integer_array_t is
+    variable retval : integer_array_t(b'range);
+  begin
+    for i in b'range loop
+      retval(i) := a ** b(i);
     end loop;
     return retval;
   end function;

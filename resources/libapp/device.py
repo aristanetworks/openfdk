@@ -51,8 +51,8 @@ else:
 
 skus = [
     {
-        # Pattern matches all 7130L (Lyrebird-VU7P-2) Devices
-        "sku_pattern": re.compile(r"DCS-7130-\d{2}L(A|C)?S?($|-.*)"),
+        # Pattern matches all 7130-32L and 7130-48L (Lyrebird-VU7P-2) Devices
+        "sku_pattern": re.compile(r"DCS-7130-(32|48)L(A|C)?S?($|-.*)"),
         "fpgas": [
             {
                 "identifier": "Fpga1",
@@ -82,13 +82,51 @@ skus = [
                         "address": 0x6B,
                         "mos_label": "mezzanine",
                     },
+                    "scd": {},
                 },
             },
         ],
     },
     {
-        # Pattern matches all 7130LB (Lyrebird-VU9P-3) Devices
-        "sku_pattern": re.compile(r"DCS-7130-\d{2}LB(A|C)?S?($|-.*)"),
+        # Pattern matches all 7130-96L (Lyrebird-VU7P-2) Devices
+        "sku_pattern": re.compile(r"DCS-7130-96L(A|C)?S?($|-.*)"),
+        "fpgas": [
+            {
+                "identifier": "Fpga1",
+                "label": "mezzanine.default",
+                "board_standard": "l",
+                "interfaces": {
+                    "i2c_app": {
+                        "chan_number": 5,
+                        "mos_label": "mezzanine.default",
+                    },
+                    "i2c_sys": {
+                        "chan_number": 1,
+                        "address": 0x66,
+                        "mos_label": "main_sys",
+                    },
+                    "app_ports": "1-28,32-60",
+                    "jtag": {},
+                    "pcie": {
+                        "root_port": "8086:1f12",
+                        "root_port_name": "Atom processor C2000 PCIe Root Port 3",
+                        "root_port_vendor": "Intel Corporation",
+                        "link_width": 8,
+                    },
+                    "clkgen": {
+                        "device": "Si5345",
+                        "chan_number": 0,
+                        "address": 0x6B,
+                        "mos_label": "mezzanine",
+                    },
+                    "scd": {},
+                },
+            },
+        ],
+    },
+    {
+        # Pattern matches all 7130-32LB and 7130-48LB (Lyrebird-VU9P-3) Devices
+        "sku_pattern": re.compile(r"DCS-7130-(32|48)LB(A|C)?S?($|-.*)"),
         "fpgas": [
             {
                 "identifier": "Fpga1",
@@ -118,6 +156,44 @@ skus = [
                         "address": 0x6B,
                         "mos_label": "mezzanine",
                     },
+                    "scd": {},
+                },
+            },
+        ],
+    },
+    {
+        # Pattern matches all 7130-96LB (Lyrebird-VU9P-3) Devices
+        "sku_pattern": re.compile(r"DCS-7130-96LB(A|C)?S?($|-.*)"),
+        "fpgas": [
+            {
+                "identifier": "Fpga1",
+                "label": "mezzanine.default",
+                "board_standard": "lb2",
+                "interfaces": {
+                    "i2c_app": {
+                        "chan_number": 5,
+                        "mos_label": "mezzanine.default",
+                    },
+                    "i2c_sys": {
+                        "chan_number": 1,
+                        "address": 0x66,
+                        "mos_label": "main_sys",
+                    },
+                    "app_ports": "1-28,32-60",
+                    "jtag": {},
+                    "pcie": {
+                        "root_port": "8086:1f12",
+                        "root_port_name": "Atom processor C2000 PCIe Root Port 3",
+                        "root_port_vendor": "Intel Corporation",
+                        "link_width": 8,
+                    },
+                    "clkgen": {
+                        "device": "Si5345",
+                        "chan_number": 0,
+                        "address": 0x6B,
+                        "mos_label": "mezzanine",
+                    },
+                    "scd": {},
                 },
             },
         ],
@@ -156,6 +232,7 @@ skus = [
                         "address": 0x6B,
                         "mos_label": "mezzanine",
                     },
+                    "scd": {},
                 },
             },
         ],
@@ -194,6 +271,7 @@ skus = [
                         "address": 0x6B,
                         "mos_label": "mezzanine",
                     },
+                    "scd": {},
                 },
             },
             {
@@ -210,7 +288,7 @@ skus = [
                         "address": 0x66,
                         "mos_label": "sec_sys",
                     },
-                    "app_ports": "57-70",
+                    "app_ports": "1-14",
                     "jtag": {
                         "usb_path": "1-1.4.3",
                         "index": 0,
@@ -222,6 +300,7 @@ skus = [
                         "link_width": 4,
                     },
                     "clkgen": {},
+                    "scd": {},
                 },
             },
             {
@@ -238,7 +317,7 @@ skus = [
                         "address": 0x67,
                         "mos_label": "sec_sys",
                     },
-                    "app_ports": "71-84",
+                    "app_ports": "1-14",
                     "jtag": {
                         "usb_path": "1-1.4.3",
                         "index": 1,
@@ -250,6 +329,7 @@ skus = [
                         "link_width": 4,
                     },
                     "clkgen": {},
+                    "scd": {},
                 },
             },
         ],
@@ -274,7 +354,7 @@ skus = [
                         "bus_number": 0,
                         "address": 0x66,
                     },
-                    "app_ports": "",  # FIX ME!!!
+                    "app_ports": "1-28,32-60",
                     "jtag": {
                         "index": 0,
                         "options": ["-J10000000"],
@@ -287,8 +367,6 @@ skus = [
                         "root_port_vendor": "PLX Technology, Inc.",
                         "link_width": 2,
                         "port_num": 1,
-                        "scd_reset_set_reg": (0x4000, 0x10),
-                        "scd_reset_clr_reg": (0x4010, 0x10),
                     },
                     "clkgen": {
                         "device": "LMK05318",
@@ -296,6 +374,11 @@ skus = [
                         "bus_number": 5,
                         "address": 0x66,
                         "pci": "01:00.0",
+                    },
+                    "scd": {
+                        "fpga_prog_done": {"sts": 0x4810, "bit": 24},
+                        "fpga_seu_alert": {"sts": 0x30B0, "bit": 24},
+                        "fpga_pcie_reset": {"set": 0x4000, "clr": 0x4010, "bit": 4},
                     },
                 },
             },
@@ -315,7 +398,7 @@ skus = [
                         "bus_number": 1,
                         "address": 0x66,
                     },
-                    "app_ports": "",  # FIX ME!!!
+                    "app_ports": "1-28,32-60",
                     "jtag": {
                         "index": 1,
                         "options": ["-J10000000"],
@@ -328,8 +411,6 @@ skus = [
                         "root_port_vendor": "PLX Technology, Inc.",
                         "link_width": 2,
                         "port_num": 2,
-                        "scd_reset_set_reg": (0x4000, 0x20),
-                        "scd_reset_clr_reg": (0x4010, 0x20),
                     },
                     "clkgen": {
                         "device": "LMK05318",
@@ -337,6 +418,11 @@ skus = [
                         "bus_number": 5,
                         "address": 0x65,
                         "pci": "01:00.0",
+                    },
+                    "scd": {
+                        "fpga_prog_done": {"sts": 0x4910, "bit": 24},
+                        "fpga_seu_alert": {"sts": 0x30B0, "bit": 25},
+                        "fpga_pcie_reset": {"set": 0x4000, "clr": 0x4010, "bit": 5},
                     },
                 },
             },
@@ -362,7 +448,7 @@ skus = [
                         "bus_number": 0,
                         "address": 0x66,
                     },
-                    "app_ports": "",  # FIX ME!!!
+                    "app_ports": "1-28,30-68",
                     "jtag": {
                         "usb_path": "1-1",
                         "index": 0,
@@ -374,8 +460,6 @@ skus = [
                         "root_port_vendor": "Advanced Micro Devices, Inc. [AMD]",
                         "link_width": 4,
                         "port_num": 0,
-                        "scd_reset_set_reg": (0x4000, 0x10),
-                        "scd_reset_clr_reg": (0x4010, 0x10),
                     },
                     "clkgen": {
                         "device": "LMK05318",
@@ -384,6 +468,51 @@ skus = [
                         "address": 0x65,
                         "pci": "01:00.0",
                     },
+                    "scd": {
+                        "fpga_prog_done": {"sts": 0x4810, "bit": 24},
+                        "fpga_seu_alert": {"sts": 0x30B0, "bit": 24},
+                        "fpga_pcie_reset": {"set": 0x4000, "clr": 0x4010, "bit": 4},
+                    },
+                },
+            },
+        ],
+    },
+    {
+        # Pattern matches all 7135V (Birdsville) Devices
+        "sku_pattern": re.compile("DCS-7135V-.*"),
+        "fpgas": [
+            {
+                "identifier": "Fpga1",
+                "label": "Application FPGA 1",
+                "board_standard": "bvl",
+                "interfaces": {
+                    "i2c_app": {
+                        "pci": "01:00.0",
+                        "accelerator": 12 if IS_EOS and agentIsRunning("ar", "PLSmbusMediator") else 10,
+                        "bus_number": 0,
+                    },
+                    "i2c_sys": {
+                        "pci": "01:00.0",
+                        "accelerator": 13 if IS_EOS and agentIsRunning("ar", "PLSmbusMediator") else 11,
+                        "bus_number": 0,
+                        "address": 0x66,
+                    },
+                    "app_ports": "1-68",
+                    "pcie": {
+                        "root_port": "1022:1453",
+                        "root_port_name": "Family 17h (Models 00h-0fh) PCIe GPP Bridge",
+                        "root_port_vendor": "Advanced Micro Devices, Inc. [AMD]",
+                        "link_width": 4,
+                        "port_num": 0,
+                    },
+                    "jtag": {},
+                    "clkgen": {},
+                    "scd": {
+                        "fpga_prog_done": {"sts": 0x4810, "bit": 24},
+                        "fpga_seu_alert": {"sts": 0x30B0, "bit": 24},
+                        "fpga_temp_alert": {"sts": 0x2F10, "clr": 0x2F10, "bit": 25},
+                        "fpga_pcie_reset": {"set": 0x4000, "clr": 0x4010, "bit": 4},
+                    },
                 },
             },
         ],
@@ -391,6 +520,11 @@ skus = [
 ]
 
 board_standards = {
+    "bvl": {
+        "fpga": "VH1542",
+        "image_type": "pdi",
+        "speed_grade": "3",
+    },
     "l": {
         "fpga": "VU7P",
         "image_type": "bit",
@@ -427,9 +561,53 @@ def _irangestr(range_str):
 
 def get_portlist(range_str):
     if isinstance(range_str, str):
-        return list(_irangestr(range_str.replace("ap", "")))
+        range_str = range_str.replace("ap", "").split("/")
+        if len(range_str) == 2:
+            res = range_str[0], list(_irangestr(range_str[1]))
+        else:
+            res = list(_irangestr(range_str[0]))
+    else:
+        raise ValueError('"{}" is not a valid range : "ap1-3,5,8 or ap1/1-3,5,8"'.format(range_str))
 
-    raise ValueError('"{}" is not a valid range : "ap1-3,5,8"'.format(range_str))
+    return res
+
+
+class Scd(object):
+    def __init__(self, scdRegs):
+        self.scdRegs = scdRegs
+
+    def set(self, reg):
+        if reg in self.scdRegs.keys():
+            if "set" in self.scdRegs[reg]:
+                subprocess.check_call(
+                    [
+                        "sudo",
+                        "sh",
+                        "-c",
+                        "scd write {} {}".format(self.scdRegs[reg]["set"], 1 << self.scdRegs[reg]["bit"]),
+                    ]
+                )
+
+    def clr(self, reg):
+        if reg in self.scdRegs.keys():
+            if "clr" in self.scdRegs[reg]:
+                subprocess.check_call(
+                    [
+                        "sudo",
+                        "sh",
+                        "-c",
+                        "scd write {} {}".format(self.scdRegs[reg]["clr"], 1 << self.scdRegs[reg]["bit"]),
+                    ]
+                )
+
+    def get(self, reg):
+        if reg in self.scdRegs.keys():
+            if "sts" in self.scdRegs[reg]:
+                res = subprocess.check_output(
+                    ["sudo", "sh", "-c", "scd read {}".format(self.scdRegs[reg]["sts"])], text=True
+                )
+                return int(res.split()[1], 16) >> self.scdRegs[reg]["bit"] & 0x1
+        return 0
 
 
 class XilinxJTag(object):
@@ -474,22 +652,20 @@ class Pcie(object):  # pylint: disable=too-many-instance-attributes
 
     def __init__(  # pylint: disable=too-many-arguments
         self,
+        scd,
         root_port=None,
         root_port_name=None,
         root_port_vendor=None,
         link_width=None,
         port_num=None,
-        scd_reset_set_reg=None,
-        scd_reset_clr_reg=None,
         pseudo_hotplug=False,
     ):
+        self.scd = scd
         self.root_port = root_port
         self.root_port_name = root_port_name
         self.root_port_vendor = root_port_vendor
         self.link_width = link_width
         self.port_num = port_num
-        self.scd_reset_set_reg = scd_reset_set_reg
-        self.scd_reset_clr_reg = scd_reset_clr_reg
         self.pseudo_hotplug = pseudo_hotplug
         self._cached_bridge = None
         self.domain = "0000"
@@ -500,10 +676,10 @@ class Pcie(object):  # pylint: disable=too-many-instance-attributes
         return self._probe_downstream_bus(bridge)
 
     def _set_pcie_reset(self, value):
-        if self.scd_reset_set_reg and value:
-            subprocess.check_call(["sudo", "sh", "-c", "scd write {} {}".format(*self.scd_reset_set_reg)])
-        elif self.scd_reset_clr_reg and not value:
-            subprocess.check_call(["sudo", "sh", "-c", "scd write {} {}".format(*self.scd_reset_clr_reg)])
+        if value:
+            self.scd.set("fpga_pcie_reset")
+        else:
+            self.scd.clr("fpga_pcie_reset")
 
     def _find_bridge(self):
         for _ in range(self.bridge_check_attempts):
@@ -684,12 +860,13 @@ class Fpga(object):  # pylint: disable=too-many-instance-attributes
             self.sys_communicator = register_accessor.RegisterAccessor(**interfaces["i2c_sys"])
         self.registers = None
 
+        self.scd = Scd(interfaces["scd"])
         self.jtag = XilinxJTag(**interfaces["jtag"])
-        self.pcie = Pcie(pseudo_hotplug=self._platform in ["emu", "lyrebird"], **interfaces["pcie"])
+        self.pcie = Pcie(scd=self.scd, pseudo_hotplug=self._platform in ["emu", "lyrebird"], **interfaces["pcie"])
         self.clkgen = clock_generator.ClockGenerator(self._platform, self.board_standard, interfaces)
 
         self._profile_key = None
-        self._instance = 127
+        self._instance = self._numeric_id
 
         try:
             self.port_list = list(_irangestr(interfaces["app_ports"]))
@@ -709,7 +886,7 @@ class Fpga(object):  # pylint: disable=too-many-instance-attributes
     def name(self):
         return self.identifier
 
-    def load_image(  # pylint: disable=too-many-arguments
+    def load_image(  # pylint: disable=too-many-arguments,too-many-branches
         self,
         bitstream,
         clock_profile="default",
@@ -717,6 +894,7 @@ class Fpga(object):  # pylint: disable=too-many-instance-attributes
         timeout=None,
         ipcores=None,
         register_file=None,
+        port_def=None,
     ):
         """Programs the FPGA with a specified bitstream.
 
@@ -745,8 +923,8 @@ class Fpga(object):  # pylint: disable=too-many-instance-attributes
             self.unload_image()
         self.clkgen.load_profile(clock_profile)
         if IS_EOS:
-            with tempfile.NamedTemporaryFile("w+") as features:
-                features_arr = []
+            with tempfile.NamedTemporaryFile("w+") as features, tempfile.NamedTemporaryFile("w+") as port_def_file:
+                features_arr = [{"name": "fdk", "version": "1.0.0"}]
                 for name, ipcore in ipcores.items():
                     if name == "tscore":
                         features_arr.append(
@@ -756,12 +934,12 @@ class Fpga(object):  # pylint: disable=too-many-instance-attributes
                                 "communicators": {
                                     "i2c": {
                                         "type": "i2c",
-                                        "csv": ipcore["register_file"]
-                                        if ipcore.get("register_file")
-                                        else register_file,
-                                        "regspec": ipcore["register_file"]
-                                        if ipcore.get("register_file")
-                                        else register_file,
+                                        "csv": (
+                                            ipcore["register_file"] if ipcore.get("register_file") else register_file
+                                        ),
+                                        "regspec": (
+                                            ipcore["register_file"] if ipcore.get("register_file") else register_file
+                                        ),
                                     },
                                 },
                             }
@@ -770,6 +948,12 @@ class Fpga(object):  # pylint: disable=too-many-instance-attributes
                 json.dump(features_arr, features)
                 features.flush()
 
+                if port_def is None:
+                    port_def = self._default_port_def()
+
+                json.dump(port_def, port_def_file)
+                port_def_file.flush()
+
                 self._profile_key = profile_helper.createProfile(
                     "{}-{}".format(self._script_name, self._instance),
                     os.path.abspath(bitstream),
@@ -777,6 +961,7 @@ class Fpga(object):  # pylint: disable=too-many-instance-attributes
                     os.path.abspath(bitstream),
                     clockProfile="bypass",
                     features=features.name,
+                    portDef=port_def_file.name,
                 )
                 profile_helper.loadProfile(
                     instance=self._instance,
@@ -787,6 +972,8 @@ class Fpga(object):  # pylint: disable=too-many-instance-attributes
 
                 if blocking:
                     try:
+                        while self.profile_state() is None:
+                            continue
                         while self.profile_state() == "applying":
                             if time.time() > timeout_time:
                                 raise TimeoutError()
@@ -813,7 +1000,7 @@ class Fpga(object):  # pylint: disable=too-many-instance-attributes
     def _profile_status(self):
         config = self._profile_config()
         if config:
-            return profile_helper.status.profileStatus[config]
+            return profile_helper.status.profileStatus.get(config)
         return None
 
     def profile_key(self):
@@ -873,6 +1060,8 @@ class Fpga(object):  # pylint: disable=too-many-instance-attributes
                 platform = "freshwater"
             if "tamarama" in plat.lower():
                 platform = "tamarama"
+            if "birdsville" in plat.lower():
+                platform = "birdsville"
 
         return platform
 
@@ -895,13 +1084,26 @@ class Fpga(object):  # pylint: disable=too-many-instance-attributes
                 maclist = [EUI(basemac + 134 + adr) for adr in range(64)]
             if "Fpga2" in self.identifier:
                 maclist = [EUI(basemac + 198 + adr) for adr in range(64)]
-        elif self._platform in ["malabar", "freshwater"]:
+        elif self._platform in ["malabar", "freshwater", "birdsville"]:
             # From AID7800 Section 2.6-Media Access; AID8600 Section 2.7-Media Access
             maclist = [EUI(basemac + 6 + adr) for adr in range(68)]
         else:
             raise ValueError("There are no assigned MAC addresses for this FPGA/Platform.")
 
         return maclist
+
+    def _default_port_def(self):
+        port_def = {
+            str(port): {
+                "type": "FPHY",
+                "speed": {
+                    "default": "10G",
+                    "options": {"OFF": "OFF", "1G": "1G", "10G": "10G", "25G": "25G"},
+                },
+            }
+            for port in self.port_list
+        }
+        return port_def
 
 
 def get_fpga_devices(board_standard=None, identifier=None):
@@ -918,13 +1120,7 @@ def get_fpga_devices(board_standard=None, identifier=None):
             result to.
     """
     ret_list = []  # type: list[Fpga]
-    try:
-        import hal  # pylint: disable=import-outside-toplevel
-
-        sku = hal.sku()
-    except ImportError:
-        with open("/etc/prefdl") as prefdl:  # pylint: disable=unspecified-encoding
-            sku = re.search(r"SKU: (.*)", prefdl.read()).group(1)
+    sku = get_sku()
     ret_list = [
         Fpga(descriptor)
         for device_map in skus
@@ -948,13 +1144,7 @@ def get_fpga_identifiers():
     for a particular FPGA.
     """
     ret_list = {}  # type: dict[str, str]
-    try:
-        import hal  # pylint: disable=import-outside-toplevel
-
-        sku = hal.sku()
-    except ImportError:
-        with open("/etc/prefdl") as prefdl:  # pylint: disable=unspecified-encoding
-            sku = re.search(r"SKU: (.*)", prefdl.read()).group(1)
+    sku = get_sku()
     ret_list = {
         descriptor["identifier"] if IS_EOS else descriptor["label"]: descriptor["board_standard"]
         for device_map in skus
@@ -977,9 +1167,20 @@ def get_interface_macaddr(interface=None):
         return EUI("00:00:00:00:00:00")
 
 
+def get_sku():
+    try:
+        import hal  # pylint: disable=import-outside-toplevel
+
+        return hal.sku()
+    except ImportError:
+        with open("/etc/prefdl") as prefdl:  # pylint: disable=unspecified-encoding
+            return re.search(r"SKU: (.*)", prefdl.read()).group(1)
+
+
 __all__ = (
     "Fpga",
     "get_fpga_devices",
     "get_fpga_identifiers",
     "get_interface_macaddr",
+    "get_sku",
 )

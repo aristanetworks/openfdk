@@ -44,7 +44,7 @@ package board_pkg is
   constant NUM_GPIO_C           : natural := 4;
 
   constant NUM_DIMMS_C          : natural := 4;
-  constant NUM_DIMM_DQS_BITS    : natural := 9;
+  constant NUM_DIMM_DQS_BITS_C  : natural := 9;
 
   constant NUM_RESERVED_IN_C    : natural := 4;
   constant NUM_RESERVED_OUT_C   : natural := 1;
@@ -121,9 +121,9 @@ package body board_pkg is
                      retval.ref1_idx := 21; retval.ref1_route := "SOUTH"; retval.ref1_sel := "110";
       when 14     => retval.ref0_idx := 14; retval.ref0_route := "LOCAL"; retval.ref0_sel := "001";
                      retval.ref1_idx := 21; retval.ref1_route := "LOCAL"; retval.ref1_sel := "010";
-      when 15     => retval.ref0_idx := 22; retval.ref0_route := "LOCAL"; retval.ref0_sel := "001";
+      when 15     => retval.ref0_idx :=  0; retval.ref0_route := "SOUTH"; retval.ref0_sel := "101";
                      retval.ref1_idx := 15; retval.ref1_route := "SOUTH"; retval.ref1_sel := "110";
-      when 16     => retval.ref0_idx := 23; retval.ref0_route := "LOCAL"; retval.ref0_sel := "001";
+      when 16     => retval.ref0_idx :=  7; retval.ref0_route := "SOUTH"; retval.ref0_sel := "101";
                      retval.ref1_idx := 19; retval.ref1_route := "SOUTH"; retval.ref1_sel := "110";
       -- invalid, so causes intentional compile error...
       when others => retval.ref0_idx := 64; retval.ref0_route := "LOCAL"; retval.ref0_sel := "000";
@@ -177,6 +177,7 @@ package body board_pkg is
       ret_val(i).txprecursor  := (others => (others => '0')); -- No precursor
       ret_val(i).txpolarity   := '0';
       ret_val(i).txinhibit    := '0';
+      ret_val(i).rxinhibit    := '0';
       ret_val(i).rxdfeen      := '0';
       ret_val(i).rxpolarity   := '0';
       ret_val(i).rxreset      := '0';

@@ -22,9 +22,9 @@ from . import cli, serial
 from .loghandler import EOSTraceHandler
 
 if six.PY3:
-    from collections.abc import Set, MutableMapping
+    from collections.abc import Set, MutableMapping, Mapping
 else:
-    from collections import Set, MutableMapping  # pylint: disable=deprecated-class
+    from collections import Set, MutableMapping, Mapping  # pylint: disable=deprecated-class
 
 
 class ConfigAccessor(Set):
@@ -56,24 +56,38 @@ class ConfigMixin(object):
 
 class StatusMutator(cli.StatusAccessor, MutableMapping):
     def __setattr__(self, name, value):
-        self[name] = value
-
-    def __getitem__(self, key):
-        data = self.ctx.status(self._extend_prefix(key))
-        if not data:
-            return StatusMutator(self.ctx, self._extend_prefix(key))
-        return serial.loads(data)
+        if name.startswith("_"):
+            object.__setattr__(self, name, value)
+        else:
+            self[name] = value
 
     def __setitem__(self, key, value):
-        return self.ctx.status_set(self._extend_prefix(key), serial.dumps(value))
+        path = self._extend_path(key)
+        self._add_path(path)
+        self._ctx.status_set(path, serial.dumps(value))
 
     def __delitem__(self, key):
-        StatusMutator(self.ctx, self._extend_prefix(key)).clear()
-        return self.ctx.status_del(self._extend_prefix(key))
+        node = self._create(key)
+        node.clear()
+        self._del_path(node._path)
+        self._ctx.status_del(node._path)
+
+    def _create(self, key):
+        return self.__class__(self._ctx, self._extend_path(key), self)
 
     def _status_iter(self):
-        for key in self.ctx.status_iter():  # pylint: disable=use-yield-from
+        for key in self._ctx.status_iter():  # pylint: disable=use-yield-from
             yield key
+
+    def deepupdate(self, other):
+        if not isinstance(other, Mapping):
+            raise TypeError("other must be a Mapping")
+
+        for key, value in six.iteritems(other):
+            if isinstance(value, Mapping):
+                self[key].deepupdate(value)
+            else:
+                self[key] = value
 
 
 class StatusMixin(object):
@@ -86,7 +100,9 @@ class StatusMixin(object):
         """A proxy for accessing and modifying a daemon's status that
         automatically serializes and deserializes.
         """
-        return StatusMutator(self.get_agent_mgr())
+        if not hasattr(self, "_status"):
+            self._status = StatusMutator(self.get_agent_mgr())
+        return self._status
 
 
 class LoggingMixin(object):

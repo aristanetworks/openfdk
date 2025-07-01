@@ -44,7 +44,7 @@ package board_pkg is
   constant NUM_GPIO_C           : natural := 4;
 
   constant NUM_DIMMS_C          : natural := 4;
-  constant NUM_DIMM_DQS_BITS    : natural := 9;
+  constant NUM_DIMM_DQS_BITS_C  : natural := 9;
 
   constant NUM_RESERVED_IN_C    : natural := 4;
   constant NUM_RESERVED_OUT_C   : natural := 1;
@@ -177,6 +177,7 @@ package body board_pkg is
       ret_val(i).txprecursor  := (others => (others => '0')); -- No precursor
       ret_val(i).txpolarity   := '0';
       ret_val(i).txinhibit    := '0';
+      ret_val(i).rxinhibit    := '0';
       ret_val(i).rxdfeen      := '0';
       ret_val(i).rxpolarity   := '0';
       ret_val(i).rxreset      := '0';
@@ -190,7 +191,7 @@ package body board_pkg is
   function get_cmac_loc(cmac_idx : cmac_idx_t) return string is
   begin
     assert false
-    report "CMAC is not supported on the L board"
+      report "CMAC is not supported on the L board"
       severity failure;
     return "FAIL";
   end get_cmac_loc;
