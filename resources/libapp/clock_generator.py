@@ -277,14 +277,27 @@ class ClockGenerator(object):  # pylint:disable=too-many-instance-attributes
                     print(
                         """\
 WARNING: PLSmbusMediator not running! \
-Clkgen part left with manufacturers default settings (eth156).\
+Clkgen part left with manufacturers default settings.\
 """
                     )
 
         if not self.noClkGen:
             self.partNum = self.clkgen.partNum
 
-    def load_profile(self, profile, verify=False):
+    def check_profile(self, profile):
+        """Verifies that the profile exists for the platform."""
+        if self.noClkGen:
+            return "NA"  # not supported
+
+        try:
+            config_filename = self.clkgenProfiles[profile][self.platform][self.brdStandard][self.partNum]["config_file"]
+            os.path.exists(self.clkprofiledir + config_filename)
+        except Exception:  # pylint: disable=broad-except
+            return "Null"  # Doesn't exist
+
+        return config_filename  # Exists
+
+    def load_profile(self, profile, verify=False, quiet=False):
         """Loads a clock generator profile.
 
         Configures clkgen with the specified profile and waits for the device
@@ -300,15 +313,13 @@ Clkgen part left with manufacturers default settings (eth156).\
             return
 
         # Check profile exists
-        try:
-            config_filename = self.clkgenProfiles[profile][self.platform][self.brdStandard][self.partNum]["config_file"]
-            os.path.exists(self.clkprofiledir + config_filename)
-        except:
+        config_filename = self.check_profile(profile)
+        if config_filename == "Null":
             raise Exception(
                 "Clock Profile {} does not exist for this platform/board_standard configuration.".format(profile)
             )
 
-        if profile != "default":
+        if not quiet and profile != "default":
             print("Loading Clock Generator Profile: {}".format(self.clkgenProfiles[profile]["description"]))
         self.clkgen.load_config(self.clkprofiledir + config_filename)
         while not self.clkgen.device_ready:

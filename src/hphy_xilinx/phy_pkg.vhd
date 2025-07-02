@@ -39,15 +39,18 @@ package phy_pkg is
   constant QPLLMODE_10G_161R_C : std_logic_vector := 8x"03";
   constant QPLLMODE_25G_161R_C : std_logic_vector := 8x"04";
   constant QPLLMODE_2G5_156R_C : std_logic_vector := 8x"05";
+  constant QPLLMODE_2G5_125R_C : std_logic_vector := 8x"06";
 
-  constant GTMODE_10G32_C : std_logic_vector := 8x"00";
-  constant GTMODE_1G32_C  : std_logic_vector := 8x"01";
-  constant GTMODE_10G16_C : std_logic_vector := 8x"02";
-  constant GTMODE_1G16_C  : std_logic_vector := 8x"03";
-  constant GTMODE_10G20_C : std_logic_vector := 8x"04";
-  constant GTMODE_25G64_C : std_logic_vector := 8x"05";
-  constant GTMODE_25G80_C : std_logic_vector := 8x"06";
-  constant GTMODE_1G8_C   : std_logic_vector := 8x"07";
+  constant GTMODE_10G32_C  : std_logic_vector := 8x"00";
+  constant GTMODE_1G32_C   : std_logic_vector := 8x"01";
+  constant GTMODE_10G16_C  : std_logic_vector := 8x"02";
+  constant GTMODE_1G16_C   : std_logic_vector := 8x"03";
+  constant GTMODE_10G20_C  : std_logic_vector := 8x"04";
+  constant GTMODE_25G64_C  : std_logic_vector := 8x"05";
+  constant GTMODE_25G80_C  : std_logic_vector := 8x"06";
+  constant GTMODE_1G8_C    : std_logic_vector := 8x"07";
+  constant GTMODE_40G32_C  : std_logic_vector := 8x"08";
+  constant GTMODE_100G64_C : std_logic_vector := 8x"09";
 
   -- Define a GT configuration type for all
   type qpll_cfg_t is
@@ -70,8 +73,8 @@ package phy_pkg is
     rxdfeen      : std_logic;
     rxpolarity   : std_logic;
     rxinhibit    : std_logic;
-    rxreset      : std_logic;
-    eyescanreset : std_logic;
+    rxreset      : std_logic; -- Do Not Use
+    eyescanreset : std_logic; -- Do Not Use
   end record;
   type gt_cfg_t is array (natural range <>) of gt_cfg_subt;
   constant GT_CFG_DFLT_C : gt_cfg_subt := (txdiffctrl   => (others => '0'),
@@ -88,25 +91,94 @@ package phy_pkg is
   -- Define a GT status type for all
   type gt_sts_t is
   record
-    qpllmode  : slv8_array_t(1 downto 0);
-    txmode    : std_logic_vector(7 downto 0);
-    txinhibit : std_logic;
-    txprbs    : std_logic_vector(3 downto 0);
-    txber     : std_logic_vector(31 downto 0);
-    txser     : std_logic_vector(31 downto 0);
-    rxmode    : std_logic_vector(7 downto 0);
-    rxinhibit : std_logic;
-    rxprbs    : std_logic_vector(3 downto 0);
-    rxprbslck : std_logic;
-    rxprbserr : std_logic;
-    loopback  : std_logic_vector(2 downto 0);
+    qpllmode      : slv8_array_t(1 downto 0);
+    txmode        : std_logic_vector(7 downto 0);
+    txmode_sysclk : std_logic_vector(7 downto 0);
+    txinhibit     : std_logic;
+    txprbs        : std_logic_vector(3 downto 0);
+    txber         : std_logic_vector(31 downto 0);
+    txser         : std_logic_vector(31 downto 0);
+    rxmode        : std_logic_vector(7 downto 0);
+    rxmode_sysclk : std_logic_vector(7 downto 0);
+    rxinhibit     : std_logic;
+    rxprbs        : std_logic_vector(3 downto 0);
+    rxprbslck     : std_logic;
+    loopback      : std_logic_vector(2 downto 0);
   end record;
+
+  constant GT_STS_DFLT_C : gt_sts_t := (txmode        => (others => '0'),
+                                        txmode_sysclk => (others => '0'),
+                                        qpllmode      => (others => (others => '0')),
+                                        txinhibit     => '0',
+                                        txprbs        => (others => '0'),
+                                        txber         => (others => '0'),
+                                        txser         => (others => '0'),
+                                        rxmode        => (others => '0'),
+                                        rxmode_sysclk => (others => '0'),
+                                        rxinhibit     => '0',
+                                        rxprbs        => (others => '0'),
+                                        rxprbslck     => '0',
+                                        loopback      => (others => '0'));
+
   type gt_sts_array_t is array (natural range <>) of gt_sts_t;
+
+  type apb3_in_t is
+  record
+    sel   : std_logic_vector(3 downto 0);
+    en    : std_logic;
+    addr  : std_logic_vector(15 downto 0);
+    wr    : std_logic;
+    wdata : std_logic_vector(31 downto 0);
+  end record;
+  type apb3_out_t is
+  record
+    rdy    : std_logic;
+    slverr : std_logic;
+    rdata  : std_logic_vector(31 downto 0);
+  end record;
+
+  type gt_chnl_in_t is
+  record
+    -- @ SYSCLK
+    rx_reset      : std_logic;
+    tx_reset      : std_logic;
+    rate          : std_logic_vector(7 downto 0);
+    loopback      : std_logic_vector(2 downto 0);
+    tx_polarity   : std_logic;
+    tx_diffctrl   : std_logic_vector(6 downto 0);
+    tx_precursor1 : std_logic_vector(5 downto 0);
+    tx_precursor2 : std_logic_vector(5 downto 0);
+    tx_precursor3 : std_logic_vector(5 downto 0);
+    tx_postcursor : std_logic_vector(5 downto 0);
+    tx_prbssel    : std_logic_vector(3 downto 0);
+    tx_prbsinserr : std_logic;
+    rx_polarity   : std_logic;
+    rx_lpmen      : std_logic;
+    rx_cdrhold    : std_logic;
+    rx_prbssel    : std_logic_vector(3 downto 0);
+    rx_prbserrrst : std_logic;
+    eyescanreset  : std_logic;
+    -- @ TX_CLK
+    tx_inhibit    : std_logic;
+    tx_data       : std_logic_vector(63 downto 0);
+  end record;
+  type gt_chnl_in_array_t is array (natural range <>) of gt_chnl_in_t;
+
+  type gt_chnl_out_t is
+  record
+    -- @ SYSCLK
+    rx_cdrlock       : std_logic;
+    rx_elecidle      : std_logic;
+    -- @ RX_CLK
+    rx_data          : std_logic_vector(63 DOWNTO 0);
+    rx_prbslocked    : std_logic;
+    rx_prbserr       : std_logic;
+  end record;
+  type gt_chnl_out_array_t is array (natural range <>) of gt_chnl_out_t;
 
   ---- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   -- Component Definitions
   ---- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
   component gty_quad_gtye4_common_wrapper
     port (
       GTYE4_COMMON_BGBYPASSB         : in  std_logic_vector(0 downto 0)  := 1x"1";
@@ -229,6 +301,9 @@ package phy_pkg is
       drpdi_in              : IN  STD_LOGIC_VECTOR(63 DOWNTO 0);
       drpen_in              : IN  STD_LOGIC_VECTOR(3 DOWNTO 0);
       drpwe_in              : IN  STD_LOGIC_VECTOR(3 DOWNTO 0);
+      dmonitorclk_in        : IN  STD_LOGIC_VECTOR(3 DOWNTO 0);
+      eyescanreset_in       : IN  STD_LOGIC_VECTOR(3 DOWNTO 0);
+      eyescantrigger_in     : IN  STD_LOGIC_VECTOR(3 DOWNTO 0);
       gtrxreset_in          : IN  STD_LOGIC_VECTOR(3 DOWNTO 0);
       gttxreset_in          : IN  STD_LOGIC_VECTOR(3 DOWNTO 0);
       gtyrxn_in             : IN  STD_LOGIC_VECTOR(3 DOWNTO 0);
@@ -307,6 +382,8 @@ package phy_pkg is
 
       drpdo_out             : OUT STD_LOGIC_VECTOR(63 DOWNTO 0);
       drprdy_out            : OUT STD_LOGIC_VECTOR(3 DOWNTO 0);
+      dmonitorout_out       : OUT STD_LOGIC_VECTOR(63 DOWNTO 0);
+      eyescandataerror_out  : OUT STD_LOGIC_VECTOR(3 DOWNTO 0);
       gtpowergood_out       : OUT STD_LOGIC_VECTOR(3 DOWNTO 0);
       gtytxn_out            : OUT STD_LOGIC_VECTOR(3 DOWNTO 0);
       gtytxp_out            : OUT STD_LOGIC_VECTOR(3 DOWNTO 0);
@@ -368,6 +445,44 @@ package phy_pkg is
       OVF_AB      : OUT STD_LOGIC;
       OVF_VOLT    : OUT STD_LOGIC;
       OVF_INT     : OUT STD_LOGIC
+      );
+  END COMPONENT;
+
+  -- BVL
+  COMPONENT picxo_fracxo
+    PORT (
+      TXOUTCLK_I    : IN  STD_LOGIC;
+      REF_CLK_I     : IN  STD_LOGIC;
+      RESET_I       : IN  STD_LOGIC;
+      RSIGCE_I      : IN  STD_LOGIC;
+      VSIGCE_I      : IN  STD_LOGIC;
+      VSIGCE_O      : OUT STD_LOGIC;
+      G1            : IN  STD_LOGIC_VECTOR(4 DOWNTO 0);
+      G2            : IN  STD_LOGIC_VECTOR(4 DOWNTO 0);
+      R             : IN  STD_LOGIC_VECTOR(15 DOWNTO 0);
+      V             : IN  STD_LOGIC_VECTOR(15 DOWNTO 0);
+      CE_DSP_RATE   : IN  STD_LOGIC_VECTOR(23 DOWNTO 0);
+      C_I           : IN  STD_LOGIC_VECTOR(6 DOWNTO 0);
+      P_I           : IN  STD_LOGIC_VECTOR(9 DOWNTO 0);
+      N_I           : IN  STD_LOGIC_VECTOR(9 DOWNTO 0);
+      DCXO_DIS      : IN  STD_LOGIC;
+      HOLD          : IN  STD_LOGIC;
+      DON_I         : IN  STD_LOGIC_VECTOR(0 DOWNTO 0);
+      SDM_DATA_O    : OUT STD_LOGIC_VECTOR(25 DOWNTO 0);
+      SDM_TOGGLE_O  : OUT STD_LOGIC;
+      SDM_RANGE_I   : IN  STD_LOGIC_VECTOR(2 DOWNTO 0);
+      SDM_MAX_I     : IN  STD_LOGIC_VECTOR(25 DOWNTO 0);
+      SDM_MIN_I     : IN  STD_LOGIC_VECTOR(25 DOWNTO 0);
+      CENTER_FREQ_I : IN  STD_LOGIC_VECTOR(25 DOWNTO 0);
+      ERROR_O       : OUT STD_LOGIC_VECTOR(20 DOWNTO 0);
+      VOLT_O        : OUT STD_LOGIC_VECTOR(21 DOWNTO 0);
+      CE_PI_O       : OUT STD_LOGIC;
+      CE_PI2_O      : OUT STD_LOGIC;
+      CE_DSP_O      : OUT STD_LOGIC;
+      OVF_PD        : OUT STD_LOGIC;
+      OVF_AB        : OUT STD_LOGIC;
+      OVF_VOLT      : OUT STD_LOGIC;
+      OVF_INT       : OUT STD_LOGIC
       );
   END COMPONENT;
 

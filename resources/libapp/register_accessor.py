@@ -198,8 +198,8 @@ class RegisterAccessor(object):
             != 1
         ):
             raise ValueError("Requires one of (chan_number, bus_number, bus_label, fpgaPCIeDevMngr)")
-        if IS_EOS:
-            if bdf is None:
+        if bdf is None:
+            if IS_EOS:
                 label = (
                     bus_number
                     if bus_number is not None
@@ -207,9 +207,9 @@ class RegisterAccessor(object):
                 )
                 self.internal = EosRegAccess(label, address, pci, accelerator)
             else:
-                self.internal = PCIeRegAccess(fpgaPCIeDevMngr, bdf, bar)
+                self.internal = MakoRegAccess(mos_label, address)
         else:
-            self.internal = MakoRegAccess(mos_label, address)
+            self.internal = PCIeRegAccess(fpgaPCIeDevMngr, bdf, bar)
 
     def __name_to_bus(self, bus):
         # type: (str)->int|None

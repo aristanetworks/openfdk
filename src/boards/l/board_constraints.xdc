@@ -51,7 +51,7 @@ create_clock -period   8.000  -name ts_clk        [get_ports ts_clk_in]
 create_clock -period 100.000  -name ts_diff_clk   [get_ports ts_diff_clk_p]
 
 create_clock -period 6.400    -name refclk_user_0 [get_ports {refclk_user_p[0]}]
-create_clock -period 6.400    -name refclk_user_1 [get_ports {refclk_user_p[1]}]
+create_clock -period 8.000    -name refclk_user_1 [get_ports {refclk_user_p[1]}]
 
 create_clock -period 6.400    -name gt_refclk_0   [get_ports {gt_refclk_p[0]}]
 create_clock -period 6.400    -name gt_refclk_1   [get_ports {gt_refclk_p[1]}]
@@ -88,9 +88,9 @@ create_clock -period 2500.000 -name i2c_clk_4     [get_ports {i2c_scl[4]}]
 create_clock -period 2500.000 -name i2c_clk_5     [get_ports {i2c_scl[5]}]
 create_clock -period 2500.000 -name i2c_clk_6     [get_ports {i2c_scl[6]}]
 
-create_generated_clock -name sem_clk -source [get_pins bufg_sem_clock/I] -divide_by 2 [get_pins bufg_sem_clock/O]
-create_generated_clock -name refclk_25 [get_pins -hier -filter {NAME =~ arista_sysctl_i*/refclk_pll_i/*CLKOUT0}]
-create_generated_clock -name refclk_50 [get_pins -hier -filter {NAME =~ arista_sysctl_i*/refclk_pll_i/*CLKOUT1}]
+create_generated_clock -name refclk_25 [get_pins -hier -filter {NAME =~ arista_sysctl_i*/refclk_pll_i/*CLKOUT0} *CLKOUT0]
+create_generated_clock -name refclk_50 [get_pins -hier -filter {NAME =~ arista_sysctl_i*/refclk_pll_i/*CLKOUT1} *CLKOUT1]
+#create_generated_clock -add -name sem_clk -master_clock refclk_user_0 -source [get_pins bufg_sem_clock/I] -divide_by 2 [get_pins bufg_sem_clock/O]
 
 
 ################################################################################
@@ -1352,4 +1352,3 @@ set_property PACKAGE_PIN BA18 [get_ports reserved_inout[3]]
 set_property IOSTANDARD LVCMOS12 [get_ports reserved_inout[*]]
 set_property SLEW SLOW [get_ports reserved_inout[*]]
 set_property DRIVE 4   [get_ports reserved_inout[*]]
-

@@ -29,6 +29,7 @@ from six.moves import range
 
 regex = re.compile("(?P<name>\\w+)\\[(?P<num>\\d+)\\]")
 
+
 #
 def Retryable(retry_list):
     """Utility decorator to wrap methods which might flake (like i2c accesses).
@@ -149,7 +150,7 @@ class Node(object):
             v.dumps(buf, level + 1)
 
         for name, array in self._arrays.items():
-            for i, n in enumerate(array):
+            for i, n in array.items():
                 buf.write("{}{}[{}]:\n".format(indent, name, i + self._offs))
                 n.dumps(buf, level + 1)
 
@@ -165,7 +166,7 @@ class Node(object):
             v.dump(level + 1)
 
         for name, array in self._arrays.items():
-            for i, n in enumerate(array):
+            for i, n in array.items():
                 print("{}{}[{}]:".format(indent, name, i + self._offs))
                 n.dump(level + 1)
 
@@ -248,6 +249,10 @@ class RegisterArray(collections.OrderedDict):
     def __iter__(self):
         for key in super(RegisterArray, self).__iter__():
             yield self[key]
+
+    def items(self):
+        for key in super(RegisterArray, self).__iter__():
+            yield key, self[key]
 
 
 def walk_nodes(start, parts, may_insert=False, array_offset=0):

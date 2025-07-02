@@ -48,7 +48,7 @@ The Null example design demonstrates how to build and program FPGA images into a
 | `eh_central      ` | XCVU9P-FLGB2104-3-E  | 4.28.0f or later | 0.37.0 or later | DCS-7130-32EB, DCS-7130-48EB, DCS-7130-48EH, DCS-7130-96EB, DCS-7130-96EH   |
 | `eh_leaf         ` | XCVU9P-FLGB2104-3-E  | 4.28.0f or later | 0.37.0 or later | DCS-7130-48EH, DCS-7130-96EH                                                |
 | `l               ` | XCVU7P-FLVB2104-2-E  | 4.28.0f or later | 0.37.0 or later | DCS-7130-48L, DCS-7130-96L                                                  |
-| `lb2             ` | XCVU9P-FLGB2104-3-E  | 4.28.0f or later | 0.37.0 or later | DCS-7130-32LB, DCS-7130-48LB, DCS-7130-96LB, DCS-7130LBR-48S6QD             |
+| `lb2             ` | XCVU9P-FLGB2104-3-E  | 4.28.0f or later | 0.37.0 or later | DCS-7130-32LB, DCS-7130-48LB, DCS-7130-96LB, DCS-7130LBR-48S6QD, DCS-7132LB-48Y4C |
 
 
 
@@ -101,7 +101,7 @@ To copy and use the example from the Arista FDK, copy the `null` directory
 outside the FDK tree (probably to a new version control repository):
 
 ```bash
-cp -r arista_fdk-3.0.0.openfdk/examples/null mynewproject/
+cp -r arista_fdk-3.1.0.openfdk/examples/null mynewproject/
 ```
 Update the `Makefile` to change:
 
@@ -129,8 +129,8 @@ For example, for a new project, based on `null` called `mynewproject`:
 +BUILD_ID   ?= 1
 
  PROJECT_DIR     = $(CURDIR)
--ARISTA_FDK_DIR ?= $(PROJECT_DIR)/../../../arista_fdk-3.0.0.openfdk
-+ARISTA_FDK_DIR ?= $(PROJECT_DIR)/../arista_fdk-3.0.0.openfdk
+-ARISTA_FDK_DIR ?= $(PROJECT_DIR)/../../../arista_fdk-3.1.0.openfdk
++ARISTA_FDK_DIR ?= $(PROJECT_DIR)/../arista_fdk-3.1.0.openfdk
  ARISTA_SRC_DIR  = $(ARISTA_FDK_DIR)/src
 
  SOURCE_FILES = $(PROJECT_DIR)/src_files.json

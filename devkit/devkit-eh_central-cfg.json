@@ -1,6 +1,7 @@
 {
     "license": "bsd-3-clause",
     "sources_1": [
+        "${ARISTA_FDK_DIR}/src/arista_sysctl/arista_sysctl_v2.csv",
         "${ARISTA_FDK_DIR}/src/arista_sysctl/arista_sysctl_v2.vhd",
         "${ARISTA_FDK_DIR}/src/arista_sysctl/eeprom_ctrl_wrapper.vhd",
         "${ARISTA_FDK_DIR}/src/arista_sysctl/eeprom_parser_core.vhd",
@@ -27,14 +28,16 @@
         "${ARISTA_FDK_DIR}/src/regfile/reg_file_pkg.vhd",
         "${ARISTA_FDK_DIR}/src/regfile/reg_flexi_pkg.vhd",
         "${ARISTA_FDK_DIR}/src/seu/ip/xcvu9p-flgb2104-3-e/sem_mit_78M125/sem_mit_78M125.xci",
-        "${ARISTA_FDK_DIR}/src/seu/xil_sem.vhd",
+        "${ARISTA_FDK_DIR}/src/seu/xil_sem_deprecated.vhd",
         "${ARISTA_FDK_DIR}/src/spi/spi_master.vhd",
         "${ARISTA_FDK_DIR}/src/synchroniser/synchroniser.vhd",
         "${ARISTA_FDK_DIR}/src/yart/yart_i2c.vhd",
         "${ARISTA_FDK_DIR}/src/yart/yart_leaf_decode.vhd",
         "${ARISTA_FDK_DIR}/src/yart/yart_pkg.vhd",
         "${ARISTA_FDK_DIR}/src/yart/yart_reg.vhd",
+        "${ARISTA_FDK_DIR}/src/yart/yart_sideload_helper_pkg.vhd",
         "${ARISTA_FDK_DIR}/src/yart/yart_tl.vhd",
+        "${ARISTA_FDK_DIR}/src/yart/yart_utils_pkg.vhd",
         "${ARISTA_FDK_DIR}/src/yart/ytl_bridge.vhd"
     ],
     "constrs_1": [

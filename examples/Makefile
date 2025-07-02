@@ -40,7 +40,7 @@ $(BUILD_TARGETS): \
 			| $(LOG_FILE_DIR)
 	$(MAKE) -C $(@F) | tee $(LOG_FILE_DIR)/$(@F)__log.txt
 
-$(PRJ_DIR)/%.bitstream:
+$(PROJECT_DIR)/%.bitstream:
 	make -C $(@D) $(notdir $@)
 
 .PHONY: build_bitstream
