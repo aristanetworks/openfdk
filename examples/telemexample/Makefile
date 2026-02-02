@@ -23,11 +23,11 @@
 .SECONDEXPANSION:
 
 PROJECT    ?= telemexample
-VERSION_ID ?= 3.1.0.openfdk
-BUILD_ID   ?= 45
+VERSION_ID ?= 3.2.0.openfdk
+BUILD_ID   ?= 7
 
 PROJECT_DIR         = $(CURDIR)
-ARISTA_FDK_VERSION ?= 3.1.0.openfdk
+ARISTA_FDK_VERSION ?= 3.2.0.openfdk
 ARISTA_FDK_DIR     ?= $(PROJECT_DIR)/../../../arista_fdk-$(ARISTA_FDK_VERSION)
 ARISTA_SRC_DIR      = $(ARISTA_FDK_DIR)/src
 
@@ -147,8 +147,8 @@ $(APP_STAGING_DIR)/eos/python_deps3.zip: requirements.txt $(PYTHON3_ENV)
 	$(PYTHON3) -m pip install -r $< --target $(BUILD_DIR)/python_deps3
 	cd $(BUILD_DIR)/python_deps3 && zip -q -r -o $@ *
 
-$(APP_STAGING_DIR)/eos/python_deps2.zip: requirements.txt $(PYTHON2_ENV)
+$(APP_STAGING_DIR)/eos/python_deps2.zip: requirements.txt $(PYTHON3_ENV)
 	@mkdir -p $(@D)
 	mkdir -p $(BUILD_DIR)/python_deps2
-	$(PYTHON2) -m pip install -r $< --target $(BUILD_DIR)/python_deps2
+	$(PYTHON3) -m pip install -r $< --target $(BUILD_DIR)/python_deps2 --python-version 2.7 --only-binary :all:
 	cd $(BUILD_DIR)/python_deps2 && zip -q -r -o $@ *

@@ -32,7 +32,9 @@ try:
     class MakoRegAccess(hal.i2c.Device):  # type: ignore
         ALLOWABLE_ADDR = [0x72, 0x73, 0x66, 0x67]  # Is this limitation arbitrary??
 
-        def __init__(self, label=None, addr=None):
+        def __init__(self, label=None, addr=None, awidth=None):
+            self.awidth = awidth if awidth else 16
+
             if label in hal.base.mezzanine._fpgas:  # type: ignore
                 # label is an FPGA name
                 fpga = hal.base.mezzanine._fpgas[label]  # type: ignore
@@ -85,8 +87,9 @@ except ImportError:
 
 
 class EosRegAccess(object):
-    def __init__(self, label=None, addr=None, pci=None, accelerator=None):
-        self.sock = PLSmbusUtil.connect()
+    # pylint: disable=R0913
+    def __init__(self, label=None, addr=None, pci=None, accelerator=None, awidth=None):
+        self._sock = None
 
         if pci:
             self.pci_addr = PLSmbusUtil.encodePCIAddress(pci)
@@ -97,6 +100,13 @@ class EosRegAccess(object):
         self.accel_id = accelerator
         self.bus = label
         self.addr = addr
+        self.awidth = awidth if awidth else 16
+
+    @property
+    def sock(self):
+        if self._sock is None:
+            self._sock = PLSmbusUtil.connect()
+        return self._sock
 
     def read_block(self, addr, n=32):
         result = PLSmbusUtil.read(
@@ -129,34 +139,37 @@ class EosRegAccess(object):
         )
 
     def read_reg(self, addr):
-        self.write_block((addr >> 8) & 0xFF, [(addr) & 0xFF])
+        b = []
+        for i in reversed(range(int((self.awidth - 8) / 8))):
+            b.append((addr >> i * 8) & 0xFF)
+        self.write_block((addr >> (self.awidth - 8)) & 0xFF, b)
         r = self.read_block(0xFF, 4)
         return r[0] << 24 | r[1] << 16 | r[2] << 8 | r[3]
 
     def write_reg(self, addr, value):
-        b = [
-            (addr) & 0xFF,
-            (value >> 24) & 0xFF,
-            (value >> 16) & 0xFF,
-            (value >> 8) & 0xFF,
-            (value) & 0xFF,
-        ]
-        self.write_block((addr >> 8) & 0xFF, b)
+        b = []
+        for i in reversed(range(int((self.awidth - 8) / 8))):
+            b.append((addr >> i * 8) & 0xFF)
+        for i in reversed(range(4)):
+            b.append((value >> i * 8) & 0xFF)
+        self.write_block((addr >> (self.awidth - 8)) & 0xFF, b)
 
 
 class PCIeRegAccess(object):
-    def __init__(self, fpgaPCIeDevMngr, bdf, bar=0):
-        self.pcieDevice = fpgaPCIeDevMngr.pcie_devices_by_bdf.get(bdf)
-        self.bar = bar
+    def __init__(self, fpgaPCIeDevMngr, bdf, bar=0, awidth=None):
+        self.awidth = awidth if awidth else 32
+        for r in fpgaPCIeDevMngr.pcie_devices_by_bdf.get(bdf).regions:
+            if r.region_num == bar:
+                self.region = r
 
     def read_block(self, addr, n=32):
-        r = self.pcieDevice.regions[self.bar].read(addr, n)
+        r = self.region.read(addr, n)
         return [ord(x) if isinstance(x, (str, bytes)) else x for x in r]
 
     def write_block(self, addr, vals):
         # FIXME: The bytearray call is only needed for Python 2.
         data = bytes(bytearray(vals))
-        self.pcieDevice.regions[self.bar].write(addr, data)
+        self.region.write(addr, data)
 
     def read_reg(self, addr):
         a = addr << 2
@@ -189,6 +202,7 @@ class RegisterAccessor(object):
         fpgaPCIeDevMngr=None,
         bdf=None,
         bar=0,
+        awidth=None,
     ):
         if (
             int(fpgaPCIeDevMngr is not None)
@@ -205,11 +219,11 @@ class RegisterAccessor(object):
                     if bus_number is not None
                     else self.__name_to_bus(bus_label or r"i2c-.*-mux \(chan_id {}\)".format(chan_number)) or bus_label
                 )
-                self.internal = EosRegAccess(label, address, pci, accelerator)
+                self.internal = EosRegAccess(label, address, pci, accelerator, awidth)
             else:
-                self.internal = MakoRegAccess(mos_label, address)
+                self.internal = MakoRegAccess(mos_label, address, awidth)
         else:
-            self.internal = PCIeRegAccess(fpgaPCIeDevMngr, bdf, bar)
+            self.internal = PCIeRegAccess(fpgaPCIeDevMngr, bdf, bar, awidth)
 
     def __name_to_bus(self, bus):
         # type: (str)->int|None

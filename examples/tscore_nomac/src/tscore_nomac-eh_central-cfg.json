@@ -43,6 +43,7 @@
         "${ARISTA_FDK_DIR}/src/seu/xil_sem_pkg.vhd",
         "${ARISTA_FDK_DIR}/src/seu/xil_sem_reg.vhd",
         "${ARISTA_FDK_DIR}/src/spi/spi_master.vhd",
+        "${ARISTA_FDK_DIR}/src/synchroniser/cdc_jitter_pkg.vhd",
         "${ARISTA_FDK_DIR}/src/synchroniser/sync_pulse.vhd",
         "${ARISTA_FDK_DIR}/src/synchroniser/sync_tgl_to_pulse.vhd",
         "${ARISTA_FDK_DIR}/src/synchroniser/sync_vec.vhd",

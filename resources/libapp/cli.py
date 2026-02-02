@@ -221,6 +221,29 @@ class StatusAccessor(Mapping, dict):
             yield key
 
 
+def status_as_dict(ctx):
+    """Returns current status in Sysdb deserialized as a dict."""
+
+    def lsplit_path(path):
+        if path[:1] == "[":
+            head, tail = path[1:].split("]", 1)
+            return int(head), tail
+        if "/" in path:
+            return path.split("/", 1)
+        return path, ""
+
+    status = {}
+    for path, value in ctx.statusIter():
+        current = status
+        while True:
+            key, path = lsplit_path(path)
+            if not path:
+                current[key] = serial.loads(value)
+                break
+            current = current.setdefault(key, {})
+    return status
+
+
 def _tokenize(syntax, optionals=True):
     if optionals:
         syntax = re.sub(r"\[([^]]+)\]", r"\1", syntax)

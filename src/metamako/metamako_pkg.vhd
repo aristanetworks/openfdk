@@ -295,7 +295,6 @@ package metamako_pkg is
   type positive_array_t is array (natural range <>) of positive;
   type integer_array_t is array (natural range <>) of integer;
   type integer_array_2d_t is array (natural range <>, natural range <>) of integer;
-  type integer_array_ptr_t is access integer_array_t;
 
   type std_logic_2d is array (integer range <>, integer range <>) of std_logic;
 
@@ -471,6 +470,7 @@ package metamako_pkg is
   function imax (arg1             : integer; arg2 : integer) return integer;
   function imin (arg1             : integer_array_t) return integer;
   function imax (arg1             : integer_array_t) return integer;
+  function imax (arg1             : positive_array_t) return positive;
   function imax (arg1             : integer_array_t; arg2 : integer_array_t) return integer_array_t;
   function rmin (arg1             : real; arg2 : real) return real;
   function rmax (arg1             : real; arg2 : real) return real;
@@ -600,6 +600,10 @@ package metamako_pkg is
   function iif(test                    : boolean;
                true_value, false_value : slv64_array_t)
     return slv64_array_t;
+
+  function iif(test                    : boolean;
+               true_value, false_value : boolean_array_t)
+    return boolean_array_t;
 
   function "-" (a, b : integer_array_t) return integer_array_t;
   function "-" (a: integer_array_t; b: integer) return integer_array_t;
@@ -1034,6 +1038,18 @@ package body metamako_pkg is
 
   function imax (arg1 : integer_array_t) return integer is
     variable tmp_res : integer;
+  begin
+    tmp_res := arg1(arg1'low);
+    for i in arg1'low+1 to arg1'high loop
+      if arg1(i) > tmp_res then
+        tmp_res := arg1(i);
+      end if;
+    end loop;
+    return tmp_res;
+  end function imax;
+
+  function imax (arg1 : positive_array_t) return positive is
+    variable tmp_res : positive;
   begin
     tmp_res := arg1(arg1'low);
     for i in arg1'low+1 to arg1'high loop
@@ -1575,6 +1591,17 @@ package body metamako_pkg is
   function iif(test                    : boolean;
                true_value, false_value : slv64_array_t)
     return slv64_array_t is
+  begin
+    if test then
+      return true_value;
+    else
+      return false_value;
+    end if;
+  end function;
+
+  function iif(test                    : boolean;
+               true_value, false_value : boolean_array_t)
+    return boolean_array_t is
   begin
     if test then
       return true_value;

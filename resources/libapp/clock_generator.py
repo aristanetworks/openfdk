@@ -20,7 +20,9 @@ from __future__ import absolute_import
 
 import os
 import json
+import logging
 import re
+import time
 from functools import wraps
 
 from . import IS_EOS
@@ -28,9 +30,9 @@ from . import IS_EOS
 if not IS_EOS:
     from hal import i2c
 else:
-    from AgentDirectory import agentIsRunning
     from PlutoSmbusAccessor import PlutoSmbusDaemonAccessor
 
+logger = logging.getLogger(__name__)
 
 # ------------------------------------------------------------------------------
 class Si5345(object):
@@ -39,17 +41,26 @@ class Si5345(object):
 
     def __init__(self, clkgen_interface):
         self.partNum = "si5345"
+        self._clkgen_interface = clkgen_interface
+        self._device = None
 
-        if not IS_EOS:
-            self.device = i2c.Device(
-                bus=i2c.label_to_bus(clkgen_interface["mos_label"]),
-                addr=clkgen_interface["address"],
-            )
-        else:
-            self.device = PlutoSmbusDaemonAccessor(
-                mezzanineMuxPort=clkgen_interface["chan_number"],
-                address=clkgen_interface["address"],
-            )
+    @property
+    def device(self):
+        if self._device is None:
+            if not IS_EOS:
+                self._device = i2c.Device(
+                    bus=i2c.label_to_bus(self._clkgen_interface["mos_label"]),
+                    addr=self._clkgen_interface["address"],
+                )
+            else:
+                try:
+                    self._device = PlutoSmbusDaemonAccessor(
+                        mezzanineMuxPort=self._clkgen_interface["chan_number"],
+                        address=self._clkgen_interface["address"],
+                    )
+                except FileNotFoundError:
+                    pass  # PlutoSmbus isn't ready yet
+        return self._device
 
     def load_config(self, fileName):
         reg_map = self._reg_map_parser(fileName)
@@ -117,14 +128,29 @@ class Si5345(object):
 # -------------------------------------------------------------------------------
 class LMK05318(object):
     def __init__(self, clkgen_interface):
-        self.device = PlutoSmbusDaemonAccessor(
-            bus=clkgen_interface["bus_number"],
-            address=clkgen_interface["address"],
-            accelId=clkgen_interface["accelerator"],
-            pci=clkgen_interface["pci"],
-        )
+        self._clkgen_interface = clkgen_interface
+        self._device = None
+        self._part_num = None
 
-        self.partNum = self._get_part_number()
+    @property
+    def device(self):
+        if self._device is None:
+            try:
+                self._device = PlutoSmbusDaemonAccessor(
+                    bus=self._clkgen_interface["bus_number"],
+                    address=self._clkgen_interface["address"],
+                    accelId=self._clkgen_interface["accelerator"],
+                    pci=self._clkgen_interface["pci"],
+                )
+            except FileNotFoundError:
+                pass  # PlutoSmbus isn't ready yet
+        return self._device
+
+    @property
+    def partNum(self):
+        if self._part_num is None:
+            self._part_num = self._get_part_number()
+        return self._part_num
 
     def load_config(self, fileName):
         reg_map = self._reg_map_parser(fileName)
@@ -270,7 +296,7 @@ class ClockGenerator(object):  # pylint:disable=too-many-instance-attributes
                 self.clkgen = Si5345(interface["clkgen"])
                 self.noClkGen = False
             if interface["clkgen"]["device"] == "LMK05318":
-                if agentIsRunning("ar", "PLSmbusMediator"):  # pylint: disable=used-before-assignment
+                if interface["clkgen"]["accelerator"] is not None:
                     self.clkgen = LMK05318(interface["clkgen"])
                     self.noClkGen = False
                 else:
@@ -281,8 +307,9 @@ Clkgen part left with manufacturers default settings.\
 """
                     )
 
-        if not self.noClkGen:
-            self.partNum = self.clkgen.partNum
+    @property
+    def partNum(self):
+        return self.clkgen.partNum
 
     def check_profile(self, profile):
         """Verifies that the profile exists for the platform."""
@@ -297,7 +324,7 @@ Clkgen part left with manufacturers default settings.\
 
         return config_filename  # Exists
 
-    def load_profile(self, profile, verify=False, quiet=False):
+    def load_profile(self, profile, verify=False, quiet=False, timeout=None):
         """Loads a clock generator profile.
 
         Configures clkgen with the specified profile and waits for the device
@@ -306,11 +333,18 @@ Clkgen part left with manufacturers default settings.\
         Args:
             profile (str): Name of profile to apply.
         """
+        deadline = time.time() + timeout if timeout is not None else float("inf")
 
         # Skip programming if there is no clkgen part or we are keeping what is
         # already programmed
         if self.noClkGen or profile == "keep":
             return
+
+        # Wait till we can communicate with the device
+        while self.clkgen.device is None:
+            if time.time() > deadline:
+                raise TimeoutError("Timed out waiting for clkgen device communication")
+            logger.info("Waiting for clkgen device to be present")
 
         # Check profile exists
         config_filename = self.check_profile(profile)
@@ -323,7 +357,9 @@ Clkgen part left with manufacturers default settings.\
             print("Loading Clock Generator Profile: {}".format(self.clkgenProfiles[profile]["description"]))
         self.clkgen.load_config(self.clkprofiledir + config_filename)
         while not self.clkgen.device_ready:
-            pass
+            if time.time() > deadline:
+                raise TimeoutError("Timed out waiting for clkgen device to be ready")
+            logger.info("Waiting for clkgen device to be ready")
 
         if verify:
             self.clkgen.verify_config(self.clkprofiledir + config_filename)

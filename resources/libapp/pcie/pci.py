@@ -22,11 +22,23 @@
 #
 # ------------------------------------------------------------------------------
 
+import ctypes
 import logging
 import mmap
 import os
 import re
 import subprocess
+import struct
+
+try:
+    # Writing with a ctypes pointer results in a read-modify-write so use the
+    # _MemVolatileAccess Diags CPP library available on EOS instead. This is the
+    # library used by pciread32 and pciwrite32.
+    import _MemVolatileAccess
+
+    _use_MemVolatileAccess = True
+except ImportError:
+    _use_MemVolatileAccess = False
 
 from . import helpers, shell
 
@@ -186,14 +198,40 @@ class PCIMemoryRegion(object):  # pylint: disable=too-many-instance-attributes
         self.size = size
         self.prefetchable = prefetchable
         self.word_size = word_size
+        if self.word_size == 1:
+            self.word_fmt = ctypes.c_uint8
+            self.struct_fmt = "B"
+        elif self.word_size == 2:
+            self.word_fmt = ctypes.c_uint16
+            self.struct_fmt = "<H"
+        elif self.word_size == 4:
+            self.word_fmt = ctypes.c_uint32
+            self.struct_fmt = "<I"
+        elif self.word_size == 8:
+            self.word_fmt = ctypes.c_uint64
+            self.struct_fmt = "<Q"
+        else:
+            self.word_fmt = None
+            self.struct_fmt = None
 
         self._mapping = None
+        self._buf = None
 
     @property
     def mapping(self):
         if not self._mapping:
             self._mapping = self._mmap(self.size)
         return self._mapping
+
+    @property
+    def buf(self):
+        if self.word_fmt is None:
+            raise AttributeError("Unsupported word format")
+        if not self._buf:
+            # FIXME: from_buffer results in a read at address 0.
+            addr = ctypes.addressof(self.word_fmt.from_buffer(self.mapping))
+            self._buf = ctypes.cast(addr, ctypes.POINTER(self.word_fmt))
+        return self._buf
 
     def _mmap(self, length, offset=0x0):
         """
@@ -212,7 +250,7 @@ class PCIMemoryRegion(object):  # pylint: disable=too-many-instance-attributes
         shell.shellcmd("chmod {} {}".format(mode, self.resource_path), root=True)
         return mapping
 
-    def _check_rw_access(self, offset, nbytes, align, trxn_size):
+    def _check_rw_access(self, offset, nbytes, trxn_size):
         """Check that a read/write access of nbytes at offset is valid"""
 
         if not self.is_mapped:
@@ -227,7 +265,7 @@ class PCIMemoryRegion(object):  # pylint: disable=too-many-instance-attributes
         if offset < 0 or offset + nbytes > self.size:
             raise ValueError("Address out of range")
 
-        if align and trxn_size and trxn_size % self.word_size:
+        if trxn_size and trxn_size % self.word_size:
             raise ValueError(
                 "Transaction size {:d} is not a multiple of word size {:d}".format(trxn_size, self.word_size)
             )
@@ -244,6 +282,32 @@ class PCIMemoryRegion(object):  # pylint: disable=too-many-instance-attributes
 
         return self.base_addr != 0x0
 
+    def read_aligned_once(self, nbytes):
+        """
+        mmap.read has a bug where it may result in multiple reads for a single call. This breaks clear-on-read
+        registers. This function implements a workaround to read only once at the current address.
+        """
+
+        # Default to self.mapping.read if the word format is not supported.
+        if self.word_fmt is None:
+            return self.mapping.read(nbytes)
+
+        def do_read(i):
+            if _use_MemVolatileAccess:
+                return _MemVolatileAccess.read(self.word_size, self.mapping, i * self.word_size)
+            return self.buf[i]
+
+        offset = self.mapping.tell()
+        lo = offset // self.word_size
+        hi = (offset + nbytes + self.word_size - 1) // self.word_size
+        # For compatibility with Python2 since int.to_bytes does not exist.
+        data = b"".join(struct.pack(self.struct_fmt, do_read(i)) for i in range(lo, hi))
+        self.mapping.seek(offset + nbytes)
+        if len(data) > nbytes:
+            start = offset % self.word_size
+            data = data[start : start + nbytes]
+        return data
+
     # FIXME: Allow mmapping a region first for better performance if frequent accesses are required.
     def read(self, offset, nbytes, align=True, trxn_size=4):
         """
@@ -256,7 +320,7 @@ class PCIMemoryRegion(object):  # pylint: disable=too-many-instance-attributes
                          Must be a multiple of the region's word size.
         """
 
-        self._check_rw_access(offset, nbytes, align=align, trxn_size=trxn_size)
+        self._check_rw_access(offset, nbytes, trxn_size=trxn_size)
 
         data = b""
 
@@ -265,26 +329,59 @@ class PCIMemoryRegion(object):  # pylint: disable=too-many-instance-attributes
             lo = (offset // self.word_size) * self.word_size
             self.mapping.seek(lo)
             to_read = min(nbytes, lo + self.word_size - offset)
-            data += self.mapping.read(self.word_size)[offset - lo : offset - lo + to_read]
+            data += self.read_aligned_once(self.word_size)[offset - lo : offset - lo + to_read]
             nbytes -= to_read
         else:
             self.mapping.seek(offset)
 
         trxn_size = trxn_size if trxn_size else nbytes
         while nbytes >= trxn_size:
-            data += self.mapping.read(trxn_size)
+            data += self.read_aligned_once(trxn_size)
             nbytes -= trxn_size
 
         # Read the remaining aligned part
         if nbytes >= self.word_size:
             to_read = (nbytes // self.word_size) * self.word_size
-            data += self.mapping.read(to_read)
+            data += self.read_aligned_once(to_read)
             nbytes -= to_read
 
         # Finally read the unaligned part at the end
         if nbytes > 0:
-            data += self.mapping.read(self.word_size)[0:nbytes]
+            data += self.read_aligned_once(self.word_size)[0:nbytes]
         return data
+
+    def write_aligned_once(self, data):
+        """
+        mmap.write has a bug where it may result in multiple writes for a single call. This function implements a
+        workaround to write only once at the current address.
+        """
+
+        # Default to self.mapping.write if the word format is not supported.
+        if self.word_fmt is None:
+            self.mapping.write(data)
+            return
+
+        offset = self.mapping.tell()
+        lo = offset // self.word_size
+        hi = (offset + len(data) + self.word_size - 1) // self.word_size
+        if offset % self.word_size:
+            # First word is unaligned so do a read-modify-write
+            self.mapping.seek(lo * self.word_size)
+            word = self.read_aligned_once(self.word_size)
+            data = word[: offset % self.word_size] + data
+        if hi - lo > 1 and (offset + len(data)) % self.word_size:
+            # Last word is unaligned so do a read-modify-write
+            self.mapping.seek((hi - 1) * self.word_size)
+            word = self.read_aligned_once(self.word_size)
+            data += word[(offset + len(data)) % self.word_size :]
+        for i in range(0, hi - lo):
+            # For compatibility with Python2 since int.from_bytes does not exist.
+            word = struct.unpack(self.struct_fmt, data[i * self.word_size : (i + 1) * self.word_size])[0]
+            if _use_MemVolatileAccess:
+                _MemVolatileAccess.write(self.word_size, self.mapping, (lo + i) * self.word_size, word)
+            else:
+                self.buf[lo + i] = word
+        self.mapping.seek(offset + len(data))
 
     def write(self, offset, value, align=True, trxn_size=4):
         """
@@ -298,41 +395,41 @@ class PCIMemoryRegion(object):  # pylint: disable=too-many-instance-attributes
         """
 
         nbytes = len(value)
-        self._check_rw_access(offset, nbytes, align=align, trxn_size=trxn_size)
+        self._check_rw_access(offset, nbytes, trxn_size=trxn_size)
 
         # First write the unaligned part at the start
         if align and offset % self.word_size:
             lo = (offset // self.word_size) * self.word_size
             # Read the existing word
             self.mapping.seek(lo)
-            word = self.mapping.read(self.word_size)
+            word = self.read_aligned_once(self.word_size)
             i = min(nbytes, lo + self.word_size - offset)
             word = word[0 : offset - lo] + value[:i] + word[offset - lo + i :]
             self.mapping.seek(lo)
-            self.mapping.write(word)
+            self.write_aligned_once(word)
         else:
             self.mapping.seek(offset)
             i = 0
 
         trxn_size = trxn_size if trxn_size else nbytes
         while nbytes - i >= trxn_size:
-            self.mapping.write(value[i : i + trxn_size])
+            self.write_aligned_once(value[i : i + trxn_size])
             i += trxn_size
 
         # Write the remaining aligned part
         if nbytes - i >= self.word_size:
             to_write = ((nbytes - i) // self.word_size) * self.word_size
-            self.mapping.write(value[i : i + to_write])
+            self.write_aligned_once(value[i : i + to_write])
             i += to_write
 
         # Finally write the unaligned part at the end
         if nbytes - i > 0:
             # Read the existing word
             pos = self.mapping.tell()
-            word = self.mapping.read(self.word_size)
+            word = self.read_aligned_once(self.word_size)
             word = value[i:] + word[nbytes - i :]
             self.mapping.seek(pos)
-            self.mapping.write(word)
+            self.write_aligned_once(word)
 
 
 class PCICapability(object):

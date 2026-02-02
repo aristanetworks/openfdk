@@ -18,6 +18,8 @@
 
 from __future__ import absolute_import, division, print_function
 
+import csv
+import importlib
 import json
 import os
 import re
@@ -31,6 +33,7 @@ from netaddr import EUI
 from six.moves import range
 
 from .register_file import RegisterFile
+from .system import eos_version
 
 from . import IS_EOS, register_accessor, clock_generator
 
@@ -42,7 +45,6 @@ from . import IS_EOS, register_accessor, clock_generator
 
 
 if IS_EOS:
-    from AgentDirectory import agentIsRunning
     import MakoFdtProfileHelper
 
     profile_helper = MakoFdtProfileHelper.MakoFdtProfileHelper()
@@ -105,7 +107,7 @@ skus = [
                         "address": 0x66,
                         "mos_label": "main_sys",
                     },
-                    "app_ports": "1-28,32-60",
+                    "app_ports": "1-28,31-60",
                     "jtag": {},
                     "pcie": {
                         "root_port": "8086:1f12",
@@ -179,7 +181,7 @@ skus = [
                         "address": 0x66,
                         "mos_label": "main_sys",
                     },
-                    "app_ports": "1-28,32-60",
+                    "app_ports": "1-28,31-60",
                     "jtag": {},
                     "pcie": {
                         "root_port": "8086:1f12",
@@ -335,7 +337,7 @@ skus = [
         ],
     },
     {
-        # Pattern matches all 7130LBR (Tamarama) Devices
+        # Pattern matches all 7130LBR (Tamarama/Tamarama25) Devices
         "sku_pattern": re.compile("DCS-7130LB[2R]-.*"),
         "fpgas": [
             {
@@ -345,12 +347,12 @@ skus = [
                 "interfaces": {
                     "i2c_app": {
                         "pci": "01:00.0",
-                        "accelerator": 12 if IS_EOS and agentIsRunning("ar", "PLSmbusMediator") else 10,
+                        "accelerator": 12 if eos_version() >= (4, 30, 2) else 10,
                         "bus_number": 0,
                     },
                     "i2c_sys": {
                         "pci": "01:00.0",
-                        "accelerator": 18 if IS_EOS and agentIsRunning("ar", "PLSmbusMediator") else 16,
+                        "accelerator": 18 if eos_version() >= (4, 30, 2) else 16,
                         "bus_number": 0,
                         "address": 0x66,
                     },
@@ -370,7 +372,7 @@ skus = [
                     },
                     "clkgen": {
                         "device": "LMK05318",
-                        "accelerator": 2,
+                        "accelerator": 2 if eos_version() >= (4, 30, 2) else None,
                         "bus_number": 5,
                         "address": 0x66,
                         "pci": "01:00.0",
@@ -389,12 +391,12 @@ skus = [
                 "interfaces": {
                     "i2c_app": {
                         "pci": "01:00.0",
-                        "accelerator": 13 if IS_EOS and agentIsRunning("ar", "PLSmbusMediator") else 11,
+                        "accelerator": 13 if eos_version() >= (4, 30, 2) else 11,
                         "bus_number": 0,
                     },
                     "i2c_sys": {
                         "pci": "01:00.0",
-                        "accelerator": 18 if IS_EOS and agentIsRunning("ar", "PLSmbusMediator") else 16,
+                        "accelerator": 18 if eos_version() >= (4, 30, 2) else 16,
                         "bus_number": 1,
                         "address": 0x66,
                     },
@@ -414,7 +416,7 @@ skus = [
                     },
                     "clkgen": {
                         "device": "LMK05318",
-                        "accelerator": 2,
+                        "accelerator": 2 if eos_version() >= (4, 30, 2) else None,
                         "bus_number": 5,
                         "address": 0x65,
                         "pci": "01:00.0",
@@ -439,12 +441,12 @@ skus = [
                 "interfaces": {
                     "i2c_app": {
                         "pci": "01:00.0",
-                        "accelerator": 11 if IS_EOS and agentIsRunning("ar", "PLSmbusMediator") else 9,
+                        "accelerator": 11 if eos_version() >= (4, 30, 1) else 9,
                         "bus_number": 0,
                     },
                     "i2c_sys": {
                         "pci": "01:00.0",
-                        "accelerator": 12 if IS_EOS and agentIsRunning("ar", "PLSmbusMediator") else 10,
+                        "accelerator": 12 if eos_version() >= (4, 30, 1) else 10,
                         "bus_number": 0,
                         "address": 0x66,
                     },
@@ -463,7 +465,7 @@ skus = [
                     },
                     "clkgen": {
                         "device": "LMK05318",
-                        "accelerator": 2,
+                        "accelerator": 2 if eos_version() >= (4, 30, 1) else None,
                         "bus_number": 3,
                         "address": 0x65,
                         "pci": "01:00.0",
@@ -478,8 +480,9 @@ skus = [
         ],
     },
     {
-        # Pattern matches all 7135V (Birdsville) Devices
+        # Pattern matches all P1 and P2 7135V (Birdsville) Devices
         "sku_pattern": re.compile("DCS-7135V-.*"),
+        "hwapi_pattern": re.compile(r"(01|02)\."),
         "fpgas": [
             {
                 "identifier": "Fpga1",
@@ -488,18 +491,59 @@ skus = [
                 "interfaces": {
                     "i2c_app": {
                         "pci": "01:00.0",
-                        "accelerator": 12 if IS_EOS and agentIsRunning("ar", "PLSmbusMediator") else 10,
+                        "accelerator": 12,
                         "bus_number": 0,
                     },
                     "i2c_sys": {
                         "pci": "01:00.0",
-                        "accelerator": 13 if IS_EOS and agentIsRunning("ar", "PLSmbusMediator") else 11,
+                        "accelerator": 13,
                         "bus_number": 0,
                         "address": 0x66,
                     },
                     "app_ports": "1-68",
                     "pcie": {
                         "root_port": "1022:1453",
+                        "root_port_name": "Family 17h (Models 00h-0fh) PCIe GPP Bridge",
+                        "root_port_vendor": "Advanced Micro Devices, Inc. [AMD]",
+                        "link_width": 4,
+                        "port_num": 0,
+                    },
+                    "jtag": {},
+                    "clkgen": {},
+                    "scd": {
+                        "fpga_prog_done": {"sts": 0x4810, "bit": 24},
+                        "fpga_seu_alert": {"sts": 0x30B0, "bit": 24},
+                        "fpga_temp_alert": {"sts": 0x2F10, "clr": 0x2F10, "bit": 25},
+                        "fpga_pcie_reset": {"set": 0x4000, "clr": 0x4010, "bit": 4},
+                    },
+                },
+            },
+        ],
+    },
+    {
+        # Pattern matches all other 7135V (Birdsville) Devices
+        "sku_pattern": re.compile("DCS-7135V-.*"),
+        "hwapi_pattern": re.compile(r"(?!(01|02)\.)"),
+        "fpgas": [
+            {
+                "identifier": "Fpga1",
+                "label": "Application FPGA 1",
+                "board_standard": "bvl",
+                "interfaces": {
+                    "i2c_app": {
+                        "pci": "06:00.0",
+                        "accelerator": 12,
+                        "bus_number": 0,
+                    },
+                    "i2c_sys": {
+                        "pci": "06:00.0",
+                        "accelerator": 13,
+                        "bus_number": 0,
+                        "address": 0x66,
+                    },
+                    "app_ports": "1-68",
+                    "pcie": {
+                        "root_port": "1022:14b8",
                         "root_port_name": "Family 17h (Models 00h-0fh) PCIe GPP Bridge",
                         "root_port_vendor": "Advanced Micro Devices, Inc. [AMD]",
                         "link_width": 4,
@@ -842,7 +886,7 @@ class Fpga(object):  # pylint: disable=too-many-instance-attributes
         clkgen (ClockGenerator): ClockGenerator device interface for FPGA reference clocks.
     """
 
-    def __init__(self, descriptor):
+    def __init__(self, descriptor, _i2c_awidth=None):
         self.label = descriptor["label"]
         self.identifier = descriptor["identifier"]
         self._numeric_id = int(descriptor["identifier"][4:])
@@ -855,9 +899,10 @@ class Fpga(object):  # pylint: disable=too-many-instance-attributes
         self.speed_grade = board_standard_info["speed_grade"]
 
         interfaces = descriptor["interfaces"]
-        self.communicator = register_accessor.RegisterAccessor(**interfaces["i2c_app"])
+        self.communicator = register_accessor.RegisterAccessor(awidth=_i2c_awidth, **interfaces["i2c_app"])
         if len(interfaces["i2c_sys"]):
             self.sys_communicator = register_accessor.RegisterAccessor(**interfaces["i2c_sys"])
+
         self.registers = None
 
         self.scd = Scd(interfaces["scd"])
@@ -865,8 +910,13 @@ class Fpga(object):  # pylint: disable=too-many-instance-attributes
         self.pcie = Pcie(scd=self.scd, pseudo_hotplug=self._platform in ["emu", "lyrebird"], **interfaces["pcie"])
         self.clkgen = clock_generator.ClockGenerator(self._platform, self.board_standard, interfaces)
 
-        self._profile_key = None
+        self._bitstream = None
         self._instance = self._numeric_id
+        self._ipcores = None
+        self._port_def = None
+        self._profile_key = None
+        self._register_file = None
+        self._tuning_data = None
 
         try:
             self.port_list = list(_irangestr(interfaces["app_ports"]))
@@ -923,66 +973,31 @@ class Fpga(object):  # pylint: disable=too-many-instance-attributes
             self.unload_image()
         self.clkgen.load_profile(clock_profile)
         if IS_EOS:
-            with tempfile.NamedTemporaryFile("w+") as features, tempfile.NamedTemporaryFile("w+") as port_def_file:
-                features_arr = [{"name": "fdk", "version": "1.0.0"}]
-                for name, ipcore in ipcores.items():
-                    if name == "tscore":
-                        features_arr.append(
-                            {
-                                "name": "metachron",
-                                "version": "1.0",
-                                "communicators": {
-                                    "i2c": {
-                                        "type": "i2c",
-                                        "csv": (
-                                            ipcore["register_file"] if ipcore.get("register_file") else register_file
-                                        ),
-                                        "regspec": (
-                                            ipcore["register_file"] if ipcore.get("register_file") else register_file
-                                        ),
-                                    },
-                                },
-                            }
-                        )
+            self._bitstream = bitstream
+            self._ipcores = ipcores
+            self._port_def = port_def
+            self._register_file = register_file
 
-                json.dump(features_arr, features)
-                features.flush()
+            self._profile_create()
+            profile_helper.loadProfile(
+                instance=self._instance,
+                profileKey=self._profile_key,
+                fpgaId=self._numeric_id,
+                waitForLoad=False,
+            )
 
-                if port_def is None:
-                    port_def = self._default_port_def()
-
-                json.dump(port_def, port_def_file)
-                port_def_file.flush()
-
-                self._profile_key = profile_helper.createProfile(
-                    "{}-{}".format(self._script_name, self._instance),
-                    os.path.abspath(bitstream),
-                    self.board_standard,
-                    os.path.abspath(bitstream),
-                    clockProfile="bypass",
-                    features=features.name,
-                    portDef=port_def_file.name,
-                )
-                profile_helper.loadProfile(
-                    instance=self._instance,
-                    profileKey=self._profile_key,
-                    fpgaId=self._numeric_id,
-                    waitForLoad=False,
-                )
-
-                if blocking:
-                    try:
-                        while self.profile_state() is None:
-                            continue
-                        while self.profile_state() == "applying":
-                            if time.time() > timeout_time:
-                                raise TimeoutError()
-                            continue
-                        if self.profile_state() != "applied":
-                            raise Exception("Failed to program FPGA, state is {}".format(self.profile_state()))
-                    except Exception:
-                        self.unload_image()
-                        raise
+            if blocking:
+                try:
+                    while self.profile_state() is None or self.profile_state() == "applying":
+                        if time.time() > timeout_time:
+                            raise TimeoutError(
+                                "Timed out programming FPGA, profile state is {}".format(self.profile_state())
+                            )
+                    if self.profile_state() != "applied":
+                        raise Exception("Failed to program FPGA, profile state is {}".format(self.profile_state()))
+                except Exception:
+                    self.unload_image()
+                    raise
         else:
             self.pcie.pre_load()
             self.__mosapi_device__.load_image(bitstream)  # type: ignore
@@ -990,6 +1005,48 @@ class Fpga(object):  # pylint: disable=too-many-instance-attributes
 
         if register_file:
             self.registers = RegisterFile(register_file, self.communicator)
+
+    def _profile_create(self):
+        with tempfile.NamedTemporaryFile("w+") as features, tempfile.NamedTemporaryFile("w+") as port_def_file:
+            features_arr = [{"name": "fdk", "version": "1.0.0"}]
+            for name, ipcore in self._ipcores.items():
+                if name == "tscore":
+                    features_arr.append(
+                        {
+                            "name": "metachron",
+                            "version": "1.0",
+                            "communicators": {
+                                "i2c": {
+                                    "type": "i2c",
+                                    "csv": (
+                                        ipcore["register_file"] if ipcore.get("register_file") else self._register_file
+                                    ),
+                                    "regspec": (
+                                        ipcore["register_file"] if ipcore.get("register_file") else self._register_file
+                                    ),
+                                },
+                            },
+                        }
+                    )
+
+            json.dump(features_arr, features)
+            features.flush()
+
+            if self._port_def is None:
+                self._port_def = self._default_port_def()
+
+            json.dump(self._port_def, port_def_file)
+            port_def_file.flush()
+
+            self._profile_key = profile_helper.createProfile(
+                "{}-{}".format(self._script_name, self._instance),
+                os.path.abspath(self._bitstream),
+                self.board_standard,
+                os.path.abspath(self._bitstream),
+                clockProfile="bypass",
+                features=features.name,
+                portDef=port_def_file.name,
+            )
 
     def _profile_config(self):
         for config in profile_helper.config.profileConfig:
@@ -1012,7 +1069,18 @@ class Fpga(object):  # pylint: disable=too-many-instance-attributes
     def profile_state(self):
         """Returns the state of the profile that has been applied to the FPGA from this program"""
         if IS_EOS:
-            return getattr(self._profile_status(), "state", None)
+            state = getattr(self._profile_status(), "state", None)
+            if state == "unknown":
+                return None
+            if state == "unavailable":
+                # During boot, if we start before MakoProfile, then the profile
+                # we create might get cleaned up, and the load will fail. We
+                # recreate the profile here to deal with that case.
+                self._profile_create()
+                # Apart from in the above case, we don't expect to see
+                # "unavailable", so we hide it from the user.
+                return None
+            return state
         raise NotImplementedError("profile_state() is not implemented on this platform")
 
     def is_loaded(self):
@@ -1044,8 +1112,7 @@ class Fpga(object):  # pylint: disable=too-many-instance-attributes
     def _get_platform_name(self):
         plat = "Dropbear"  # Set a default platform
         if IS_EOS:
-            with open("/etc/prefdl") as prefdl:  # pylint: disable=unspecified-encoding
-                plat = re.search(r"SID: (.*)", prefdl.read()).group(1)
+            plat = re.search(r"SID: (.*)", _get_prefdl()).group(1)
 
         platform = ""
         if "Dropbear" in plat:
@@ -1059,7 +1126,10 @@ class Fpga(object):  # pylint: disable=too-many-instance-attributes
             if "freshwater" in plat.lower():
                 platform = "freshwater"
             if "tamarama" in plat.lower():
-                platform = "tamarama"
+                if "tamarama25" in plat.lower():
+                    platform = "tamarama25"
+                else:
+                    platform = "tamarama"
             if "birdsville" in plat.lower():
                 platform = "birdsville"
 
@@ -1078,7 +1148,7 @@ class Fpga(object):  # pylint: disable=too-many-instance-attributes
                 maclist = [EUI(basemac + 207 + adr) for adr in range(24)]  # 24 addresses assigned for leaf FPGA
             if "Fpga3" in self.identifier:
                 maclist = [EUI(basemac + 231 + adr) for adr in range(24)]  # 24 addresses assigned for leaf FPGA
-        elif self._platform == "tamarama":
+        elif self._platform in ["tamarama", "tamarama25"]:
             # From AID5889 Section 2.10-Media Access
             if "Fpga1" in self.identifier:
                 maclist = [EUI(basemac + 134 + adr) for adr in range(64)]
@@ -1105,8 +1175,27 @@ class Fpga(object):  # pylint: disable=too-many-instance-attributes
         }
         return port_def
 
+    @property
+    def tuning_data(self):
+        if self._tuning_data is None:
+            _tuning_dir = importlib.resources.files("libapp") / "tuning_data"
+            self._tuning_data = {}
+            for path in _tuning_dir.glob("{}_*.csv".format(self._platform)):
+                _, speed, media = path.stem.split("_")
+                self._tuning_data[speed, media] = {}
+                with open(path) as csvfile:  # pylint: disable=unspecified-encoding
+                    for row in csv.DictReader(csvfile):
+                        if int(row.pop("ComponentId")) + 1 == self._numeric_id:
+                            intf = int(row.pop("ApId", None) or row.pop("SerdesId")) + 1
+                            if "PostTap" in row:
+                                row["Post1Tap"] = row.pop("PostTap")
+                            self._tuning_data[speed, media][intf] = {
+                                setting: int(value) for setting, value in row.items()
+                            }
+        return self._tuning_data
 
-def get_fpga_devices(board_standard=None, identifier=None):
+
+def get_fpga_devices(board_standard=None, identifier=None, _i2c_awidth=None):
     """Returns a list of application FPGAs in the system.
 
     By default get_fpga_devices will return all application FPGAs in the system
@@ -1121,11 +1210,13 @@ def get_fpga_devices(board_standard=None, identifier=None):
     """
     ret_list = []  # type: list[Fpga]
     sku = get_sku()
+    hwapi = get_hwapi()
     ret_list = [
-        Fpga(descriptor)
+        Fpga(descriptor, _i2c_awidth)
         for device_map in skus
         for descriptor in device_map["fpgas"]
         if device_map["sku_pattern"].match(sku)
+        and ("hwapi_pattern" not in device_map or device_map["hwapi_pattern"].match(hwapi))
     ]
     ret_list = [
         fpga
@@ -1145,13 +1236,26 @@ def get_fpga_identifiers():
     """
     ret_list = {}  # type: dict[str, str]
     sku = get_sku()
+    hwapi = get_hwapi()
     ret_list = {
         descriptor["identifier"] if IS_EOS else descriptor["label"]: descriptor["board_standard"]
         for device_map in skus
         for descriptor in device_map["fpgas"]
         if device_map["sku_pattern"].match(sku)
+        and ("hwapi_pattern" not in device_map or device_map["hwapi_pattern"].match(hwapi))
     }
     return ret_list
+
+
+def get_hwapi():
+    try:
+        import hal  # pylint: disable=import-outside-toplevel
+
+        return hal.base.hwapi
+    except AttributeError:
+        return "00.00"
+    except ImportError:
+        return re.search(r"HwApi: (.*)", _get_prefdl()).group(1)
 
 
 def get_interface_macaddr(interface=None):
@@ -1173,14 +1277,19 @@ def get_sku():
 
         return hal.sku()
     except ImportError:
-        with open("/etc/prefdl") as prefdl:  # pylint: disable=unspecified-encoding
-            return re.search(r"SKU: (.*)", prefdl.read()).group(1)
+        return re.search(r"SKU: (.*)", _get_prefdl()).group(1)
+
+
+def _get_prefdl():
+    with open("/etc/prefdl") as prefdl:  # pylint: disable=unspecified-encoding
+        return prefdl.read()
 
 
 __all__ = (
     "Fpga",
     "get_fpga_devices",
     "get_fpga_identifiers",
+    "get_hwapi",
     "get_interface_macaddr",
     "get_sku",
 )
