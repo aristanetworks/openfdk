@@ -23,11 +23,11 @@
 .SECONDEXPANSION:
 
 PROJECT    ?= tscore_nomac
-VERSION_ID ?= 3.1.0.openfdk
-BUILD_ID   ?= 45
+VERSION_ID ?= 3.2.0.openfdk
+BUILD_ID   ?= 7
 
 PROJECT_DIR         = $(CURDIR)
-ARISTA_FDK_VERSION ?= 3.1.0.openfdk
+ARISTA_FDK_VERSION ?= 3.2.0.openfdk
 ARISTA_FDK_DIR     ?= $(PROJECT_DIR)/../../../arista_fdk-$(ARISTA_FDK_VERSION)
 ARISTA_SRC_DIR      = $(ARISTA_FDK_DIR)/src
 

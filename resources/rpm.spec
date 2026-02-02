@@ -31,8 +31,7 @@ Summary:        %{summary}
 License:        Commercial
 Source:         %{source}
 
-# Buildrequire both python2 and python3
-BuildRequires: python2-devel python3-devel
+BuildRequires: python3-devel
 
 # Pre-compile for python3
 %define __python python3

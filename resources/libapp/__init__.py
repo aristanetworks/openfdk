@@ -32,6 +32,7 @@ from . import (
     device,
     eossdk_utils,
     eossdk_helpers,
+    fphy,
     loghandler,
     network,
     pcie,
@@ -39,6 +40,7 @@ from . import (
     register_accessor,
     register_file,
     subprocess,
+    system,
     sysctl,
     tuning,
 )

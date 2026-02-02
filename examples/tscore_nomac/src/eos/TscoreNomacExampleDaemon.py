@@ -20,7 +20,6 @@
 
 import logging
 import sys
-import time
 from datetime import datetime
 
 from tscore_nomac import libapp
@@ -78,13 +77,12 @@ class TscoreNomacExampleDaemon(
 
         # The bitfiles are suffixed with the board standard string.
         bitfile = f"{self.app_path}/fpga/tscore_nomac-{fpga.board_standard}.bit"
-        fpga.load_image(bitfile)
+        csvfile = f"{self.app_path}/fpga/tscore_nomac_registers.csv"
+        fpga.load_image(bitfile, ipcores={"tscore": {}}, register_file=csvfile)
         self.status["Image"] = bitfile
 
         # Set up a register file.
-        self.regfile = libapp.register_file.RegisterFile(
-            f"{self.app_path}/fpga/tscore_nomac_registers.csv", fpga.communicator
-        )
+        self.regfile = libapp.register_file.RegisterFile(csvfile, fpga.communicator)
 
         # Demonstrate that registers can be read immediately.
         logger.debug("timestamp_low=0x%08x", self.regfile.example_ts_0.timestamp_low)
@@ -109,22 +107,6 @@ class TscoreNomacExampleDaemon(
         # Set up a timeout to go off after 1s (which will recursively
         # enable the next timeout, so we get a 1s tick).
         self.on_timeout()
-
-        # freerun the clock and initial sync
-        chron = self.regfile.ts.chron
-
-        seconds_f, subseconds_f = divmod(time.time(), 1)
-
-        seconds = int(seconds_f)
-        nanoseconds = int(subseconds_f * 1000000000)
-        the_time = seconds * 1000000000 + nanoseconds
-
-        chron.apply_initval = 1
-        chron.initval_high = (the_time >> 32) & 0xFFFFFFFF
-        chron.initval_low = (the_time >> 0) & 0xFFFFFFFF
-        chron.initval_s = int(the_time / 1000000000)
-        chron.initval_ns = the_time % 1000000000
-        chron.apply_initval = 0
 
         # Print for the agent logs in /var/log/agents/*
         logger.debug("Finished initialization")

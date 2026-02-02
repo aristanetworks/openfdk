@@ -34,7 +34,7 @@ class ShowCliExampleStatusCmd(libapp.cli.ShowEnabledBaseCmd):
             # Daemon is not currently running
             return result
 
-        status = libapp.cli.StatusAccessor(daemon.status)
+        status = libapp.cli.status_as_dict(daemon.status)
 
         result["status"]["ip address"] = status.get("ip address")
         result["status"]["ip address secondary"] = status.get("ip address secondary")

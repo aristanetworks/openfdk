@@ -56,20 +56,9 @@ EXTRA_APP_DIRS ?=
 # Rules for building python venvs
 #-------------------------------------------------------------------------------
 
-PYTHON2_ENV = $(BUILD_DIR)/python2_env
-PYTHON2     = $(PYTHON2_ENV)/bin/python
-PIP2        = $(PYTHON2_ENV)/bin/pip
-
 PYTHON3_ENV = $(BUILD_DIR)/python3_env
 PYTHON3     = $(PYTHON3_ENV)/bin/python
 PIP3        = $(PYTHON3_ENV)/bin/pip
-
-$(PYTHON2_ENV):
-	virtualenv --quiet $@
-	$@/bin/python -m pip install --upgrade pip==20.3.4 --disable-pip-version-check
-
-$(PYTHON2) $(PIP2): $(PYTHON2_ENV)
-	@
 
 $(PYTHON3_ENV):
 	python3 -m venv $@

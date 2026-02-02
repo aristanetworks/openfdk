@@ -59,6 +59,8 @@ class PhyConfig(object):
         return getattr(self._phy_config, name)
 
     def __setattr__(self, name, value):
+        if not hasattr(self, name):
+            raise AttributeError("'{}' object has no attribute '{}'".format(type(self), name))
         self.refresh()
         setattr(self._phy_config, name, value)
         self.commit()

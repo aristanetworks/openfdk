@@ -90,6 +90,16 @@ class StatusMutator(cli.StatusAccessor, MutableMapping):
                 self[key] = value
 
 
+class StatusMutatorNi(StatusMutator):
+    # Same as StatusMutator but with improved APIs
+
+    def __setitem__(self, key, value):
+        if isinstance(value, Mapping):
+            self[key].deepupdate(value)
+        else:
+            StatusMutator.__setitem__(self, key, value)
+
+
 class StatusMixin(object):
     """A mixin for a daemon class that provides automatic serializing and
     deserializing of status.
@@ -100,8 +110,12 @@ class StatusMixin(object):
         """A proxy for accessing and modifying a daemon's status that
         automatically serializes and deserializes.
         """
+        fdk4 = getattr(self, "fdk4", False)
         if not hasattr(self, "_status"):
-            self._status = StatusMutator(self.get_agent_mgr())
+            if fdk4:
+                self._status = StatusMutatorNi(self.get_agent_mgr())
+            else:
+                self._status = StatusMutator(self.get_agent_mgr())
         return self._status
 
 
