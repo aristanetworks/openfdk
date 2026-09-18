@@ -101,15 +101,11 @@ class StatusMutatorNi(StatusMutator):
 
 
 class StatusMixin(object):
-    """A mixin for a daemon class that provides automatic serializing and
-    deserializing of status.
-    """
+    """A mixin that exposes daemon status through the `status` property."""
 
     @property
     def status(self):
-        """A proxy for accessing and modifying a daemon's status that
-        automatically serializes and deserializes.
-        """
+        """A mutable mapping that provides access to daemon status."""
         fdk4 = getattr(self, "fdk4", False)
         if not hasattr(self, "_status"):
             if fdk4:

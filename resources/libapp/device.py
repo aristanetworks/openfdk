@@ -871,8 +871,9 @@ class Fpga(object):  # pylint: disable=too-many-instance-attributes
     Typically accessed via get_fpga_devices().
 
     Attributes:
-        label (str): Legacy (MOS-style) name of the FPGA.
+        label (str): Label used to identify the FPGA.
         identifier (str): The name of the FPGA on EOS.
+        id (int): Numeric FPGA identifier.
         board_standard (str): The FPGA bitstream compatibility standard.
         communicator (RegisterAccessor): The interface to use to access
             registers via the i2c_app bus.
@@ -884,12 +885,14 @@ class Fpga(object):  # pylint: disable=too-many-instance-attributes
         jtag (JTAG): JTAG interface to the FPGA.
         pcie (Pcie): PCIe interface to the FPGA.
         clkgen (ClockGenerator): ClockGenerator device interface for FPGA reference clocks.
+        tuning_data (dict): Mapping of supported (speed, medium) combinations
+            to one-based AP numbers and tuning-setting dictionaries.
     """
 
     def __init__(self, descriptor, _i2c_awidth=None):
         self.label = descriptor["label"]
         self.identifier = descriptor["identifier"]
-        self._numeric_id = int(descriptor["identifier"][4:])
+        self.id = int(descriptor["identifier"][4:])
         self.board_standard = descriptor["board_standard"]
         self._platform = self._get_platform_name()
 
@@ -911,12 +914,15 @@ class Fpga(object):  # pylint: disable=too-many-instance-attributes
         self.clkgen = clock_generator.ClockGenerator(self._platform, self.board_standard, interfaces)
 
         self._bitstream = None
-        self._instance = self._numeric_id
+        self._instance = self.id
         self._ipcores = None
         self._port_def = None
         self._profile_key = None
         self._register_file = None
         self._tuning_data = None
+        self._allow_device_restart = False
+        self._load_from_flash = False
+        self._counters_supported = False
 
         try:
             self.port_list = list(_irangestr(interfaces["app_ports"]))
@@ -936,6 +942,10 @@ class Fpga(object):  # pylint: disable=too-many-instance-attributes
     def name(self):
         return self.identifier
 
+    @property
+    def _numeric_id(self):
+        return self.id
+
     def load_image(  # pylint: disable=too-many-arguments,too-many-branches
         self,
         bitstream,
@@ -945,13 +955,17 @@ class Fpga(object):  # pylint: disable=too-many-instance-attributes
         ipcores=None,
         register_file=None,
         port_def=None,
+        load_from_flash=False,
+        allow_device_restart=False,
+        counters_supported=False,
     ):
         """Programs the FPGA with a specified bitstream.
 
         On EOS, the `timeout` and `blocking` flags are supported.
 
-        If `blocking` is False, this function will return immediately after beginning programming. Whether the FPGA has
-        been loaded can be checked using the `fpga.applied_profile()` function.
+        If `blocking` is False, this function returns immediately after beginning
+        programming. On EOS, use `fpga.is_loaded()` or `fpga.profile_state()` to
+        check the result.
 
         If `timeout` is not None, this function will raise a TimeoutError if the programming takes longer than
         `timeout` seconds. As EosSdk daemons may be killed if they do not yield back to the main event loop within 30
@@ -959,11 +973,21 @@ class Fpga(object):  # pylint: disable=too-many-instance-attributes
         daemon killed.
 
         Args:
-            bitstream (str): The file to be written to the device
-            blocking (bool): A boolean indicating if the programming should be non-blocking
-            timeout  (Optional[float]): The timeout in seconds for the operation.
-            ipcores (Optional[Dict[str, str]]): A dictionary of IP cores to be used
-            register_file (Optional[str]): The path to the register file to be used
+            bitstream (str): Path to the bitstream file.
+            clock_profile (str): Clock-generator profile to load. Defaults to
+                `"default"`.
+            blocking (bool): Whether to wait for programming to finish. On EOS,
+                `False` returns after programming starts.
+            timeout (Optional[float]): Maximum time in seconds to wait for
+                programming on EOS.
+            ipcores (Optional[Dict[str, str]]): IP-core configuration to include
+                in the EOS profile.
+            register_file (Optional[str]): Path to the register file to use.
+            load_from_flash (bool): Whether to load the image from FPGA flash.
+            allow_device_restart (bool): Whether the image should remain loaded
+                when the device restarts.
+            counters_supported (bool): Whether the daemon publishes interface
+                counters.
         """
         timeout_time = time.time() + timeout if timeout is not None else float("inf")
         if ipcores is None:
@@ -977,12 +1001,15 @@ class Fpga(object):  # pylint: disable=too-many-instance-attributes
             self._ipcores = ipcores
             self._port_def = port_def
             self._register_file = register_file
+            self._load_from_flash = load_from_flash
+            self._allow_device_restart = allow_device_restart
+            self._counters_supported = counters_supported
 
             self._profile_create()
             profile_helper.loadProfile(
                 instance=self._instance,
                 profileKey=self._profile_key,
-                fpgaId=self._numeric_id,
+                fpgaId=self.id,
                 waitForLoad=False,
             )
 
@@ -1008,7 +1035,17 @@ class Fpga(object):  # pylint: disable=too-many-instance-attributes
 
     def _profile_create(self):
         with tempfile.NamedTemporaryFile("w+") as features, tempfile.NamedTemporaryFile("w+") as port_def_file:
-            features_arr = [{"name": "fdk", "version": "1.0.0"}]
+            features_arr = [
+                {
+                    "name": "fdk",
+                    "version": "1.0.0",
+                    "daemonName": os.path.splitext(self._script_name)[0],
+                    "loadFromFlash": self._load_from_flash,
+                    "allowsRestart": self._allow_device_restart,
+                    "preventInitialUnload": self._allow_device_restart,
+                    "countersSupported": self._counters_supported,
+                }
+            ]
             for name, ipcore in self._ipcores.items():
                 if name == "tscore":
                     features_arr.append(
@@ -1050,7 +1087,7 @@ class Fpga(object):  # pylint: disable=too-many-instance-attributes
 
     def _profile_config(self):
         for config in profile_helper.config.profileConfig:
-            if config.fpgaId == self._numeric_id and self._script_name in config.appName:
+            if config.fpgaId == self.id and self._script_name in config.appName:
                 return config
         return None
 
@@ -1090,7 +1127,7 @@ class Fpga(object):  # pylint: disable=too-many-instance-attributes
     def unload_image(self):
         """Clears FPGA configuration."""
         if IS_EOS:
-            profile_helper.unloadProfile(appName=self._app_name, fpgaId=self._numeric_id)
+            profile_helper.unloadProfile(appName=self._app_name, fpgaId=self.id)
             for profile_key, profile in six.iteritems(profile_helper.getAvailableProfiles()):
                 if profile["appName"] == self._app_name and profile_key not in profile_helper.getActiveProfiles():
                     profile_helper.removeProfile(profile_key)
@@ -1177,6 +1214,12 @@ class Fpga(object):  # pylint: disable=too-many-instance-attributes
 
     @property
     def tuning_data(self):
+        """Returns platform-specific recommended FPGA transceiver tuning values.
+
+        The mapping contains only the speed and medium combinations supplied
+        for the detected platform, keyed by one-based AP number. Reading this
+        property returns data only and does not configure FPGA hardware.
+        """
         if self._tuning_data is None:
             _tuning_dir = importlib.resources.files("libapp") / "tuning_data"
             self._tuning_data = {}
@@ -1185,7 +1228,7 @@ class Fpga(object):  # pylint: disable=too-many-instance-attributes
                 self._tuning_data[speed, media] = {}
                 with open(path) as csvfile:  # pylint: disable=unspecified-encoding
                     for row in csv.DictReader(csvfile):
-                        if int(row.pop("ComponentId")) + 1 == self._numeric_id:
+                        if int(row.pop("ComponentId")) + 1 == self.id:
                             intf = int(row.pop("ApId", None) or row.pop("SerdesId")) + 1
                             if "PostTap" in row:
                                 row["Post1Tap"] = row.pop("PostTap")
@@ -1228,11 +1271,10 @@ def get_fpga_devices(board_standard=None, identifier=None, _i2c_awidth=None):
 
 
 def get_fpga_identifiers():
-    """Returns a list of application FPGAs in the system.
+    """Return a mapping from each application FPGA identifier to its board standard.
 
-    By default get_fpga_devices will return all application FPGAs in the system
-    but the result can be filtered by specifying a board standard or identifier
-    for a particular FPGA.
+    On EOS, keys are FPGA identifiers such as `Fpga1`. On other platforms,
+    keys are the corresponding platform labels.
     """
     ret_list = {}  # type: dict[str, str]
     sku = get_sku()

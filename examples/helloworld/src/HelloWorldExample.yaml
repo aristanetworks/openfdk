@@ -1,0 +1,48 @@
+#-------------------------------------------------------------------------------
+#- Copyright (c) 2026 Arista Networks, Inc. All rights reserved.
+#-------------------------------------------------------------------------------
+#- Maintainers:
+#-   fdk-support@arista.com
+#-
+#- Description:
+#-   The helloworld example CLI commands definition YAML.
+#-
+#-   Licensed under BSD 3-clause license:
+#-     https://opensource.org/licenses/BSD-3-Clause
+#-
+#- Tags:
+#-   license-bsd-3-clause
+#-
+#-------------------------------------------------------------------------------
+
+vendor:
+   name: Arista Networks
+   address: 5453 Great America Parkway, Santa Clara, CA 95054
+   phoneNumber: +1-408-547-5500
+   email: fdk-support@arista.com
+
+namespace: arista.helloworld
+
+daemons:
+   HelloWorldExampleDaemon:
+      exe: /opt/apps/helloworld/HelloWorldExampleDaemon.py
+
+modes:
+   "helloworld":
+      command:
+         syntax: "helloworld"
+         noSyntax: "helloworld"
+      modeKey: "helloworld"
+      daemon: HelloWorldExampleDaemon
+
+commands:
+   disabled:
+      syntax: disabled
+      noSyntax: disabled
+      mode: "helloworld"
+
+   # Show a user-friendly version of the helloworld status
+   show_helloworld_status:
+      syntax: show helloworld status
+      mode: Unprivileged
+      outputSchema: {}

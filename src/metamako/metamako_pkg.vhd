@@ -97,7 +97,8 @@ package metamako_pkg is
   subtype slv10_t is std_logic_vector(9 downto 0);
   type slv10_array_t is array (natural range <>) of slv10_t;
 
-  type slv11_array_t is array (natural range <>) of std_logic_vector(10 downto 0);
+  subtype slv11_t is std_logic_vector(10 downto 0);
+  type slv11_array_t is array (natural range <>) of slv11_t;
 
   subtype slv12_t is std_logic_vector(11 downto 0);
   type slv12_array_t is array (natural range <>) of slv12_t;
@@ -208,6 +209,12 @@ package metamako_pkg is
 
   subtype slv204_t is std_logic_vector(203 downto 0);
   type slv204_array_t is array (natural range <>) of slv204_t;
+
+  subtype slv221_t is std_logic_vector(220 downto 0);
+  type slv221_array_t is array (natural range <>) of slv221_t;
+
+  subtype slv222_t is std_logic_vector(221 downto 0);
+  type slv222_array_t is array (natural range <>) of slv222_t;
 
   subtype slv256_t is std_logic_vector(255 downto 0);
   type slv256_array_t is array (natural range <>) of slv256_t;
@@ -466,6 +473,7 @@ package metamako_pkg is
   function to_boolean (arg1       : integer) return boolean;
   function to_int (arg1           : boolean) return natural;
   function to_int (arg1           : std_logic) return natural;
+  function to_nat (arg1           : std_logic_vector) return natural;
   function imin (arg1             : integer; arg2 : integer) return integer;
   function imax (arg1             : integer; arg2 : integer) return integer;
   function imin (arg1             : integer_array_t) return integer;
@@ -477,8 +485,12 @@ package metamako_pkg is
   function sum (arg1              : boolean_array_t) return natural;
   function sum (arg1              : integer_array_t) return integer;
   function sum (arg1              : natural_array_t) return natural;
+  function sum (arg1              : u32_array_t) return natural;
   function in_array (arg1         : integer; arg2 : integer_array_t) return boolean;
   function pos_in_array (arg1     : integer; arg2 : integer_array_t) return integer;
+  -- Convert indices integer array into offset array with default first offset
+  -- equal 0. For example (12,12,12,12)->(0,12,24,36)
+  function array_offset(arg1      : integer_array_t; first_offset : natural := 0) return integer_array_t;
 
   function extend (arg  : std_ulogic;
                    size : natural) return std_logic_vector;
@@ -604,6 +616,10 @@ package metamako_pkg is
   function iif(test                    : boolean;
                true_value, false_value : boolean_array_t)
     return boolean_array_t;
+
+  function iif(test                    : boolean;
+               true_value, false_value : time)
+    return time;
 
   function "-" (a, b : integer_array_t) return integer_array_t;
   function "-" (a: integer_array_t; b: integer) return integer_array_t;
@@ -964,6 +980,12 @@ package body metamako_pkg is
     end if;
   end function to_int;
 
+  function to_nat (arg1 : std_logic_vector) return natural is
+  begin
+    assert arg1'length <= 32;
+    return to_integer(unsigned(arg1));
+  end function to_nat;
+
   function to_boolean (arg1 : std_logic) return boolean is
   begin
     if arg1 = '1' or arg1 = 'H' then
@@ -1105,6 +1127,15 @@ package body metamako_pkg is
     return ret_val;
   end function sum;
 
+  function sum(arg1 : u32_array_t) return natural is
+    variable ret_val : natural := 0;
+  begin
+    for i in arg1'range loop
+      ret_val := ret_val + to_integer(arg1(i));
+    end loop;
+    return ret_val;
+  end function sum;
+
   function sum(arg1 : boolean_array_t) return natural is
     variable ret : natural := 0;
   begin
@@ -1138,6 +1169,17 @@ package body metamako_pkg is
     end loop;
     return ret_val;
   end function pos_in_array;
+
+  function array_offset(arg1 : integer_array_t; first_offset : natural := 0) return integer_array_t is
+    variable ret_val : integer_array_t(arg1'range);
+    variable offset  : natural := first_offset;
+  begin
+    for i in ret_val'range loop
+      ret_val(i) := offset;
+      offset := offset + arg1(i);
+    end loop;
+    return ret_val;
+  end function;
 
   function extend (arg  : std_ulogic;
                    size : natural) return std_logic_vector is
@@ -1602,6 +1644,17 @@ package body metamako_pkg is
   function iif(test                    : boolean;
                true_value, false_value : boolean_array_t)
     return boolean_array_t is
+  begin
+    if test then
+      return true_value;
+    else
+      return false_value;
+    end if;
+  end function;
+
+  function iif(test                    : boolean;
+               true_value, false_value : time)
+    return time is
   begin
     if test then
       return true_value;

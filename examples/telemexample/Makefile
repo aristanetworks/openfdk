@@ -23,11 +23,11 @@
 .SECONDEXPANSION:
 
 PROJECT    ?= telemexample
-VERSION_ID ?= 3.2.0.openfdk
-BUILD_ID   ?= 7
+VERSION_ID ?= 4.0.0.openfdk
+BUILD_ID   ?= 26
 
 PROJECT_DIR         = $(CURDIR)
-ARISTA_FDK_VERSION ?= 3.2.0.openfdk
+ARISTA_FDK_VERSION ?= 4.0.0.openfdk
 ARISTA_FDK_DIR     ?= $(PROJECT_DIR)/../../../arista_fdk-$(ARISTA_FDK_VERSION)
 ARISTA_SRC_DIR      = $(ARISTA_FDK_DIR)/src
 
@@ -122,9 +122,10 @@ clean::
 
 DRIVERFILES =
 
-APP_CLI_PLUGINS = $(APP_INSTALL_DIR)/eos/TelemExampleCli.py
-APP_CLI_EXTENSIONS = $(APP_INSTALL_DIR)/eos/TelemExample.yaml
-APP_DAEMONS = $(APP_INSTALL_DIR)/eos/TelemExampleDaemon.py
+APP_CLI_PLUGINS = $(APP_INSTALL_DIR)/TelemExampleCli.py
+APP_CLI_EXTENSIONS = $(APP_INSTALL_DIR)/TelemExample.yaml
+APP_DAEMONS = $(APP_INSTALL_DIR)/TelemExampleDaemon.py
+APP_EOS_VERSIONS = '4.26.{2-99}*' '4.{27-99}.{0-99}*'
 APP_BUILD_SQUASHFS =
 #-------------------------------------------------------------------------------
 # Include rules
@@ -138,17 +139,11 @@ include $(ARISTA_FDK_DIR)/resources/vivado.mk
 #-------------------------------------------------------------------------------
 
 # This is used via secondary expansion, so OK to put here (after other .mk)
-EXTRA_APP_FILES = $(APP_STAGING_DIR)/eos/python_deps2.zip $(APP_STAGING_DIR)/eos/python_deps3.zip
+EXTRA_APP_FILES = $(APP_STAGING_DIR)/python_deps3.zip
 
 # Python requirements are packaged as a zip file in the app for now
-$(APP_STAGING_DIR)/eos/python_deps3.zip: requirements.txt $(PYTHON3_ENV)
+$(APP_STAGING_DIR)/python_deps3.zip: requirements.txt $(PYTHON3_ENV)
 	@mkdir -p $(@D)
 	mkdir -p $(BUILD_DIR)/python_deps3
 	$(PYTHON3) -m pip install -r $< --target $(BUILD_DIR)/python_deps3
 	cd $(BUILD_DIR)/python_deps3 && zip -q -r -o $@ *
-
-$(APP_STAGING_DIR)/eos/python_deps2.zip: requirements.txt $(PYTHON3_ENV)
-	@mkdir -p $(@D)
-	mkdir -p $(BUILD_DIR)/python_deps2
-	$(PYTHON3) -m pip install -r $< --target $(BUILD_DIR)/python_deps2 --python-version 2.7 --only-binary :all:
-	cd $(BUILD_DIR)/python_deps2 && zip -q -r -o $@ *

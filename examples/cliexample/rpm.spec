@@ -36,6 +36,10 @@ BuildRequires: python3-devel
 # Pre-compile for python3
 %define __python python3
 
+# Set compression
+%define _binary_payload w2.xzdio
+%define _source_payload w2.xzdio
+
 AutoReqProv:    no
 
 %description
@@ -81,7 +85,7 @@ fi
 #if [ -d /opt/apps/%{appname}/www ]; then
 #    ln -sf /opt/apps/%{appname}/www /usr/share/nginx/html/apps/%{appname}
 #fi
-for d in /usr/lib*/python[23].*/site-packages; do
+for d in /usr/lib*/python3.*/site-packages; do
     ln -sf /opt/apps/%{appname} $d/%{appname}
 %if 0%{?cliplugins:1}
     mkdir -p $d/CliPlugin
@@ -94,7 +98,7 @@ exit 0
 %preun
 if [ $1 == 0 ]; then
     # uninstalling
-    for d in /usr/share/nginx/html/apps /usr/lib*/python[23].*/site-packages; do
+    for d in /usr/share/nginx/html/apps /usr/lib*/python3.*/site-packages; do
         if [ -L $d/%{appname} ]; then
             rm -f $d/%{appname}
         fi

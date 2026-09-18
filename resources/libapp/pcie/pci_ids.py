@@ -200,7 +200,6 @@ class PCI_IDs(object):
     def vendor_id_inttokey(cls, intval):
         """
         Convert an integer vendor ID into its hex string representation.
-        If leading is True then the string is prefixed with 0x.
         """
 
         return cls._id_inttokey(intval, "vendor_id")
@@ -209,7 +208,6 @@ class PCI_IDs(object):
     def device_id_inttokey(cls, intval):
         """
         Convert an integer device ID into its hex string representation.
-        If leading is True then the string is prefixed with 0x.
         """
 
         return cls._id_inttokey(intval, "device_id")
@@ -218,7 +216,6 @@ class PCI_IDs(object):
     def class_id_inttokey(cls, intval):
         """
         Convert an integer class ID into its hex string representation.
-        If leading is True then the string is prefixed with 0x.
         """
 
         return cls._id_inttokey(intval, "class_id")
@@ -227,7 +224,6 @@ class PCI_IDs(object):
     def subclass_id_inttokey(cls, intval):
         """
         Convert an integer subclass ID into its hex string representation.
-        If leading is True then the string is prefixed with 0x.
         """
 
         return cls._id_inttokey(intval, "subclass_id")

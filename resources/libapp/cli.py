@@ -131,6 +131,13 @@ class ConfigMutator(MutableSet):
         return self.ctx.configDel(serial.dumps(value.key))
 
 
+# Path syntax:
+#   - string keys joined with "/", e.g., foo/bar/baz
+#   - integer keys as "[N]", e.g., foo[5]
+#   - string keys containing "/" wrapped with ["..."], e.g., inputs["FpgaFunction1/1"]
+#   - keys containing '"', '[', or ']' are not currently supported
+
+
 class StatusAccessor(Mapping, dict):
     """A wrapper around statuses in Sysdb that provides python objects.
 
@@ -177,9 +184,11 @@ class StatusAccessor(Mapping, dict):
 
     def _add_path(self, full_path):
         path = full_path
-        while path:
+        while True:
             path, key = self._rsplit_path(path)
             self._index.setdefault(path, set()).add(key)
+            if not path:
+                break
 
     def _asdict(self):
         result = {}
@@ -203,13 +212,17 @@ class StatusAccessor(Mapping, dict):
     def _extend_path(self, key):
         if isinstance(key, six.integer_types):
             key = "{}[{}]".format(self._path, key)
+        elif "/" in key:
+            key = '{}["{}"]'.format(self._path, key)
         elif self._path:
             key = "{}/{}".format(self._path, key)
         return key
 
     @staticmethod
     def _rsplit_path(path):
-        if path[-1] == "]":
+        if path[-2:] == '"]':
+            return path[:-2].rsplit('["', 1)
+        if path[-1:] == "]":
             head, tail = path[:-1].rsplit("[", 1)
             return head, int(tail)
         if "/" in path:
@@ -223,25 +236,7 @@ class StatusAccessor(Mapping, dict):
 
 def status_as_dict(ctx):
     """Returns current status in Sysdb deserialized as a dict."""
-
-    def lsplit_path(path):
-        if path[:1] == "[":
-            head, tail = path[1:].split("]", 1)
-            return int(head), tail
-        if "/" in path:
-            return path.split("/", 1)
-        return path, ""
-
-    status = {}
-    for path, value in ctx.statusIter():
-        current = status
-        while True:
-            key, path = lsplit_path(path)
-            if not path:
-                current[key] = serial.loads(value)
-                break
-            current = current.setdefault(key, {})
-    return status
+    return StatusAccessor(ctx)._asdict()
 
 
 def _tokenize(syntax, optionals=True):

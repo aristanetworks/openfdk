@@ -202,9 +202,9 @@ class FpgaPCIeDeviceManager(object):
     def check_access_pci_devices(self, trxn_size=4):  # pylint: disable=too-many-branches
         """
         Check the PCI devices to make sure that they are mapped correctly and there is read/write access.
-        Param trxn_size: Split read/writes into multiple transactions of at most trxn_size bytes as
-                         some devices may not be able to handle transactions greater than a certain size.
-                         If None, then there is no size limit and only one transaction is used.
+        Param trxn_size: Maximum size in bytes for each access-check transaction,
+                         or None to use one transaction. It must be a multiple of
+                         the region's word size.
         """
 
         # Check that we can read/write to the devices
@@ -270,12 +270,13 @@ class FpgaPCIeDeviceManager(object):
     def remove_pci_devices(self, remove_bridge=False):
         """Remove all PCI devices on the FPGAs. Return a list of BDFs of the removed devices."""
 
-        bdfs = self.pcie_devices_by_bdf.keys()
+        devices_by_bdf = self.pcie_devices_by_bdf
+        bdfs = list(devices_by_bdf)
+        devices = list(devices_by_bdf.values())
         if remove_bridge:
-            bdfs += self.pcie_bridges_by_bdf.keys()
-        devices = self.pcie_devices_by_bdf.values()
-        if remove_bridge:
-            devices += self.pcie_bridges_by_bdf.values()
+            bridges_by_bdf = self.pcie_bridges_by_bdf
+            bdfs.extend(bridges_by_bdf)
+            devices.extend(bridges_by_bdf.values())
         for dev in devices:
             dev.remove()
         self.pcie_devices = self._get_managed_pcie_devices()
@@ -283,7 +284,7 @@ class FpgaPCIeDeviceManager(object):
         return bdfs
 
     def lspci_devices(self, bdf=None, verbose=False, root=False):
-        """List PCI devices on the FPGAs as given by lspci"""
+        """Return `lspci` output for the PCI devices on the FPGAs."""
 
         if bdf:
             return pci.PCIDeviceManager.lspci_devices(bdf=bdf, verbose=verbose, root=root)
@@ -299,11 +300,13 @@ class FpgaPCIeDeviceManager(object):
 
     def list_devices(self, verbose=False):  # pylint: disable=too-many-locals
         """
-        List PCIe devices on the FPGAs as a table in the format (values in brackets are the link capabilities) e.g.
+        Return PCIe device information as a list of dictionaries. Link values
+        contain both the current and maximum capability values.
 
-        FPGA              BDF          Link Speed   Link Width Subclass          Vendor             Device
-        ----              ---          ----------   ---------- --------          ------             ------
-        mezzanine.central 0000:03:00.0 5.0(8.0)GT/s x8(x8)     Memory controller Xilinx Corporation Device name
+        If `verbose` is true, each dictionary also includes subclass, vendor,
+        and device identifiers and names.
+
+        Returns (list[dict]): One dictionary for each managed PCIe device.
         """
 
         # List of rows of the table, initialise with headings
@@ -354,11 +357,13 @@ class FpgaPCIeDeviceManager(object):
 
     def list_regions(self, verbose=False):
         """
-        List the memory regions of PCIe devices on the FPGAs as a table in the format e.g.
+        Return memory-region information as a list of dictionaries.
 
-        FPGA              BDF     Region   Base Address Size Prefetchable
-        ----              ---     ------   ------------ ---- ------------
-        mezzanine.central 03:00.0 Region 0 0xdfd00000   2K   Yes
+        If `verbose` is true, each dictionary also includes whether the region
+        is prefetchable.
+
+        Returns (list[dict]): One dictionary for each region of each managed
+            PCIe device.
         """
 
         rows = []
@@ -398,10 +403,10 @@ class FpgaPCIeDeviceManager(object):
         Param bdf: [Domain:]Bus:Device.Function identifier, Domain defaults to 0x0000
         Param nbytes: Number of bytes to read. A value of 0 reads the entire region starting from offset.
         Param align: Align accesses to word boundaries, defaults to True
-        Param trxn_size: Split the read into multiple read transactions of at most trxn_size bytes as
-                         some devices may not be able to handle transactions greater than a certain size.
-                         If None, then there is no size limit and only one transaction is used.
-                         Must be a multiple of the region's word size.
+        Param trxn_size: Maximum size in bytes for each read transaction, or None
+                         to use one transaction. It must be a multiple of the
+                         region's word size.
+        Returns (bytes): The requested bytes in device memory order.
         """
 
         region = self._get_region(self._complete_bdf(bdf), region_num)
@@ -412,16 +417,17 @@ class FpgaPCIeDeviceManager(object):
         self, bdf, region_num, value, offset, nbytes=None, align=True, trxn_size=4
     ):
         """
-        Write a value at an offset from the base address of the specified region. If nbytes is greater than the length
-        of value then value is repeated.
+        Write bytes at an offset from the base address of the specified region. If
+        `nbytes` is greater than the length of `value`, the value is repeated.
         Param bdf: [Domain:]Bus:Device.Function identifier, Domain defaults to 0x0000
+        Param value: Bytes to write, repeated as needed to fill `nbytes`.
+        Param offset: Offset in bytes from the start of the region.
         Param nbytes: Number of bytes to write. A value of 0 fills the entire region starting from offset.
                       Must be a multiple of the length of value. Defaults to the length of value.
         Param align: Align accesses to word boundaries, defaults to True
-        Param trxn_size: Split the write into multiple write transactions of at most trxn_size bytes as
-                         some devices may not be able to handle transactions greater than a certain size.
-                         If None, then there is no size limit and only one transaction is used.
-                         Must be a multiple of the region's word size.
+        Param trxn_size: Maximum size in bytes for each write transaction, or None
+                         to use one transaction. It must be a multiple of the
+                         region's word size.
         """
 
         region = self._get_region(self._complete_bdf(bdf), region_num)

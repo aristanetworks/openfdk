@@ -272,6 +272,7 @@ package amba_pkg is
     size   : axi4mm_size_t;
     valid  : std_logic;
   end record;
+  type axi4mm_mts_addr_channel_array_t is array (integer range <>) of axi4mm_mts_addr_channel_t;
 
   constant AXI4MM_MTS_ADDR_CHANNEL_DFLT_C : axi4mm_mts_addr_channel_t := (
     addr   => (others  => '0'),
@@ -291,6 +292,7 @@ package amba_pkg is
   type axi4mm_stm_addr_channel_t is record
     ready: std_logic;
   end record;
+  type axi4mm_stm_addr_channel_array_t is array (integer range <>) of axi4mm_stm_addr_channel_t;
 
   constant AXI4MM_STM_ADDR_CHANNEL_DFLT_C : axi4mm_stm_addr_channel_t := (
     ready => '0'
@@ -299,6 +301,7 @@ package amba_pkg is
   type axi4mm_mts_read_data_channel_t is record
     ready: std_logic;
   end record;
+  type axi4mm_mts_read_data_channel_array_t is array (integer range <>) of axi4mm_mts_read_data_channel_t;
 
   constant AXI4MM_MTS_READ_DATA_CHANNEL_DFLT_C: axi4mm_mts_read_data_channel_t := (
     ready => '0'
@@ -311,6 +314,7 @@ package amba_pkg is
     valid : std_logic;
     last  : std_logic;
   end record;
+  type axi4mm_stm_read_data_channel_array_t is array (integer range <>) of axi4mm_stm_read_data_channel_t;
 
   constant AXI4MM_STM_READ_DATA_CHANNEL_DFLT_C: axi4mm_stm_read_data_channel_t := (
     data  => (others => '0'),
@@ -326,6 +330,7 @@ package amba_pkg is
     last  : std_logic;
     valid : std_logic;
   end record;
+  type axi4mm_mts_write_data_channel_array_t is array (integer range <>) of axi4mm_mts_write_data_channel_t;
 
   constant AXI4MM_MTS_WRITE_DATA_CHANNEL_DFLT_C: axi4mm_mts_write_data_channel_t := (
     data  => (others => '0'),
@@ -337,6 +342,7 @@ package amba_pkg is
   type axi4mm_stm_write_data_channel_t is record
     ready: std_logic;
   end record;
+  type axi4mm_stm_write_data_channel_array_t is array (integer range <>) of axi4mm_stm_write_data_channel_t;
 
   constant AXI4MM_STM_WRITE_DATA_CHANNEL_DFLT_C: axi4mm_stm_write_data_channel_t := (
     ready => '0'
@@ -345,6 +351,7 @@ package amba_pkg is
   type axi4mm_mts_bresp_channel_t is record
     ready: std_logic;
   end record;
+  type axi4mm_mts_bresp_channel_array_t is array (integer range <>) of axi4mm_mts_bresp_channel_t;
 
   constant AXI4MM_MTS_BRESP_CHANNEL_DFLT_C: axi4mm_mts_bresp_channel_t := (
     ready => '0'
@@ -356,6 +363,7 @@ package amba_pkg is
     user  : axi4mm_user_t;
     valid : std_logic;
   end record;
+  type axi4mm_stm_bresp_channel_array_t is array (integer range <>) of axi4mm_stm_bresp_channel_t;
 
   constant AXI4MM_STM_BRESP_CHANNEL_DFLT_C: axi4mm_stm_bresp_channel_t := (
     id    => (others => '0'),

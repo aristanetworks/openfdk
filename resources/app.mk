@@ -17,7 +17,7 @@
 # Environment / Config variables
 #-------------------------------------------------------------------------------
 
-PROJECT        ?= null
+PROJECT        ?= helloworld
 VERSION_ID     ?= 0.0.1.beta1
 BUILD_ID       ?= 0
 
@@ -78,11 +78,15 @@ $(BUILD_DIR)/%/:
 # Build all bitstreams
 #-------------------------------------------------------------------------------
 
-APP_BITS = $(foreach bitstream,$(BITSTREAMS),$(APP_STAGING_DIR)/fpga/$(bitstream).bit)
+APP_BITS = $(foreach bitstream,$(BITSTREAMS), \
+               $(if $(findstring bvl,$(bitstream)), \
+                   $(APP_STAGING_DIR)/fpga/$(bitstream).pdi, \
+                   $(APP_STAGING_DIR)/fpga/$(bitstream).bit))
 
-$(APP_STAGING_DIR)/fpga/%.bit: \
-			$(BUILD_DIR)/vivado_results/%.bit
-	@mkdir -p $(@D)
+$(APP_STAGING_DIR)/fpga/%.bit: $(BUILD_DIR)/vivado_results/%.bit | $$(@D)
+	@cp $< $@
+
+$(APP_STAGING_DIR)/fpga/%.pdi: $(BUILD_DIR)/vivado_results/%.pdi | $$(@D)
 	@cp $< $@
 
 #-------------------------------------------------------------------------------
@@ -90,7 +94,8 @@ $(APP_STAGING_DIR)/fpga/%.bit: \
 # NOTE: Eventually there should be a software.mk that builds the python project
 #-------------------------------------------------------------------------------
 
-APP_REGS     = $(patsubst $(PROJECT_DIR)/src/%,$(APP_STAGING_DIR)/fpga/%,$(REGFILES))
+APP_REGS     = $(patsubst $(ARISTA_SRC_DIR)/arista_sysctl/%,$(APP_STAGING_DIR)/fpga/%, \
+               $(patsubst $(PROJECT_DIR)/src/%,$(APP_STAGING_DIR)/fpga/%,$(REGFILES)))
 APP_FILES    = $(patsubst $(ARISTA_FDK_DIR)/resources/%,$(APP_STAGING_DIR)/%, \
                  $(patsubst $(PROJECT_DIR)/src/%,$(APP_STAGING_DIR)/%,$(APPFILES))) \
                  $$(EXTRA_APP_FILES)
@@ -110,54 +115,32 @@ $(APP_STAGING_DIR)/%.py: \
 		-e "s/__buildid__\s*=\s*0/__buildid__ = $(BUILD_ID)/" \
 		$< > $@
 
-$(APP_STAGING_DIR)/%: \
-			$(PROJECT_DIR)/src/%
+$(APP_STAGING_DIR)/%: $(PROJECT_DIR)/src/%
 	@mkdir -p $(@D)
 	cp $< $@
 
 $(APP_STAGING_DIR)/fpga:
 	@mkdir -p $@
 
-$(APP_STAGING_DIR)/fpga/%: \
-			$(PROJECT_DIR)/src/% \
-			| $$(@D)
+$(APP_STAGING_DIR)/fpga/%: $(PROJECT_DIR)/src/% | $$(@D)
 	cp $< $@
 
-$(APP_STAGING_DIR)/fpga/arista_sysctl_v2.csv: \
-			$(ARISTA_FDK_DIR)/src/arista_sysctl/arista_sysctl_v2.csv \
-			| $$(@D)
+$(APP_STAGING_DIR)/fpga/%.memh: $(PROJECT_DIR)/build/%.memh | $$(@D)
 	cp $< $@
 
-$(APP_STAGING_DIR)/eos:
-	@mkdir -p $@
-
-$(APP_STAGING_DIR)/eos/libapp: \
-			| $$(@D)
-	ln -sf $(APP_INSTALL_DIR)/libapp $@
-
-$(APP_STAGING_DIR)/eos/%: \
-			$(PROJECT_DIR)/src/eos/% \
-			| $(APP_STAGING_DIR)/eos/libapp
+$(APP_STAGING_DIR)/fpga/arista_sysctl_%.csv: $(ARISTA_FDK_DIR)/src/arista_sysctl/arista_sysctl_%.csv | $$(@D)
 	cp $< $@
 
-$(APP_STAGING_DIR)/libapp/%: \
-			$(ARISTA_FDK_DIR)/resources/libapp/%
+$(APP_STAGING_DIR)/libapp/%: $(ARISTA_FDK_DIR)/resources/libapp/%
 	@mkdir -p $(@D)
 	cp $< $@
 
 $(APP_STAGING_DIR)/drivers/%/:
 	mkdir -p $(@D)
 
-$(APP_STAGING_DIR)/drivers/%: \
-			$(ARISTA_FDK_DIR)/src/% \
-			| $$(@D)/
+$(APP_STAGING_DIR)/drivers/%: $(ARISTA_FDK_DIR)/src/% | $$(@D)/
 	cp $< $@
-	if [ -d $(APP_STAGING_DIR)/eos ]; then \
-	    ln -s $(APP_INSTALL_DIR)/drivers/$* $(APP_STAGING_DIR)/eos/; \
-	fi
-	if [ -f $(APP_STAGING_DIR)/example.py ]; then \
-	    ln -s $(APP_INSTALL_DIR)/drivers/$* $(APP_STAGING_DIR)/; \
-	fi
+	ln -s $(APP_INSTALL_DIR)/drivers/$* $(APP_STAGING_DIR)/
 
 #-------------------------------------------------------------------------------
 # Build Application TAR Ball
@@ -285,9 +268,14 @@ SWIX_BUILD_DIR ?= $(BUILD_DIR)/swixbuild
 
 APP_MANIFEST_YAML = $(SWIX_BUILD_DIR)/manifest.yaml
 
-# EOS version that this app supports
-# may be overridden in app makefile
-APP_EOS_VERSION ?= '4.{23-99}.{0-99}*'
+# EOS versions that this app supports. APP_EOS_VERSION is retained for
+# compatibility with existing app makefiles and command-line overrides.
+ifeq ($(origin APP_EOS_VERSION),undefined)
+APP_EOS_VERSION := '4.{23-99}.{0-99}*'
+APP_EOS_VERSIONS ?= $(APP_EOS_VERSION)
+else
+APP_EOS_VERSIONS := $(APP_EOS_VERSION)
+endif
 
 # Create the manifest.yaml required to install the extension.
 # APP_AGENTS_TO_RESTART is a list of agents that the app needs to have
@@ -315,14 +303,18 @@ $(APP_MANIFEST_YAML): \
 			| $(SWIX_BUILD_DIR)
 	@printf "%s\n" \
 		"metadataVersion: 1.0" \
-		"version:" \
-		"  - ${APP_EOS_VERSION}:" \
-		"    - all" > $@
-ifneq ($(APP_BUILD_SQUASHFS),)
-	@printf "%s\n" \
-		"    - $(notdir $(APP_SQUASHFS)):" \
-		"      - mount: $(APP_INSTALL_DIR)" >> $@
-endif
+		"version:" > $@
+	@set -f; \
+		for eos_version in $(APP_EOS_VERSIONS); do \
+			printf "%s\n" \
+				"  - '$${eos_version}':" \
+				"    - all" >> $@; \
+			if [ -n "$(APP_BUILD_SQUASHFS)" ]; then \
+				printf "%s\n" \
+					"    - $(notdir $(APP_SQUASHFS)):" \
+					"      - mount: $(APP_INSTALL_DIR)" >> $@; \
+			fi; \
+		done
 ifneq ($(APP_AGENTS_TO_RESTART),)
 	@AGENTS_TO_RESTART="$(APP_AGENTS_TO_RESTART)"; \
 		echo "agentsToRestart:" >> $@; \
@@ -348,7 +340,7 @@ $(APP_SWIX): \
 		&& python3 -m venv $(SWITOOLS_VENV) \
 		&& source $(SWITOOLS_VENV)/bin/activate \
 		&& python3 -m pip install --upgrade pip \
-		&& python3 -m pip install jsonschema==3.2.0 pyparsing==3.1.2 PyYAML==6.0.1 M2Crypto==0.42.0 switools==1.2 \
+		&& python3 -m pip install jsonschema==3.2.0 pyparsing==3.1.2 PyYAML==6.0.1 M2Crypto==0.46.2 switools==1.2 \
 		&& python3 $(SWITOOLS_VENV)/bin/swix-create -i $(APP_MANIFEST_YAML) $(@F) $(<F) $(APP_SQUASHFS) $(APP_SWIX_EXTRA_RPMS)
 	@mv $(SWIX_BUILD_DIR)/$(@F) $@
 endif # ifneq ($(APP_SWIX),)
@@ -383,6 +375,7 @@ targets::
 		'        <VERSION_ID>     - $(VERSION_ID)' \
 		'        <BUILD_ID>       - $(BUILD_ID)' \
 		'        <ARISTA_FDK_DIR> - $(ARISTA_FDK_DIR)' \
+		'        Artifacts        - $(foreach image,$(BITSTREAMS),$(image).$(if $(filter %-bvl,$(image)),pdi,bit))' \
 		''
 
 clean::

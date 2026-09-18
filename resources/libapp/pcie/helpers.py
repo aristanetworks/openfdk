@@ -120,8 +120,10 @@ def _roundup_pow2(intval):
 
 def _to_bytes(hexstr, endian="little"):
     """
-    Convert a hexadecimal string into a string of bytes, e.g. 0x000abcde to '\xde\xbc\x0a\x00' if little endian
-    and '\x00\x0a\xbc\xde' if big endian. Leading zeroes are maintained, and added to pad to the next byte.
+    Convert a hexadecimal string into bytes, e.g. 0x000abcde to
+    `b'\\xde\\xbc\\x0a\\x00'` if little endian and `b'\\x00\\x0a\\xbc\\xde'`
+    if big endian. Leading zeroes are maintained and added to pad to the next
+    byte.
     """
 
     # Pad to byte align

@@ -1,0 +1,5 @@
+{
+    "license" : "bsd-3-clause",
+    "FPGA_VENDOR" : "xilinx",
+    "FPGA_DEVICE" : "xcvh1542-vsva3697-3HP-e-S"
+}

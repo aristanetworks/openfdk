@@ -22,7 +22,8 @@ A module mirroring the standard library's `subprocess` module using EosSdk's
 reactor system for running child processes asynchronously.
 
 Examples:
-    from libapp.subprocess import SubprocessHandler, SubprocessMgr
+    import eossdk
+    from libapp.subprocess import PIPE, SubprocessHandler, SubprocessMgr
     class MyDaemon(eossdk.AgentHandler, SubprocessHandler):
         def __init__(self, sdk):
             self.agent_mgr = sdk.get_agent_mgr()
@@ -36,7 +37,7 @@ Examples:
             print("\tstdout: {}".format(child.stdout))
 
         def on_initialized(self):
-            self.subprocess_manager.run(['ls', '-la'])
+            self.subprocess_mgr.run(["ls", "-la"], stdout=PIPE)
 """
 
 from __future__ import absolute_import, division, print_function
@@ -167,8 +168,8 @@ class SubprocessMgr(object):
         in that it does not wait for the child process to terminate before
         returning, and instead returns the child process object for use.
 
-        If you'd like a similar interface to the standard subprocess.run() method,
-        use `child=Subprocess.run(...); child.wait()`.
+        If you need to wait for completion, use
+        `child = manager.run(...); child.wait()`.
         """
         inputarg = kwargs.pop("input", None)
         if inputarg is not None:

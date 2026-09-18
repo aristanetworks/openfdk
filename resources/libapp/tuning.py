@@ -34,14 +34,18 @@ logger = logging.getLogger(__name__)
 
 
 class TuningMixin:
-    """Mixin class to handle PHY tuning.
+    """Mixin for applying FPGA transceiver tuning through a matching PHY interface.
 
-    Defines the `on_eth_phy_intf_transceiver_present` method, which applies
-    appropriate tuning to an Ap interface when a new transceiver is inserted.
+    This mixin uses the `arista_sysctl_v2` PHY configuration record layout.
+    Use it where the corresponding PHY interface is provided by the board
+    support package. The application must provide `fpga`, `app_path`, an
+    `EthPhyIntfHandler`, an `eth_phy_intf_manager`, and an eAPI manager. Call
+    `on_initialized` and `on_agent_enabled` alongside the application's own
+    handler lifecycle.
 
-    Also defines the `on_initialized` method, which should be called during agent
-    initialization. This enables interface watching and applies initial tuning
-    to any transceivers already present."""
+    The mixin reacts to initial interface state, link-speed changes, and
+    transceiver insertion.
+    """
 
     def __init__(self, _):
         self.fphy = None
@@ -59,7 +63,7 @@ class TuningMixin:
                 )
 
             self.fphy = fphy.FPhy()
-            self.fphy.initialise(int(self.fpga.identifier[4:]), self.sysctl, self.fpga.tuning_data)
+            self.fphy.initialise(self.fpga.id, self.sysctl, self.fpga.tuning_data)
 
         # Set up the ports
         for intf_id in self.eth_phy_intf_manager.eth_phy_intf_iter():
@@ -71,6 +75,10 @@ class TuningMixin:
                     continue
             self.watch_eth_phy_intf(intf_id, True)
             self._apply_tuning(intf_id)
+
+    def on_agent_enabled(self, enabled):
+        if not enabled:
+            self.fphy = None
 
     def on_eth_phy_intf_link_speed(self, intf_id, _):
         self._apply_tuning(intf_id)
@@ -88,7 +96,8 @@ class TuningMixin:
         else:
             port = int(re.match(r"FpgaFunction\d+/(\d+)", intf_id.to_string()).group(1))
             medium = "copper"
-        self.fphy.set_speed(port, self._link_speed(intf_id), medium)
+        if self.fphy is not None:
+            self.fphy.set_speed(port, self._link_speed(intf_id), medium)
 
     def _l1_source(self, intf_id):
         response = self.eapi_mgr.run_show_cmd("show l1 source interface {}".format(intf_id.to_string()))

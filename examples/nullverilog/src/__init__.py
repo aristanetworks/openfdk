@@ -13,19 +13,7 @@
 #
 # ------------------------------------------------------------------------------
 
-from __future__ import absolute_import
-
-try:
-    import mosapi
-
-    IS_MOS = mosapi.IS_MOS
-except ImportError:
-    IS_MOS = False
-
 __version__ = "UNVERSIONED"
 __buildid__ = 0
 
 app_name = "nullverilog"
-
-if IS_MOS:
-    from .example import *  # pylint: disable=import-self

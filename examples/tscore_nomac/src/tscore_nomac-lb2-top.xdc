@@ -5,7 +5,7 @@
 #-   fdk-support@arista.com
 #-
 #- Description:
-#-   Timestamp IP core on l and lb2 board standard.
+#-   Timestamp IP core on the lb2 board standard.
 #-
 #-   Licensed under BSD 3-clause license:
 #-     https://opensource.org/licenses/BSD-3-Clause

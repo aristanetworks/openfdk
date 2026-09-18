@@ -33,7 +33,7 @@ def loads(data):
     """Returns a deserialized Python object.
 
     Args:
-        data (str): A serialized represensation of an object.
+        data (str): A serialized representation of an object.
     """
     try:
         return json.loads(data, object_pairs_hook=collections.OrderedDict)
