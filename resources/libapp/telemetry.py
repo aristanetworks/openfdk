@@ -30,7 +30,7 @@ class Telemetry(object):
     """A client for sending telemetry to Telegraf.
 
     Args:
-        appname (str): The value to included as the "application" tag.
+        appname (str): The value to include as the "application" tag.
         author (str): The value to be included as the "author" tag.
         tags (dict[str, Any]): Any other default tags to be included with each
             metric.
@@ -52,10 +52,12 @@ class Telemetry(object):
         self.telegraf_sock = None
 
     def ready(self):
-        """Returns whether telegraf socket is ready.
+        """Return whether the Telegraf socket path is readable.
 
-        Returns (bool):
-            True if telegraf is ready, False otherwise.
+        This checks filesystem readability with `os.access`; it does not attempt
+        to connect to the socket.
+
+        Returns (bool): True if the path is readable, False otherwise.
         """
         return os.access(self.address, os.R_OK)
 
@@ -85,8 +87,8 @@ class Telemetry(object):
         Args:
             measurement (str): The name of the actual measurement.
             values (Any | dict[str, Any]): The value or collection of values.
-            tags (Optional[dict[str, Any]): Dict of extra tags if any.
-            timestamp (int): The timestmap for the datapoint in
+            tags (Optional[dict[str, Any]]): Dictionary of extra tags, if any.
+            timestamp (Optional[int]): Timestamp for the datapoint in
                 nanosecond-precision Unix time.
         """
         if tags is None:

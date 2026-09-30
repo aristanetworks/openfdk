@@ -1,51 +1,59 @@
 # `nullverilog` Example Design
 
 
-> **_Note:_**  Arista supports the compilation and execution of
-        this example in its original form, following the instructions
-        provided. Arista makes no commitment or obligation to support
-        modifications to the example, or support questions relating to the
-        Xilinx Vivado toolchain, or other customisations to the example
-        design.
+
+> **Note:** Arista supports the compilation and execution of this example in
+> its original form, following the instructions provided. Arista makes no
+> commitment or obligation to support modifications to the example, support
+> questions relating to the Xilinx Vivado toolchain, or other customisations to
+> the example design.
 
 ## LICENSE
 
 Licensed under the [BSD 3-clause license](LICENSE.md)
 
-## Contents                                                      
+## Contents
+
 - [`Introduction`](#introduction)
-    - [`Usage information`](#usage-information)
-    - [`Supported Board Standards and Operating Systems`](#supported-board-standards-and-operating-systems)
-    
+- [`Usage information`](#usage-information)
+- [`Supported Board Standards and EOS Versions`](#supported-board-standards-and-eos-versions)
 - [`Building from Source`](#building-from-source)
-
 - [`Copying the Example`](#copying-the-example)
-
 - [`Description`](#description)
-    - [`FPGA Components`](#fpga-components)
-        - [`Common FPGA Files`](#common-fpga-files)
-        - [`Specific FPGA Files`](#specific-fpga-files)
-    - [`Software Components`](#software-components)
-        - [`EOS`](#eos)
-        - [`MOS`](#mos)
-        
+  - [`FPGA Components`](#fpga-components)
+  - [`Software Components`](#software-components)
+    - [`EOS`](#eos)
+
 
 ---
 
 ## Introduction
 
-The NullVerilog example design demonstrates how to build and program FPGA images into all FPGAs on all board standards.
+ The NullVerilog example design demonstrates how to build
+and program FPGA images into all FPGAs on all board standards.
+
+The NullVerilog project is a bare-bones implementation that is essentially a
+template for starting custom applications in the manner Arista recommends.
+
+
+---
+
+## Usage information
+
+Information about how to use the example design is contained in the [Quickstart
+Guide](quickstart.md).
 
 
 
 ---
 
-## Supported Board Standards and Operating Systems
+## Supported Board Standards and EOS Versions
 
 
-| Board Standard     | FPGA                 | EOS              | MOS             | Devices                                                                     |
-|--------------------|----------------------|------------------|-----------------|-----------------------------------------------------------------------------|
-| `lb2             ` | XCVU9P-FLGB2104-3-E  | 4.28.0f or later | 0.37.0 or later | DCS-7130-32LB, DCS-7130-48LB, DCS-7130-96LB, DCS-7130LBR-48S6QD, DCS-7132LB-48Y4C, DCS-7135LB-48Y4C-R |
+| Board Standard     | FPGA                 | EOS              | Devices                                                                     |
+|--------------------|----------------------|------------------|-----------------------------------------------------------------------------|
+| `lb2` | XCVU9P-FLGB2104-3-E | 4.28.0f or later | DCS-7130-32LB, DCS-7130-48LB, DCS-7130-96LB, DCS-7130LBR-48S6QD, DCS-7132LB-48Y4C, DCS-7135LB-48Y4C-R |
+
 
 
 
@@ -53,26 +61,10 @@ The NullVerilog example design demonstrates how to build and program FPGA images
 
 ## Building from Source
 
-`nullverilog` can be built from source, using the supplied `Makefile`. This
-includes all software and gateware components (i.e. building the application
-will run the tools to build the FPGA image for each supported Board Standard).
-
-To build the example, simply type `make` within the `nullverilog` example directory:
+Run `make` in the `nullverilog` example directory:
 
 ```console
 arista_fdk/examples/nullverilog> make
-```
-
-The result is a versioned RPM file, in the same directory as the `Makefile`.
-The RPM file (e.g. `nullverilog-XXX.x86_64.rpm`) can be copied to an Arista
-switch running EOS or MOS, where it can be installed and enabled. The RPM will
-install a set of files on the target switch in `/opt/apps/nullverilog`.
-
-Some other useful features are available in the build system provided with the
-FDK. The available targets can be listed using:
-
-```console
-arista_fdk/examples/nullverilog> make targets
 ```
 
 A simple `make` invocation will build for all available Board Standards. To
@@ -82,7 +74,10 @@ limit to a particular one (e.g. `lb2`) use:
 arista_fdk/examples/nullverilog> make BOARDSTD=lb2
 ```
 
-For further details, refer to the Arista FPGA Development Kit User Guide.
+The build produces a versioned RPM and SWIX. See [Building and Copying
+Examples](../../doc/developer-guide.md#building-and-copying-examples) for build
+targets, packaging details, and project configuration.
+
 
 
 
@@ -90,48 +85,10 @@ For further details, refer to the Arista FPGA Development Kit User Guide.
 
 ## Copying the Example
 
-This example is designed to be copied as the basis for derivative applications,
-and so is licensed under a [BSD 3-clause license](LICENSE.md) to allow copying, modification and
-redistribution under those terms.
-
-To copy and use the example from the Arista FDK, copy the `nullverilog` directory
-outside the FDK tree (probably to a new version control repository):
-
-```bash
-cp -r arista_fdk-3.2.0.openfdk/examples/nullverilog mynewproject/
-```
-Update the `Makefile` to change:
-
-| Variable         | Description              |
-|------------------|--------------------------|
-| `ARISTA_FDK_DIR` | The location of the FDK. |
-| `PROJECT`        | The project name.        |
-| `VERSION_ID`     | The project version.     |
-| `BUILD_ID`       | The build ID.            |
-
-For example, for a new project, based on `nullverilog` called `mynewproject`:
-
-```diff
---- mynewproject/Makefile
-+++ mynewproject/Makefile
-@@ -21,12 +21,12 @@
-
- .SECONDEXPANSION:
-
--PROJECT    ?= nullverilog
--VERSION_ID ?= 3.1.0alpha1
--BUILD_ID   ?= 5
-+PROJECT    ?= mynewproject
-+VERSION_ID ?= 0.0.1
-+BUILD_ID   ?= 1
-
- PROJECT_DIR     = $(CURDIR)
--ARISTA_FDK_DIR ?= $(PROJECT_DIR)/../../../arista_fdk-3.2.0.openfdk
-+ARISTA_FDK_DIR ?= $(PROJECT_DIR)/../arista_fdk-3.2.0.openfdk
- ARISTA_SRC_DIR  = $(ARISTA_FDK_DIR)/src
-
- SOURCE_FILES = $(PROJECT_DIR)/src_files.json
-```
+This example is licensed under the [BSD 3-clause license](LICENSE.md) and may be used as the basis for
+a derivative application. See [Building and Copying
+Examples](../../doc/developer-guide.md#building-and-copying-examples) for the
+variables and paths that must be updated after copying it.
 
 
 
@@ -139,8 +96,8 @@ For example, for a new project, based on `nullverilog` called `mynewproject`:
 
 ## Description
 
-This example project is comprised of *FPGA* and *software* components. Each of
-these is described in the following sections.
+This example project is comprised of *FPGA* and *software*
+components. Each of these is described in the following sections.
 
 
 
@@ -149,66 +106,50 @@ these is described in the following sections.
 
 
 
-Xilinx project creation can be performed by using the provided `Makefile`
-environment within the Arista FDK. This automatically creates an appropriately
-configured Xilinx Vivado project and imports all required files for the
-particular variant, from the associated `nullverilog-<boardstandard>-cfg.json` file.
+The example-specific gateware and constraints are in
+`arista_fdk/examples/nullverilog/src`. Its generated configuration file defines
+the complete source and constraint compile order. See the [Arista FDK User
+Guide](../../README.md) for the shared Board Standard files and build flow.
 
-#### *Common FPGA Files*
+The Verilog versions of the files are available in this example for the `lb2`
+Board Standard. They include:
 
-Regardless of the specific project, there are a set of files that are common to
-all Xilinx projects which are automatically imported by the `Makefile`
-environment. These files include:
+- `board_top.sv`
+- `board_pkg_v.sv`
+- `nullverilog-lb2-top.sv`
+- `nullverilog-lb2-top.xdc`
+- `nullverilog_registers.sv`
+- `nullverilog_registers.csv`
+- Other package files named `*_pkg_v.sv`
 
-| File                    | Description                                                                         |
-|-------------------------|-------------------------------------------------------------------------------------|
-| `board_conf.json`       | Defines important details about the Board Standard, including the type of FPGA.     |
-| `board_top.vhd`         | Defines the standardised interfaces, and instantiates system level functionality required for the correct operation and management by the 7130 Device. This also instantiates the `top` entity which is the application top-level file. |
-| `board_constraints.xdc` | Defines the interface pinouts, electrical definitions and timing.                   |
-| `board_pkg.vhd`         | Defines board-specific functions and constants that are/can be used within designs. |
+The command to create the Verilog Vivado project is:
 
-In addition to the above files, Arista IP cores and all required dependencies
-are imported. All of these files can be found within the `arista_fdk/src`
-directory of the Arista FDK.
-
-#### *Specific FPGA Files*
-
-Each Xilinx project, including this example, require a set of files that are
-project-specific. The following files are provided as an example `nullverilog`
-implementation:
-
-
-| File                                  | Description                                                                        |
-|---------------------------------------|------------------------------------------------------------------------------------|
-| `nullverilog-<boardstandard>-top.vhd` | The top-level HDL file that defines the `top` entity.                              |
-| `nullverilog-<boardstandard>-top.xdc` | The top-level HDL constraints for the project.                                     |
-| `nullverilog-registers.vhd`           | An example register implementation.                                                |
-| `nullverilog-registers.csv`           | An example register CSV file for mapping the HDL implementation into the software. |
-
-
-These can be found within the `arista_fdk/examples/nullverilog/src` directory of
-the Arista FDK.
+```console
+arista_fdk/examples/nullverilog> make nullverilog-lb2-project
+```
 
 
 
 ### Software Components
 
-The software components provided in this example have been designed to interact
-with the installed OS.
-
-There is a library of Python files that implement classes for available
-features of a particular Board Standard. These can be found in
-`arista_fdk/resources/libapp`.
+The example-specific EOS software is in
+`arista_fdk/examples/nullverilog/src`. Shared APIs are documented in the
+[LibApp API reference](../../resources/libapp/README.md).
 
 
 
-#### *MOS*
+#### *EOS*
 
-The example application `example.py` can be found in the `arista_fdk/examples/nullverilog/src`
-directory of the Arista FDK. This Python code provides the basic essentials that
-are required to start the application and program the FPGAs with the appropriate
-images.
+The EOS integration has three application-specific components:
 
-For more details, please review the Python source file and refer to the MOSAPI
-User Guide which can be downloaded from https://www.arista.com/support.
 
+
+| File                          | Description                                                                                                                                                                                                       |
+|-------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `NullVerilogExample.yaml`     | A YAML file which describes the CLI commands and daemon.                                                                                                                                                          |
+| `NullVerilogExampleCli.py`    | A Python file which is loaded by the CLI processor in EOS. It implements classes which are called by EOS when CLI commands are entered. This may read from the status store, and write to the config store.       |
+| `NullVerilogExampleDaemon.py` | A Python file which implements a daemon which responds to configuration updates, and publishes status. In the case of nullverilog, it responds to `no disabled` commands by programming and configuring the FPGA. |
+
+
+See the [Developer Guide](../../doc/developer-guide.md) for the common EOS SDK,
+CLI extension, packaging, and installation model.

@@ -5,7 +5,7 @@
 --   fdk-support@arista.com
 --
 -- Description:
---   Top level for the tscore_nomac example on l and lb2 board standards.
+--   Top level for the tscore_nomac example on the lb2 board standard.
 --
 --   Licensed under BSD 3-clause license:
 --     https://opensource.org/licenses/BSD-3-Clause

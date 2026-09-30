@@ -5,7 +5,7 @@
 #    fdk-support@arista.com
 #
 #  Description:
-#    Package file required for MOS CLI example.
+#    Package metadata for the EOS CLI example.
 #
 #    Licensed under BSD 3-clause license:
 #      https://opensource.org/licenses/BSD-3-Clause
@@ -15,19 +15,7 @@
 #
 # ------------------------------------------------------------------------------
 
-from __future__ import absolute_import
-
-try:
-    import mosapi
-
-    IS_MOS = mosapi.IS_MOS
-except ImportError:
-    IS_MOS = False
-
 __version__ = "UNVERSIONED"
 __buildid__ = 0
 
 app_name = "cliexample"
-
-if IS_MOS:
-    from .example import *  # pylint: disable=import-self

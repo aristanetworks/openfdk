@@ -143,7 +143,7 @@ class PCIDeviceManager(object):
     def lspci_devices(  # pylint: disable=too-many-arguments
         bdf="::.", vendor_id="", device_id="", class_id="", verbose=False, root=False
     ):
-        """Get a list of PCI devices as given by lspci"""
+        """Return the `lspci` output for devices matching the supplied filters."""
 
         # Filter by BDF
         flags = " -s " + bdf
@@ -311,13 +311,13 @@ class PCIMemoryRegion(object):  # pylint: disable=too-many-instance-attributes
     # FIXME: Allow mmapping a region first for better performance if frequent accesses are required.
     def read(self, offset, nbytes, align=True, trxn_size=4):
         """
-        Return a string of little endian bytes read from the memory region starting at offset.
+        Return bytes read from the memory region starting at offset.
         Beware of concurrency issues if other processes are also accessing the memory region.
         Param align: Align accesses to word boundaries, defaults to True
-        Param trxn_size: Split the read into multiple read transactions of at most trxn_size bytes as
-                         some devices may not be able to handle transactions greater than a certain size.
-                         If None, then there is no size limit and only one transaction is used.
-                         Must be a multiple of the region's word size.
+        Param trxn_size: Maximum size of each read transaction in bytes. If None,
+                         the read is issued as one transaction. It must be a
+                         multiple of the region's word size.
+        Returns (bytes): The requested bytes in device memory order.
         """
 
         self._check_rw_access(offset, nbytes, trxn_size=trxn_size)
@@ -385,13 +385,14 @@ class PCIMemoryRegion(object):  # pylint: disable=too-many-instance-attributes
 
     def write(self, offset, value, align=True, trxn_size=4):
         """
-        Write a string of little endian bytes to the memory region starting at offset.
+        Write bytes to the memory region starting at offset.
         Beware of concurrency issues if other processes are also accessing the memory region.
+        Param offset: Offset in bytes from the start of the region.
+        Param value: Bytes to write.
         Param align: Align accesses to word boundaries, defaults to True
-        Param trxn_size: Split the write into multiple write transactions of at most trxn_size bytes as
-                         some devices may not be able to handle transactions greater than a certain size.
-                         If None, then there is no size limit and only one transaction is used.
-                         Must be a multiple of the region's word size.
+        Param trxn_size: Maximum size of each write transaction in bytes. If None,
+                         the write is issued as one transaction. It must be a
+                         multiple of the region's word size.
         """
 
         nbytes = len(value)
@@ -826,10 +827,11 @@ class PCIDevice(object):  # pylint: disable=too-many-instance-attributes
 
     def config_read_setpci(self, addr, nbytes, cap_name=None):
         """
-        Read bytes addr:(addr + nbytes) from the device's PCI configuration space as an integer.
-        Uses setpci for simplicity. The returned integer represents a bitstring in little endian format.
+        Read `nbytes` from the device's PCI configuration space as an integer.
+        The returned integer represents a little-endian bitstring.
         This method is very slow because it may spawn a new subprocess for each byte read.
         Prefer using config_read instead, which reads from the device's config file.
+        Returns (int): The requested configuration-space value.
         """
 
         width = {1: "b", 2: "w", 4: "l"}.get(nbytes)

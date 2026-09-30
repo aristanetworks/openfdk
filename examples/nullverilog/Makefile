@@ -23,11 +23,11 @@
 .SECONDEXPANSION:
 
 PROJECT    ?= nullverilog
-VERSION_ID ?= 3.2.0.openfdk
-BUILD_ID   ?= 7
+VERSION_ID ?= 4.0.0.openfdk
+BUILD_ID   ?= 26
 
 PROJECT_DIR         = $(CURDIR)
-ARISTA_FDK_VERSION ?= 3.2.0.openfdk
+ARISTA_FDK_VERSION ?= 4.0.0.openfdk
 ARISTA_FDK_DIR     ?= $(PROJECT_DIR)/../../../arista_fdk-$(ARISTA_FDK_VERSION)
 ARISTA_SRC_DIR      = $(ARISTA_FDK_DIR)/src
 
@@ -122,9 +122,10 @@ clean::
 
 DRIVERFILES =
 
-APP_CLI_PLUGINS = $(APP_INSTALL_DIR)/eos/NullVerilogExampleCli.py
-APP_CLI_EXTENSIONS = $(APP_INSTALL_DIR)/eos/NullVerilogExample.yaml
-APP_DAEMONS = $(APP_INSTALL_DIR)/eos/NullVerilogExampleDaemon.py
+APP_CLI_PLUGINS = $(APP_INSTALL_DIR)/NullVerilogExampleCli.py
+APP_CLI_EXTENSIONS = $(APP_INSTALL_DIR)/NullVerilogExample.yaml
+APP_DAEMONS = $(APP_INSTALL_DIR)/NullVerilogExampleDaemon.py
+APP_EOS_VERSIONS = '4.{28-99}.{0-99}*'
 APP_NEEDS_SQUASHFS =
 
 #-------------------------------------------------------------------------------

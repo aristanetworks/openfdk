@@ -318,7 +318,8 @@ Clkgen part left with manufacturers default settings.\
 
         try:
             config_filename = self.clkgenProfiles[profile][self.platform][self.brdStandard][self.partNum]["config_file"]
-            os.path.exists(self.clkprofiledir + config_filename)
+            if not os.path.exists(self.clkprofiledir + config_filename):
+                return "Null"  # File does not exist
         except Exception:  # pylint: disable=broad-except
             return "Null"  # Doesn't exist
 

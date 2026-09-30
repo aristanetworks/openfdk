@@ -297,13 +297,15 @@ def RegisterFile(csvfile, accessor, array_offset=0):  # pylint: disable=too-many
     """A wrapper around register file described by a CSV file.
 
     Example:
+        >>> import struct
+        >>> import libapp.register_file
         >>> regfile = libapp.register_file.RegisterFile(
         ...     "fpga/muxcore_registers.csv", fpga.communicator
         ... )
         >>> struct.pack(
         ...    "<IIII", regfile.app_name_0, regfile.app_name_1, regfile.app_name_2, regfile.app_name_3
         ... )
-        'lseries_muxcore '
+        b'lseries_muxcore '
 
     Args:
         csvfile (str): Path to the CSV file describing the register file layout.

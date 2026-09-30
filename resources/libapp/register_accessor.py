@@ -25,6 +25,7 @@ from . import IS_EOS
 if IS_EOS:
     import PLSmbusUtil
     import Smbus_pb2
+    from . import pl_smbus_burst
 
 try:
     import hal
@@ -108,51 +109,67 @@ class EosRegAccess(object):
             self._sock = PLSmbusUtil.connect()
         return self._sock
 
-    def read_block(self, addr, n=32):
-        result = PLSmbusUtil.read(
+    def _submit_burst(self, addrs, values, reads, raw_bytes=False):  # pylint: disable=too-many-locals
+        registers = []
+        datas = []
+        reads_n = []
+
+        for i, addr in enumerate(addrs):
+            data_n = []
+            reg = []
+            for j in reversed(range(int(self.awidth / 8))):
+                reg.append((addr >> j * 8) & 0xFF)
+            registers.append(reg)
+
+            if reads[i]:
+                reads_n.append(reads[i] * (1 if raw_bytes else 4))
+            else:
+                value = values[i]
+                if raw_bytes:
+                    data_n += value
+                else:
+                    for val in value:
+                        for j in reversed(range(4)):
+                            data_n.append((val >> j * 8) & 0xFF)
+                reads_n.append(0)
+
+            datas.append(data_n)
+        r = pl_smbus_burst._submit_burst(  # pylint: disable=protected-access
             self.sock,
             self.pci_addr,
             self.accel_id,
             self.bus,
             self.addr,
-            addr,
-            readCurrent=False,
-            count=n,
+            registers,
+            datas,
+            reads_n,
             backend=self.backend,
         )
 
-        return [ord(x) if isinstance(x, (str, bytes)) else x for x in result]
+        # Swap any return data
+        if raw_bytes:
+            return r
+
+        r_swap = []
+        for i, r_i in enumerate(r):
+            r_s = [ord(x) if isinstance(x, (str, bytes)) else x for x in r_i]
+            for j in range(0, len(r_s), 4):
+                r_swap.append(r_s[j + 0] << 24 | r_s[j + 1] << 16 | r_s[j + 2] << 8 | r_s[j + 3])
+        return r_swap
+
+    def read_block(self, addr, n=32):
+        return self._submit_burst([addr], [], [n], raw_bytes=True)
 
     def write_block(self, addr, vals):
         assert all(i <= 0xFF for i in vals)
-        # FIXME: The bytearray call is only needed for Python 2.
-        data = bytes(bytearray(vals))
-        PLSmbusUtil.write(
-            self.sock,
-            self.pci_addr,
-            self.accel_id,
-            self.bus,
-            self.addr,
-            addr,
-            data,
-            backend=self.backend,
-        )
+        self.submit_burst([addr], [vals], [0], raw_bytes=True)
 
     def read_reg(self, addr):
-        b = []
-        for i in reversed(range(int((self.awidth - 8) / 8))):
-            b.append((addr >> i * 8) & 0xFF)
-        self.write_block((addr >> (self.awidth - 8)) & 0xFF, b)
-        r = self.read_block(0xFF, 4)
-        return r[0] << 24 | r[1] << 16 | r[2] << 8 | r[3]
+        r = self._submit_burst([addr], [], [1])[0]
+        return r
 
     def write_reg(self, addr, value):
-        b = []
-        for i in reversed(range(int((self.awidth - 8) / 8))):
-            b.append((addr >> i * 8) & 0xFF)
-        for i in reversed(range(4)):
-            b.append((value >> i * 8) & 0xFF)
-        self.write_block((addr >> (self.awidth - 8)) & 0xFF, b)
+        self._submit_burst([addr], [[value]], [0])
 
 
 class PCIeRegAccess(object):

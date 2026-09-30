@@ -27,8 +27,7 @@
         "${ARISTA_FDK_DIR}/src/regfile/i2c_slave_deglitch.vhd",
         "${ARISTA_FDK_DIR}/src/regfile/reg_file_pkg.vhd",
         "${ARISTA_FDK_DIR}/src/regfile/reg_flexi_pkg.vhd",
-        "${ARISTA_FDK_DIR}/src/seu/ip/xcvu9p-flgb2104-3-e/sem_mit_78M125/sem_mit_78M125.xci",
-        "${ARISTA_FDK_DIR}/src/seu/xil_sem_deprecated.vhd",
+        "${ARISTA_FDK_DIR}/src/seu/xil_sem_switchapp.vhd",
         "${ARISTA_FDK_DIR}/src/spi/spi_master.vhd",
         "${ARISTA_FDK_DIR}/src/synchroniser/synchroniser.vhd",
         "${ARISTA_FDK_DIR}/src/yart/yart_i2c.vhd",
@@ -42,5 +41,8 @@
     ],
     "constrs_1": [
         "${ARISTA_FDK_DIR}/src/boards/lb2/board_constraints.xdc"
+    ],
+    "ip_cores": [
+        "${ARISTA_FDK_DIR}/src/seu/ip/xcvu9p-flgb2104-3-e/sem_mit_78M125/sem_mit_78M125.tcl"
     ]
 }
